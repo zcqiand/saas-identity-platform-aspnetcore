@@ -1,0 +1,34 @@
+{
+  "runtime": "Net80",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "../saas-identity-platform-shared/generated/openapi/openapi.yaml",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpController": {
+      "operationGenerationMode": "MultipleClientsFromFirstTagAndPathSegments",
+      "className": "{controller}",
+      "namespace": "Saas.Identity.AspNetCore.Controllers.Generated",
+      "output": "src/Controllers/Generated/Controllers.cs",
+      "controllerBaseClass": "ControllerBase",
+      "controllerStyle": "Abstract",
+      "controllerTarget": "AspNetCore",
+      "generateModelValidationAttributes": true,
+      "useActionResultType": false,
+      "addNullableAnnotations": true,
+      "generateDtoTypes": true,
+      "typeStyle": "Record",
+      "dateType": "System.DateTime",
+      "jsonLibrary": "SystemTextJson",
+      "generateDefaultValues": true,
+      "generateOptionalParameters": false,
+      "generateResponseClasses": false,
+      "wrapResponses": false,
+      "excludedTypeNames": [],
+      "additionalNamespaceUsages": ["Microsoft.AspNetCore.Mvc"]
+    }
+  }
+}

@@ -2,9 +2,9 @@
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
   "functions": {
-    "modules": 7,
-    "features": 14,
-    "items": 45
+    "modules": 9,
+    "features": 20,
+    "items": 57
   },
   "warnings_total": 0,
   "warnings": {},
@@ -310,7 +310,7 @@
       "entry": []
     },
     "M04.F01.I01": {
-      "name": "OAuth 应用列表",
+      "name": "应用列表",
       "status": "规划",
       "type": "接口",
       "requirements": [],
@@ -320,7 +320,7 @@
       "entry": []
     },
     "M04.F01.I02": {
-      "name": "创建 OAuth 应用",
+      "name": "创建应用",
       "status": "规划",
       "type": "接口",
       "requirements": [],
@@ -330,7 +330,7 @@
       "entry": []
     },
     "M04.F01.I03": {
-      "name": "OAuth 应用详情",
+      "name": "应用详情",
       "status": "规划",
       "type": "接口",
       "requirements": [],
@@ -340,7 +340,7 @@
       "entry": []
     },
     "M04.F01.I04": {
-      "name": "更新 OAuth 应用",
+      "name": "更新应用",
       "status": "规划",
       "type": "接口",
       "requirements": [],
@@ -350,7 +350,7 @@
       "entry": []
     },
     "M04.F01.I05": {
-      "name": "删除 OAuth 应用",
+      "name": "删除应用",
       "status": "规划",
       "type": "接口",
       "requirements": [],
@@ -360,6 +360,16 @@
       "entry": []
     },
     "M04.F02.I06": {
+      "name": "启用/停用应用",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M04.F03.I07": {
       "name": "授权码签发",
       "status": "规划",
       "type": "接口",
@@ -369,7 +379,7 @@
       "tests": [],
       "entry": []
     },
-    "M04.F02.I07": {
+    "M04.F03.I08": {
       "name": "令牌交换",
       "status": "规划",
       "type": "接口",
@@ -379,7 +389,7 @@
       "tests": [],
       "entry": []
     },
-    "M04.F02.I08": {
+    "M04.F03.I09": {
       "name": "令牌刷新",
       "status": "规划",
       "type": "接口",
@@ -463,6 +473,116 @@
       "name": "留存策略设置",
       "status": "规划",
       "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F01.I01": {
+      "name": "菜单树",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F01.I02": {
+      "name": "创建菜单",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F01.I03": {
+      "name": "菜单详情",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F01.I04": {
+      "name": "更新菜单",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F01.I05": {
+      "name": "删除菜单",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F02.I06": {
+      "name": "同级排序",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M08.F02.I07": {
+      "name": "切换父级",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M09.F01.I01": {
+      "name": "角色已授权菜单",
+      "status": "规划",
+      "type": "查询",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M09.F02.I02": {
+      "name": "设置角色菜单",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M09.F02.I03": {
+      "name": "清空角色菜单",
+      "status": "规划",
+      "type": "接口",
+      "requirements": [],
+      "flows": [],
+      "designs": [],
+      "tests": [],
+      "entry": []
+    },
+    "M09.F03.I04": {
+      "name": "我的有效菜单",
+      "status": "规划",
+      "type": "查询",
       "requirements": [],
       "flows": [],
       "designs": [],

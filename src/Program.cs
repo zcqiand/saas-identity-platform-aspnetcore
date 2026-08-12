@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Saas.Identity.AspNetCore.Security;
-using Saas.Identity.AspNetCore.Service;
+using Saas.Identity.AspNetCore.Controllers.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,10 +24,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<TenantContext>();
 builder.Services.AddSingleton<TenantGuard>();
-builder.Services.AddSingleton<TenantUsersService>();
-builder.Services.AddControllers();
+
+// v0.2.0 NSwag-generated Controllers + 11 concrete implementations
+// Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
+// concrete 实现 在 src/Controllers/Implementation/<Tag>Controller.cs（手写业务）
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppsControllerBase).Assembly);
+
+builder.Services.AddScoped<AdminAppsController>();
+builder.Services.AddScoped<AdminAppMenusController>();
+builder.Services.AddScoped<AdminTenantsController>();
+builder.Services.AddScoped<AuthController>();
+builder.Services.AddScoped<MeController>();
+builder.Services.AddScoped<OauthController>();
+builder.Services.AddScoped<TenantApiKeysController>();
+builder.Services.AddScoped<TenantAuditController>();
+builder.Services.AddScoped<TenantRolesController>();
+builder.Services.AddScoped<TenantRoleMenusController>();
+builder.Services.AddScoped<TenantUsersController>();
 
 var app = builder.Build();
 
