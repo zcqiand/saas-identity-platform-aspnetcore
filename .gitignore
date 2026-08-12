@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+.state/trace.json
+.state/gate.json
+bin/
+obj/
