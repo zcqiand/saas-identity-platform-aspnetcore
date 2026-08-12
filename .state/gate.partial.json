@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "project": "saas-identity-platform-aspnetcore",
+  "passed": true,
+  "partial": true,
+  "ran": [
+    "L0"
+  ],
+  "checked_at": "2026-08-12T12:36:46+0800",
+  "gates": [
+    {
+      "level": "L0",
+      "name": "结构完整性",
+      "passed": true,
+      "returncode": 0,
+      "duration_s": 0.093,
+      "output": ""
+    }
+  ]
+}

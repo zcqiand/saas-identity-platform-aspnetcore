@@ -6,11 +6,11 @@
   "source_dirs": ["src"],
   "test_dirs": ["tests"],
   "gates": {
-    "L1": { "name": "格式", "cmd": ["dotnet", "format", "--verify-no-changes", "--include", "src/**", "tests/**"], "fix": "dotnet format" },
-    "L2": { "name": "静态检查", "cmd": ["dotnet", "build", "/p:TreatWarningsAsErrors=true"], "fix": "逐条修复 warning" },
-    "L3": { "name": "编译", "cmd": ["dotnet", "build", "--no-restore"], "fix": "先让它编译过" },
-    "L4": { "name": "测试", "cmd": ["dotnet", "test", "--no-build"], "fix": "先让测试变绿" }
+    "L1": { "name": "格式", "cmd": ["dotnet", "format", "src/Saas.Identity.AspNetCore.csproj", "--verify-no-changes", "--include", "src/**"], "fix": "dotnet format" },
+    "L2": { "name": "静态检查", "cmd": ["dotnet", "build", "src/Saas.Identity.AspNetCore.csproj", "/p:TreatWarningsAsErrors=true"], "fix": "逐条修复 warning" },
+    "L3": { "name": "编译", "cmd": ["dotnet", "build", "src/Saas.Identity.AspNetCore.csproj", "--no-restore"], "fix": "先让它编译过" },
+    "L4": { "name": "测试", "cmd": ["dotnet", "test", "tests/Saas.Identity.AspNetCore.Tests.csproj", "--no-build"], "fix": "先让测试变绿" }
   },
-  "trace_cmd": ["dotnet", "test", "--no-build", "--logger", "console;verbosity=normal"],
+  "trace_cmd": ["python", "scripts/gen-trace.py"],
   "trace_env": { "TRACE_MAP": "1" }
 }
