@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 
@@ -27,6 +29,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<TenantContext>();
 builder.Services.AddSingleton<TenantGuard>();
+
+// M10.Database — EF Core + Npgsql + snake_case 命名（ADR-0010）
+// shared SQL 是 SSOT；EF Model 镜像；启动时**不调** Database.Migrate()（避免与 shared SQL 重复执行）。
+// 启动期校验：open connection + information_schema.tables 验证 expected tables 存在。
+var pgConn = builder.Configuration.GetConnectionString("Postgres");
+builder.Services.AddDbContext<AppDbContext>(o =>
+    o.UseNpgsql(pgConn, npg => npg.MigrationsHistoryTable("__ef_migrations_history")));
 
 // v0.2.0 NSwag-generated Controllers + 11 concrete implementations
 // Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
