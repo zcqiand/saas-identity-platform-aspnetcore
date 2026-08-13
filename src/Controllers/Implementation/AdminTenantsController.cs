@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
@@ -34,9 +35,22 @@ public class AdminTenantsController : AdminTenantsControllerBase
     private static TenantSettings ToSettingsDto(Dictionary<string, object?> src)
     {
         var s = new TenantSettings();
-        if (src.TryGetValue("themeColor", out var tc)) s.ThemeColor = tc?.ToString() ?? "";
-        if (src.TryGetValue("locale", out var lo)) s.Locale = lo?.ToString() ?? "";
-        if (src.TryGetValue("maxUsers", out var mu) && mu != null) s.MaxUsers = Convert.ToInt32(mu);
+        if (src.TryGetValue("themeColor", out var tc)) s.ThemeColor = Str(tc);
+        if (src.TryGetValue("locale", out var lo)) s.Locale = Str(lo);
+        // EF Core 把 jsonb → Dictionary<string,object?> 时值是 JsonElement，不是 IConvertible，
+        // Convert.ToInt32(JsonElement) 会抛 InvalidCastException。要分派：
+        if (src.TryGetValue("maxUsers", out var mu) && mu is not null)
+        {
+            s.MaxUsers = mu switch
+            {
+                JsonElement je when je.ValueKind == JsonValueKind.Number => je.GetInt32(),
+                JsonElement je when je.ValueKind == JsonValueKind.String
+                                  && int.TryParse(je.GetString(), out var n) => n,
+                int i => i,
+                long l => (int)l,
+                _ => Convert.ToInt32(mu),
+            };
+        }
         foreach (var kv in src)
         {
             if (kv.Key is "themeColor" or "locale" or "maxUsers") continue;
@@ -44,6 +58,16 @@ public class AdminTenantsController : AdminTenantsControllerBase
         }
         return s;
     }
+
+    // JsonElement.ToString() 对 string-kind 会带 JSON 引号（"blue" → "\"blue\""），
+    // 不能直接用。要么 GetString()，要么按 ValueKind 分派。
+    private static string Str(object? v) => v switch
+    {
+        null => "",
+        JsonElement { ValueKind: JsonValueKind.String } je => je.GetString() ?? "",
+        JsonElement { ValueKind: JsonValueKind.Null } => "",
+        _ => v.ToString() ?? "",
+    };
 
     private static TenantStatus ToDtoStatus(string s) => s switch
     {

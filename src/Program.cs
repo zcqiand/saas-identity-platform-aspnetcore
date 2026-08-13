@@ -1,11 +1,19 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using Npgsql;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 
-var builder = WebApplication.CreateBuilder(args);
+// appsettings*.json 在仓根，csproj 已拷到 bin/。强制 ContentRoot = bin 目录，
+// 这样不管 cwd 是 src/、仓根、还是生产部署的任意路径，配置文件都能被加载。
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory,
+});
 
 // JWT bearer auth — tenant_id claim is mandatory for tenant-scoped routes
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -23,7 +31,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"] ?? "dev-key-32-bytes-minimum-length!")),
         };
+
+        // Dev only：next.js 端 MSW/dev-helper 发的是 alg=none + .dev-placeholder 的模拟 token
+        // （见 Authorization header 解码：{"alg":"none"}.{...}.dev-placeholder）。
+        // 标准 JwtBearer 8 默认拒收 alg=none（安全硬编码）；dev 必须显式放行。
+        // 关键开关：RequireSignedTokens=false（放行 unsigned）+ ValidateIssuerSigningKey=false（不查 key）。
+        // 切 legacy JwtSecurityTokenHandler + SignatureValidator 是 belt-and-suspenders 双保险。
+        // Production 走真实对称 key 标准流程（上面的 TokenValidationParameters）。
+        if (builder.Environment.IsDevelopment())
+        {
+            options.UseSecurityTokenValidators = true;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = false,
+                RequireSignedTokens = false,                                       // ← 真正接受 alg=none 的开关
+                SignatureValidator = (token, _) => new JwtSecurityToken(token),
+            };
+        }
     });
+
+// CORS — Next.js dev server (http://localhost:3000) 调本后端的预检白名单
+// 必须在 AddAuthorization 之前注册；UseCors 在 UseAuthentication 之前挂
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("NextDev", policy =>
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
@@ -33,9 +71,17 @@ builder.Services.AddSingleton<TenantGuard>();
 // M10.Database — EF Core + Npgsql + snake_case 命名（ADR-0010）
 // shared SQL 是 SSOT；EF Model 镜像；启动时**不调** Database.Migrate()（避免与 shared SQL 重复执行）。
 // 启动期校验：open connection + information_schema.tables 验证 expected tables 存在。
+//
+// Npgsql 8 起 Dictionary<string,object?> ↔ jsonb 动态映射需显式 EnableDynamicJson()（不再默认开启）。
+// 不开就报：Reading as 'Dictionary`2' is not supported for fields having DataTypeName 'jsonb'。
+// 同样 ToSettingsDto 里 Str() / maxUsers switch 仍是必要的——System.Text.Json 反序列化原语值仍是 JsonElement。
 var pgConn = builder.Configuration.GetConnectionString("Postgres");
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(pgConn);
+dataSourceBuilder.EnableDynamicJson();
+var dataSource = dataSourceBuilder.Build();
+builder.Services.AddSingleton(dataSource);
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseNpgsql(pgConn, npg => npg.MigrationsHistoryTable("__ef_migrations_history")));
+    o.UseNpgsql(dataSource, npg => npg.MigrationsHistoryTable("__ef_migrations_history")));
 
 // v0.2.0 NSwag-generated Controllers + 11 concrete implementations
 // Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
@@ -57,6 +103,7 @@ builder.Services.AddScoped<TenantUsersController>();
 
 var app = builder.Build();
 
+app.UseCors("NextDev");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

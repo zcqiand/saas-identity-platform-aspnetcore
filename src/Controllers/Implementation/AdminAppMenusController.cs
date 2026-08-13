@@ -66,17 +66,18 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
 
     public override async Task<ICollection<ApiMenu>> MenusGet(string appId)
     {
-        var aid = Guid.Parse(appId);
+        var aid = await ResolveAppIdAsync(appId);
         var rows = await _db.Menus.Where(m => m.AppId == aid).ToListAsync();
         return rows.Select(ToDto).ToList();
     }
 
     public override async Task<ApiMenu> MenusPost(string appId, CreateMenuRequest body)
     {
+        var aid = await ResolveAppIdAsync(appId);
         var e = new DbMenu
         {
             Id = Guid.NewGuid(),
-            AppId = Guid.Parse(appId),
+            AppId = aid,
             ParentId = body.ParentId,
             Code = body.Code,
             Name = body.Name,
@@ -135,8 +136,24 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
 
     public override async Task<ICollection<ApiMenu>> Reorder(string appId, string menuId, ReorderMenuRequest body)
     {
-        var aid = Guid.Parse(appId);
+        var aid = await ResolveAppIdAsync(appId);
         var rows = await _db.Menus.Where(m => m.AppId == aid).ToListAsync();
         return rows.Select(ToDto).ToList();
+    }
+
+    // OpenAPI 声明 appId 是 string（不约束 Guid 格式）。
+    // 前端路由用 App.Code（slug 如 "lab-management"），不是 App.Id（Guid）。
+    // v0.4.0 之前 InMemoryStore 按 Code 索引直通了，迁 EF Core 后变 Guid.Parse(appId) 撞回归。
+    // 兼容两路：先当 Guid 试，存在就返；否则按 Code 查。
+    private async Task<Guid> ResolveAppIdAsync(string appIdOrCode)
+    {
+        if (Guid.TryParse(appIdOrCode, out var gid))
+        {
+            var existsById = await _db.Apps.AnyAsync(a => a.Id == gid);
+            if (existsById) return gid;
+        }
+        var byCode = await _db.Apps.FirstOrDefaultAsync(a => a.Code == appIdOrCode)
+            ?? throw new KeyNotFoundException($"app '{appIdOrCode}' not found");
+        return byCode.Id;
     }
 }

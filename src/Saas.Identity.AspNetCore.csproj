@@ -23,4 +23,19 @@
     <PackageReference Include="EFCore.NamingConventions" Version="8.0.0" />
   </ItemGroup>
 
+  <!--
+    appsettings*.json 位于仓根（${workspaceFolder}/），不在 csproj 同目录。
+    Sdk.Web 默认的 Content glob 不会自动捕获父目录文件，必须显式 Include。
+    拷到 bin/ 后，Program.cs 用 ContentRootPath=AppContext.BaseDirectory 指向 bin/，
+    任意 cwd / 任意运行方式（dotnet run / VS launch / dotnet Saas.Identity.AspNetCore.dll）都能加载。
+  -->
+  <ItemGroup>
+    <Content Include="..\appsettings.json" Link="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\appsettings.Development.json" Link="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
