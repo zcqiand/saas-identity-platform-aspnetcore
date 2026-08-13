@@ -1,49 +1,104 @@
-using Saas.Identity.AspNetCore.Security;
+using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
+using Saas.Identity.AspNetCore.Domain.Entities;
+using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using DbGrant = Saas.Identity.AspNetCore.Domain.Entities.RoleMenuGrant;
+using Saas.Identity.AspNetCore.Security;
+
+// alias 避免与 NSwag-generated DTO `RoleMenuGrant` 冲突
+using RoleMenuGrantDto = Saas.Identity.AspNetCore.Controllers.Generated.RoleMenuGrant;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
 /// Concrete M09 角色菜单授权（tenant-scoped）。
-/// M09.F01.I01 角色已授权菜单（查询）· M09.F02.I02/I03 设置/清空角色菜单。
+/// v0.4.0：从 InMemoryStore 迁到 AppDbContext。
 /// </summary>
 public class TenantRoleMenusController : TenantRoleMenusControllerBase
 {
     private readonly TenantGuard _guard;
-    public TenantRoleMenusController(TenantGuard guard) { _guard = guard; }
+    private readonly AppDbContext _db;
 
-    public override Task<RoleMenuGrant> MenusGet(string tenantId, string roleId)
+    public TenantRoleMenusController(TenantGuard guard, AppDbContext db)
     {
-        // M09.F01.I01 角色已授权菜单
-        _guard.VerifyPathTenant(tenantId);
-        var rid = Guid.Parse(roleId);
-        var grant = InMemoryStore.RoleMenuGrants.FirstOrDefault(g => g.RoleId == rid)
-            ?? new RoleMenuGrant { RoleId = rid, MenuIds = new List<string>(), UpdatedAt = DateTime.UtcNow };
-        return Task.FromResult(grant);
+        _guard = guard;
+        _db = db;
     }
 
-    public override Task<RoleMenuGrant> MenusPut(string tenantId, string roleId, SetRoleMenusRequest body)
+    private static RoleMenuGrantDto ToDto(DbGrant e) => new()
     {
-        // M09.F02.I02 设置角色菜单
+        RoleId = e.RoleId,
+        MenuIds = (e.MenuIds ?? new()).Select(g => g.ToString()).ToList(),
+        UpdatedAt = e.UpdatedAt,
+    };
+
+    public override async Task<RoleMenuGrantDto> MenusGet(string tenantId, string roleId)
+    {
         _guard.VerifyPathTenant(tenantId);
-        var rid = Guid.Parse(roleId);
-        var existing = InMemoryStore.RoleMenuGrants.FirstOrDefault(g => g.RoleId == rid);
+        var id = Guid.Parse(roleId);
+        var row = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
+        if (row == null)
+        {
+            return new RoleMenuGrantDto
+            {
+                RoleId = id,
+                MenuIds = new List<string>(),
+                UpdatedAt = DateTimeOffset.UtcNow,
+            };
+        }
+        return ToDto(row);
+    }
+
+    public override async Task<RoleMenuGrantDto> MenusPut(string tenantId, string roleId, SetRoleMenusRequest body)
+    {
+        _guard.VerifyPathTenant(tenantId);
+        var tid = Guid.Parse(tenantId);
+        var id = Guid.Parse(roleId);
+        // 校验 role 存在
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id);
+        if (role == null)
+            throw new KeyNotFoundException($"role {roleId} not found");
+
+        var menuIds = (body.MenuIds ?? new List<string>())
+            .Where(m => Guid.TryParse(m, out _))
+            .Select(m => Guid.Parse(m))
+            .ToList();
+
+        var existing = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
         if (existing != null)
         {
-            existing.MenuIds = body.MenuIds.ToList();
-            existing.UpdatedAt = DateTime.UtcNow;
-            return Task.FromResult(existing);
+            existing.MenuIds = menuIds;
+            existing.TenantId = tid;
+            existing.UpdatedAt = DateTimeOffset.UtcNow;
         }
-        var fresh = new RoleMenuGrant { RoleId = rid, MenuIds = body.MenuIds.ToList(), UpdatedAt = DateTime.UtcNow };
-        InMemoryStore.RoleMenuGrants.Add(fresh);
-        return Task.FromResult(fresh);
+        else
+        {
+            _db.RoleMenuGrants.Add(new DbGrant
+            {
+                RoleId = id,
+                TenantId = tid,
+                MenuIds = menuIds,
+                UpdatedAt = DateTimeOffset.UtcNow,
+            });
+        }
+        await _db.SaveChangesAsync();
+        return new RoleMenuGrantDto
+        {
+            RoleId = id,
+            MenuIds = menuIds.Select(g => g.ToString()).ToList(),
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
     }
 
-    public override Task MenusDelete(string tenantId, string roleId)
+    public override async Task MenusDelete(string tenantId, string roleId)
     {
-        // M09.F02.I03 清空角色菜单
         _guard.VerifyPathTenant(tenantId);
-        InMemoryStore.RoleMenuGrants.RemoveAll(g => g.RoleId == Guid.Parse(roleId));
-        return Task.CompletedTask;
+        var id = Guid.Parse(roleId);
+        var row = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
+        if (row != null)
+        {
+            _db.RoleMenuGrants.Remove(row);
+            await _db.SaveChangesAsync();
+        }
     }
 }
