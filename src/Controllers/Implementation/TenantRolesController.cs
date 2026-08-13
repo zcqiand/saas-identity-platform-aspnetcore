@@ -1,77 +1,123 @@
-using Saas.Identity.AspNetCore.Security;
+using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
+using Saas.Identity.AspNetCore.Domain.Entities;
+using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using DbRole = Saas.Identity.AspNetCore.Domain.Entities.Role;
+using DbRolePermission = Saas.Identity.AspNetCore.Domain.Entities.RolePermission;
+using Saas.Identity.AspNetCore.Security;
+
+// alias 避免与 NSwag-generated DTO `Role` 冲突
+using ApiRole = Saas.Identity.AspNetCore.Controllers.Generated.Role;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
 /// Concrete M02.F01 角色 CRUD（tenant-scoped）+ M02.F02 权限矩阵。
+/// v0.4.0：从 InMemoryStore 迁到 AppDbContext。
 /// </summary>
 public class TenantRolesController : TenantRolesControllerBase
 {
     private readonly TenantGuard _guard;
-    public TenantRolesController(TenantGuard guard) { _guard = guard; }
+    private readonly AppDbContext _db;
 
-    public override Task<Response10> RolesGet(string tenantId, int? page, int? pageSize)
+    public TenantRolesController(TenantGuard guard, AppDbContext db)
     {
-        // M02.F01.I01 角色列表
-        _guard.VerifyPathTenant(tenantId);
-        var gid = Guid.Parse(tenantId);
-        var items = InMemoryStore.Roles.Where(r => r.TenantId == gid).ToList();
-        return Task.FromResult(new Response10
-        {
-            Items = items,
-            Page = page ?? 1,
-            PageSize = pageSize ?? items.Count,
-            Total = items.Count,
-        });
+        _guard = guard;
+        _db = db;
     }
 
-    public override Task<Role> RolesPost(string tenantId, CreateRoleRequest body)
+    private static ApiRole ToDto(DbRole e) => new()
     {
-        // M02.F01.I02 创建角色
+        Id = e.Id,
+        TenantId = e.TenantId,
+        Code = e.Code,
+        Name = e.Name,
+        Description = e.Description,
+        CreatedAt = e.CreatedAt,
+        UpdatedAt = e.UpdatedAt,
+    };
+
+    public override async Task<Response10> RolesGet(string tenantId, int? page, int? pageSize)
+    {
         _guard.VerifyPathTenant(tenantId);
-        var r = new Role
+        var tid = Guid.Parse(tenantId);
+        var p = page ?? 1;
+        var ps = pageSize ?? 20;
+        var q = _db.Roles.Where(r => r.TenantId == tid);
+        var total = await q.CountAsync();
+        var items = await q.OrderByDescending(r => r.CreatedAt)
+            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+        return new Response10
+        {
+            Items = items.Select(ToDto).ToList(),
+            Page = p,
+            PageSize = ps,
+            Total = total,
+        };
+    }
+
+    public override async Task<ApiRole> RolesPost(string tenantId, CreateRoleRequest body)
+    {
+        _guard.VerifyPathTenant(tenantId);
+        var e = new DbRole
         {
             Id = Guid.NewGuid(),
             TenantId = Guid.Parse(tenantId),
             Code = body.Code,
             Name = body.Name,
-            PermissionIds = new List<string>(),
+            Description = body.Description,
         };
-        InMemoryStore.Roles.Add(r);
-        return Task.FromResult(r);
+        _db.Roles.Add(e);
+        await _db.SaveChangesAsync();
+        return ToDto(e);
     }
 
-    public override Task<Role> RolesGet(string tenantId, string roleId)
+    public override async Task<ApiRole> RolesGet(string tenantId, string roleId)
     {
-        // M02.F01.I03 角色详情
         _guard.VerifyPathTenant(tenantId);
-        return Task.FromResult(InMemoryStore.Roles.First(r => r.Id == Guid.Parse(roleId)));
+        var id = Guid.Parse(roleId);
+        var e = await _db.Roles.FirstAsync(r => r.Id == id);
+        return ToDto(e);
     }
 
-    public override Task<Role> RolesPatch(string tenantId, string roleId, UpdateRoleRequest body)
+    public override async Task<ApiRole> RolesPatch(string tenantId, string roleId, UpdateRoleRequest body)
     {
-        // M02.F01.I04 更新角色
         _guard.VerifyPathTenant(tenantId);
-        var r = InMemoryStore.Roles.First(x => x.Id == Guid.Parse(roleId));
-        if (body.Name != null) r.Name = body.Name;
-        return Task.FromResult(r);
+        var id = Guid.Parse(roleId);
+        var e = await _db.Roles.FirstAsync(r => r.Id == id);
+        if (body.Name != null) e.Name = body.Name;
+        if (body.Description != null) e.Description = body.Description;
+        await _db.SaveChangesAsync();
+        return ToDto(e);
     }
 
-    public override Task RolesDelete(string tenantId, string roleId)
+    public override async Task RolesDelete(string tenantId, string roleId)
     {
-        // M02.F01.I05 删除角色
         _guard.VerifyPathTenant(tenantId);
-        InMemoryStore.Roles.RemoveAll(x => x.Id == Guid.Parse(roleId));
-        return Task.CompletedTask;
+        var id = Guid.Parse(roleId);
+        var e = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id);
+        if (e != null)
+        {
+            _db.Roles.Remove(e);
+            await _db.SaveChangesAsync();
+        }
     }
 
-    public override Task<Role> Permissions(string tenantId, string roleId, Body5 body)
+    public override async Task<ApiRole> Permissions(string tenantId, string roleId, Body5 body)
     {
-        // M02.F02.I01 权限矩阵（设置 role 的 permissionIds）
         _guard.VerifyPathTenant(tenantId);
-        var r = InMemoryStore.Roles.First(x => x.Id == Guid.Parse(roleId));
-        r.PermissionIds = body.PermissionIds.ToList();
-        return Task.FromResult(r);
+        var id = Guid.Parse(roleId);
+        // 校验 role 存在
+        var role = await _db.Roles.FirstAsync(r => r.Id == id);
+        // 整批替换 role ↔ permission M:N
+        var oldPerms = await _db.RolePermissions.Where(rp => rp.RoleId == id).ToListAsync();
+        if (oldPerms.Count > 0) _db.RolePermissions.RemoveRange(oldPerms);
+        var newPerms = (body.PermissionIds ?? new List<string>())
+            .Where(p => Guid.TryParse(p, out _))
+            .Select(p => new DbRolePermission { RoleId = id, PermissionId = Guid.Parse(p) })
+            .ToList();
+        if (newPerms.Count > 0) _db.RolePermissions.AddRange(newPerms);
+        await _db.SaveChangesAsync();
+        return ToDto(role);
     }
 }

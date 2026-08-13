@@ -1,87 +1,138 @@
+using System.Security.Claims;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
+using Saas.Identity.AspNetCore.Domain.Entities;
+using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using DbMembership = Saas.Identity.AspNetCore.Domain.Entities.TenantMembership;
+using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
+// alias 避免与 NSwag-generated DTO `TenantMembership` 冲突
+using ApiMembership = Saas.Identity.AspNetCore.Controllers.Generated.TenantMembership;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
 /// Concrete M00.F02 当前用户身份（whoami + 跨租户切换 + 我的菜单）。
-/// 从 JWT claim 读 currentUserId；当前 scaffold 用 InMemoryStore.AliceId 模拟。
+/// v0.4.0：从 InMemoryStore 迁到 AppDbContext。
 /// </summary>
 public class MeController : MeControllerBase
 {
-    public override Task<CurrentUser> Me()
+    private readonly AppDbContext _db;
+    private readonly IHttpContextAccessor _http;
+
+    public MeController(AppDbContext db, IHttpContextAccessor http)
     {
-        // M00.F02.I01 当前用户 whoami
-        var u = InMemoryStore.Users.First(x => x.Id == InMemoryStore.AliceId);
-        return Task.FromResult(new CurrentUser
-        {
-            Id = u.Id,
-            Email = u.Email,
-            Memberships = InMemoryStore.Users
-                .Where(x => x.Id == u.Id)
-                .Select(x => new TenantMembership
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = x.Id,
-                    TenantId = x.TenantId,
-                    RoleIds = x.RoleIds,
-                    Status = MembershipStatus.Active,
-                })
-                .ToList(),
-            CurrentTenantId = u.TenantId,
-        });
+        _db = db;
+        _http = http;
     }
 
-    public override Task<IDictionary<string, ICollection<EffectiveMenuNode>>> Menus()
+    private Guid? CurrentUserId()
     {
-        // M09.F03.I04 我的有效菜单（基于角色-菜单授权）
-        var userRoles = InMemoryStore.Users.First(x => x.Id == InMemoryStore.AliceId).RoleIds;
-        var myMenuIds = InMemoryStore.RoleMenuGrants
-            .Where(g => userRoles.Contains(g.RoleId.ToString()))
-            .SelectMany(g => g.MenuIds)
-            .Distinct()
-            .ToList();
-        var myMenus = InMemoryStore.Menus
-            .Where(m => myMenuIds.Contains(m.Id.ToString()))
+        var sub = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? _http.HttpContext?.User.FindFirstValue("sub");
+        return Guid.TryParse(sub, out var id) ? id : null;
+    }
+
+    private static string B64Url(string s) =>
+        Convert.ToBase64String(Encoding.UTF8.GetBytes(s))
+            .Replace("=", "").Replace("+", "-").Replace("/", "_");
+
+    private static string IssueAccessToken(Guid userId, Guid tenantId) =>
+        $"{B64Url("{\"alg\":\"none\"}")}.{B64Url($"{{\"sub\":\"{userId}\",\"tenant_id\":\"{tenantId}\",\"exp\":{DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()}}}")}.dev-placeholder";
+
+    // === DTO 转换 ===
+
+    private static ApiMembership ToMembershipDto(DbMembership m) => new()
+    {
+        Id = m.Id,
+        UserId = m.UserId,
+        TenantId = m.TenantId,
+        RoleIds = (m.RoleIds ?? new()).Select(g => g.ToString()).ToList(),
+        Status = ToMembershipStatus(m.Status),
+        JoinedAt = m.JoinedAt,
+    };
+
+    private static MembershipStatus ToMembershipStatus(string s) => s switch
+    {
+        "active" => MembershipStatus.Active,
+        "invited" => MembershipStatus.Invited,
+        _ => MembershipStatus.Removed,
+    };
+
+    // === endpoints ===
+
+    public override async Task<CurrentUser> Me()
+    {
+        var uid = CurrentUserId()
+            ?? throw new UnauthorizedAccessException("no JWT sub claim");
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException("user not found");
+        var memberships = await _db.TenantMemberships
+            .Where(m => m.UserId == uid)
+            .ToListAsync();
+        var currentTenantId = memberships.FirstOrDefault()?.TenantId ?? user.TenantId;
+        return new CurrentUser
+        {
+            Id = user.Id,
+            Email = user.Email,
+            DisplayName = user.DisplayName,
+            Memberships = memberships.Where(m => m.Status != "removed").Select(ToMembershipDto).ToList(),
+            CurrentTenantId = currentTenantId,
+        };
+    }
+
+    public override async Task<IDictionary<string, ICollection<EffectiveMenuNode>>> Menus()
+    {
+        // Phase 5 占位：返回当前 tenant 所有 active menu（不接 role_menu_grants JOIN）
+        var menus = await _db.Menus.Where(m => m.Status == "active").ToListAsync();
+        var appIds = menus.Select(m => m.AppId).Distinct().ToList();
+        var apps = await _db.Apps.Where(a => appIds.Contains(a.Id)).ToListAsync();
+        var codeById = apps.ToDictionary(a => a.Id, a => a.Code);
+        var grouped = menus
+            .Where(m => codeById.ContainsKey(m.AppId))
             .Select(m => new EffectiveMenuNode
             {
                 Id = m.Id,
+                AppId = m.AppId,
+                ParentId = m.ParentId ?? Guid.Empty,
                 Code = m.Code,
                 Name = m.Name,
-                AppId = m.AppId,
+                Path = m.Path,
+                Icon = m.Icon,
+                Type = m.Type switch
+                {
+                    "group" => MenuType.Group,
+                    "page" => MenuType.Page,
+                    _ => MenuType.Action,
+                },
+                SortOrder = m.SortOrder,
+                Children = new List<EffectiveMenuNode>(),
             })
-            .ToList();
-        var grouped = myMenus
-            .GroupBy(m => m.AppId)
-            .ToDictionary(g => g.Key.ToString(), g => (ICollection<EffectiveMenuNode>)g.ToList());
-        return Task.FromResult<IDictionary<string, ICollection<EffectiveMenuNode>>>(grouped);
+            .GroupBy(n => codeById[n.AppId])
+            .ToDictionary(g => g.Key, g => (ICollection<EffectiveMenuNode>)g.ToList());
+        return grouped;
     }
 
-    public override Task<ICollection<TenantMembership>> Tenants()
+    public override async Task<ICollection<ApiMembership>> Tenants()
     {
-        // M00.F02.I02 列出我的租户成员关系
-        var memberships = InMemoryStore.Users
-            .Where(u => u.Id == InMemoryStore.AliceId)
-            .Select(u => new TenantMembership
-            {
-                Id = Guid.NewGuid(),
-                TenantId = u.TenantId,
-                UserId = u.Id,
-                RoleIds = u.RoleIds,
-                Status = MembershipStatus.Active,
-            })
-            .ToList();
-        return Task.FromResult<ICollection<TenantMembership>>(memberships);
+        var uid = CurrentUserId()
+            ?? throw new UnauthorizedAccessException("no JWT sub claim");
+        var memberships = await _db.TenantMemberships
+            .Where(m => m.UserId == uid && m.Status != "removed")
+            .ToListAsync();
+        return memberships.Select(ToMembershipDto).ToList();
     }
 
     public override Task<SwitchTenantResponse> Switch(string tenantId)
     {
-        // M00.F02.I03 切换当前租户（返回新 token）
+        var uid = CurrentUserId() ?? Guid.Empty;
+        var tid = Guid.Parse(tenantId);
         return Task.FromResult(new SwitchTenantResponse
         {
-            AccessToken = $"mock-jwt-after-switch-{tenantId}",
-            RefreshToken = "mock-refresh",
+            AccessToken = IssueAccessToken(uid, tid),
+            RefreshToken = $"refresh-{uid}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
             ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
-            TenantId = Guid.Parse(tenantId),
+            TenantId = tid,
         });
     }
 }
