@@ -53,12 +53,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         }
     });
 
-// CORS — Next.js dev server (http://localhost:3000) 调本后端的预检白名单
-// 必须在 AddAuthorization 之前注册；UseCors 在 UseAuthentication 之前挂
+// CORS — 允许跨 origin 调本后端的白名单。默认给 dev：
+//   - saas-nextjs :3000（saas 全栈 Next.js API routes 调 saas 后端）
+//   - lab-react,vue :5173（lab 前端 dev server 调 saas 后端走 MSW switch）
+//   - lab-nextjs :3001（lab 全栈 Next.js API routes 调 saas 后端）
+// 生产用 SAAS_CORS_ALLOWED_ORIGINS env override（逗号分隔）改正式域名。
+// 与 springboot 端的 SecurityConfig.corsConfigurationSource() 对称 — 同一 env var。
 builder.Services.AddCors(options =>
 {
+    var origins = builder.Configuration["Saas:Cors:AllowedOrigins"]
+        ?? "http://localhost:3000,http://localhost:5173,http://localhost:3001";
     options.AddPolicy("NextDev", policy =>
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(origins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
