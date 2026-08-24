@@ -54,6 +54,12 @@ if [ ! -f "$BASE/aspnetcore.env" ]; then
       printf 'Jwt__Authority=https://auth.example.com\n'
       printf 'Jwt__Issuer=saas-identity-platform\n'
       printf 'Jwt__Audience=saas-identity-platform-clients\n'
+      # ASPNETCORE_ENVIRONMENT=Development 激活 Program.cs:41-53 dev JwtBearer 段
+      # (RequireSignedTokens=false + SignatureValidator 接受 alg=none + .dev-placeholder)
+      # —— AuthController.Login(line 25-26) 发的就是 alg=none dev token,
+      # Production mode 默认拒收 → 401/500 路径全挂。
+      # dev 环境先走 Development; prod 路径独立 PR（删 dev 段 + 换真 OIDC issuer）。
+      printf 'ASPNETCORE_ENVIRONMENT=Development\n'
       printf 'Saas__Cors__AllowedOrigins=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
     } > "$BASE/aspnetcore.env"
     chown deploy:deploy "$BASE/aspnetcore.env" 2>/dev/null || true
