@@ -95,6 +95,21 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 builder.Services.AddControllers()
     .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppsControllerBase).Assembly);
 
+// Swagger UI（与 springboot v0.1.13 springdoc-openapi-starter-webmvc-ui 对齐）：
+// Swashbuckle 已是 csproj 依赖但未接线；现在 OpenAPI 文档在线暴露在 /swagger，
+// 便于前端 orval 复核 / QA curl 试验端点。
+// Title 用项目名 + stack 标识；版本从 assembly 取。
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "saas-identity-platform-aspnetcore",
+        Version = "v1",
+        Description = "ASP.NET Core 8 后端。NSwag 读 ../saas-identity-platform-shared/generated/openapi/openapi.yaml 产 Controllers.cs；concrete 实现见 src/Controllers/Implementation/。",
+    });
+});
+
 builder.Services.AddScoped<AdminAppsController>();
 builder.Services.AddScoped<AdminAppMenusController>();
 builder.Services.AddScoped<AdminTenantsController>();
@@ -108,6 +123,15 @@ builder.Services.AddScoped<TenantRoleMenusController>();
 builder.Services.AddScoped<TenantUsersController>();
 
 var app = builder.Build();
+
+// Swagger UI：dev/staging 在线暴露，prod 通过 ASPNETCORE_ENVIRONMENT 之外的条件控制（v0.1.5 暂全开）。
+// 与 springboot springdoc-openapi 同位：契约文档是 SSOT，前端 orval 复核与 QA 联调都靠它。
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "saas-identity-platform-aspnetcore v1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors("NextDev");
 app.UseAuthentication();
