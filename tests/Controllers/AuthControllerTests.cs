@@ -9,7 +9,7 @@ namespace Saas.Identity.AspNetCore.Tests.Controllers;
 /// </summary>
 public class AuthControllerTests
 {
-    private readonly AuthController _c = new(null!);
+    private readonly AuthController _c = new(null!, null!);
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
     [Trait("Fn", "M03.F01.I01")]

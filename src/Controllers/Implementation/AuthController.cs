@@ -1,6 +1,9 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
@@ -11,19 +14,52 @@ namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 /// <summary>
 /// Concrete M03.F01 密码登录 + M03.F02 OIDC + M03.F03 登出。
 /// 公开端点（不需要 TenantGuard）。v0.4.0：从 InMemoryStore 迁到 AppDbContext。
+/// v0.1.10：AccessToken 改 HS256 签名（之前 v0.4.0 用 alg=none 仅 dev 路径接受，
+///          生产 JwtBearer 默认拒收 → 401/500。HS256 走真实对称密钥，
+///          Program.cs JwtBearer 用同一 key 校验, dev/prod 同路径）。
 /// </summary>
 public class AuthController : AuthControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IConfiguration _config;
 
-    public AuthController(AppDbContext db) { _db = db; }
+    public AuthController(AppDbContext db, IConfiguration config)
+    {
+        _db = db;
+        _config = config;
+    }
 
-    private static string B64Url(string s) =>
-        Convert.ToBase64String(Encoding.UTF8.GetBytes(s))
-            .Replace("=", "").Replace("+", "-").Replace("/", "_");
+    /// <summary>
+    /// 发 HS256 签名 JWT。密钥从 Jwt:SigningKey 配置 (appsettings.json / env Jwt__SigningKey)。
+    /// Claims: sub (userId), tenant_id, jti (random), 标准 iat/nbf/exp。
+    /// </summary>
+    private string IssueAccessToken(Guid userId, Guid tenantId)
+    {
+        var signingKey = _config["Jwt:SigningKey"]
+            ?? throw new InvalidOperationException("Jwt:SigningKey not configured");
+        var issuer = _config["Jwt:Issuer"]
+            ?? throw new InvalidOperationException("Jwt:Issuer not configured");
+        var audience = _config["Jwt:Audience"]
+            ?? throw new InvalidOperationException("Jwt:Audience not configured");
 
-    private static string IssueAccessToken(Guid userId, Guid tenantId) =>
-        $"{B64Url("{\"alg\":\"none\"}")}.{B64Url($"{{\"sub\":\"{userId}\",\"tenant_id\":\"{tenantId}\",\"exp\":{DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()}}}")}.dev-placeholder";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim("tenant_id", tenantId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            },
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
     public override async Task<LoginResponse> Login(LoginRequest body)
     {
