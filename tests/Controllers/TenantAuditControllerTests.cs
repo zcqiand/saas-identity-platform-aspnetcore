@@ -21,7 +21,11 @@ public class TenantAuditControllerTests : TestBase
     public async Task List_returnsAuditEvents()
     {
         var c = NewC();
-        var res = await c.AuditEvents(InMemoryStore.AcmeId.ToString(), null, null, null, null, null, null);
+        // NSwag gen 的 abstract AuditEvents 第 4 参 actorUserId 是 `string`（非 `string?`），
+        // 即使 OpenAPI spec 标 required:false —— NSwag 默认不输出 `?`。测试 Skip 是占位
+        // （M10.F04 留 Phase 5 Testcontainers PG），但 method body 仍要合法 C#，
+        // 用 null!（null-forgiving）压制 CS8625 让编译过。
+        var res = await c.AuditEvents(InMemoryStore.AcmeId.ToString(), null, null, null!, null, null, null);
         Assert.NotEmpty(res.Items);
     }
 
