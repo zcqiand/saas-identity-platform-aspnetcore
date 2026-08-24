@@ -1,0 +1,59 @@
+# VPS nginx vhost — saas-identity-platform-aspnetcore
+#
+# 这份是「参考模板」，不在 nginx include 路径里。.example 后缀让 nginx
+# 不会把它当真；要装的时候由 deploy/setup-vps.sh 渲染成 /etc/nginx/sites-available/$DOMAIN。
+#
+# 用法（manual）:
+#   1. 复制:cp deploy/nginx-vps.conf.example /etc/nginx/sites-available/YOUR_DOMAIN
+#   2. sed 替换 saas.YOUR_DOMAIN → 你的域名、your-cert.crt/key → 实际 cert 路径
+#   3. 启用:ln -sf /etc/nginx/sites-available/YOUR_DOMAIN /etc/nginx/sites-enabled/
+#   4. 同一台 VPS 上若已有 lab vhost 占了 default_server，删 sites-enabled/default
+#   5. nginx -t && systemctl reload nginx
+#
+# 这份配置的目的:
+#   - saas.YOUR_DOMAIN 的 HTTP 301 到 HTTPS
+#   - HTTPS 终结在 VPS（持 cert）
+#   - proxy_pass 到本机容器端口 8024（由 docker run -p 127.0.0.1:8024:8080 决定）
+#   - 容器内 ASP.NET Core 8 监听 :8080（Dockerfile: ENTRYPOINT ["dotnet", "..."]）
+#
+# 注意:不持有 default_server。同一台 VPS 上若 saas-nextjs/react/springboot 也跑 :80
+# default_server，aspnetcore 这边重复声明 nginx -t 直接报错——务必先装 saas
+# （或任意一个）并把 default 占位收掉。
+
+server {
+    listen 80;
+    server_name saas.YOUR_DOMAIN;             # 改:你的 saas-aspnetcore 域名
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name saas.YOUR_DOMAIN;             # 改
+
+    # cert / key 在 VPS 本地，**不入仓**
+    ssl_certificate     /etc/nginx/ssl/your-cert.cert;   # 改
+    ssl_certificate_key /etc/nginx/ssl/your-cert.key;    # 改
+
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # 浏览器一年 HTTPS-only
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location / {
+        # VPS 暴露端口（容器内 ASP.NET Core 监听 :8080）
+        # 改端口必须同步 deploy/saas-identity-platform-aspnetcore.sh 的 -p
+        proxy_pass http://127.0.0.1:8024;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # ASP.NET Core 默认不开 WebSocket；如有 OAuth2 callback 走 SSE/WS, 再开 Upgrade/Connection map.
+    }
+}
