@@ -13,6 +13,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <!-- v0.2.0 Phase 6：OauthControllerTests 用 InMemory provider 跑真 EF LINQ 查询,
+         不依赖 PG Testcontainers (M10.F04 范畴) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>

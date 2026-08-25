@@ -1,12 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Saas.Identity.AspNetCore.Controllers.Generated;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using Saas.Identity.AspNetCore.Security;
 using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
@@ -17,48 +14,17 @@ namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 /// v0.1.10：AccessToken 改 HS256 签名（之前 v0.4.0 用 alg=none 仅 dev 路径接受，
 ///          生产 JwtBearer 默认拒收 → 401/500。HS256 走真实对称密钥，
 ///          Program.cs JwtBearer 用同一 key 校验, dev/prod 同路径）。
+/// v0.2.0：HS256 签名抽到 Security/JwtIssuer.cs（OauthController 也用）。
 /// </summary>
 public class AuthController : AuthControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly IConfiguration _config;
+    private readonly JwtIssuer _jwt;
 
-    public AuthController(AppDbContext db, IConfiguration config)
+    public AuthController(AppDbContext db, JwtIssuer jwt)
     {
         _db = db;
-        _config = config;
-    }
-
-    /// <summary>
-    /// 发 HS256 签名 JWT。密钥从 Jwt:SigningKey 配置 (appsettings.json / env Jwt__SigningKey)。
-    /// Claims: sub (userId), tenant_id, jti (random), 标准 iat/nbf/exp。
-    /// </summary>
-    private string IssueAccessToken(Guid userId, Guid tenantId)
-    {
-        var signingKey = _config["Jwt:SigningKey"]
-            ?? throw new InvalidOperationException("Jwt:SigningKey not configured");
-        var issuer = _config["Jwt:Issuer"]
-            ?? throw new InvalidOperationException("Jwt:Issuer not configured");
-        var audience = _config["Jwt:Audience"]
-            ?? throw new InvalidOperationException("Jwt:Audience not configured");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
-            claims: new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim("tenant_id", tenantId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            },
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        _jwt = jwt;
     }
 
     public override async Task<LoginResponse> Login(LoginRequest body)
@@ -82,7 +48,7 @@ public class AuthController : AuthControllerBase
 
         return new LoginResponse
         {
-            AccessToken = IssueAccessToken(user.Id, user.TenantId),
+            AccessToken = _jwt.IssueAccessToken(user.Id, user.TenantId),
             RefreshToken = $"refresh-{user.Id}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
             TokenType = "Bearer",
             ExpiresIn = 3600,
@@ -117,7 +83,7 @@ public class AuthController : AuthControllerBase
         var tenantId = match?.tenantId ?? Guid.Empty;
         return Task.FromResult(new TokenResponse
         {
-            AccessToken = IssueAccessToken(userId, tenantId),
+            AccessToken = _jwt.IssueAccessToken(userId, tenantId),
             RefreshToken = $"refresh-{userId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
             TokenType = "Bearer",
             ExpiresIn = 3600,

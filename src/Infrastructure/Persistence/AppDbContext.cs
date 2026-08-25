@@ -31,6 +31,7 @@ public class AppDbContext : DbContext
     public DbSet<RoleMenuGrant> RoleMenuGrants => Set<RoleMenuGrant>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<AuditRetentionPolicy> AuditRetentionPolicies => Set<AuditRetentionPolicy>();
+    public DbSet<OauthCode> OauthCodes => Set<OauthCode>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -218,6 +219,30 @@ public class AppDbContext : DbContext
             e.Property(x => x.TenantId).HasColumnName("tenant_id").HasColumnType("uuid");
             e.Property(x => x.RetentionDays).HasColumnName("retention_days").IsRequired();
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamptz").IsRequired();
+        });
+
+        // === oauth_codes (V014) — Phase 6 OAuth 2.0 authorization_code + refresh_token 存储 ===
+        // 镜像 shared/sql/migrations/V014__seed_lab_mgmt_app.sql；
+        // 替代 saas-nextjs 进程内 oauth-store, 3 个 saas 后端共用同一持久化 schema。
+        b.Entity<OauthCode>(e =>
+        {
+            e.ToTable("oauth_codes");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").HasColumnType("uuid").ValueGeneratedOnAdd();
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(255).IsRequired();
+            e.Property(x => x.GrantType).HasColumnName("grant_type").HasMaxLength(32).IsRequired();
+            e.Property(x => x.AppId).HasColumnName("app_id").HasColumnType("uuid").IsRequired();
+            e.Property(x => x.UserId).HasColumnName("user_id").HasColumnType("uuid");
+            e.Property(x => x.TenantId).HasColumnName("tenant_id").HasColumnType("uuid").IsRequired();
+            e.Property(x => x.RedirectUri).HasColumnName("redirect_uri").HasMaxLength(2048);
+            e.Property(x => x.Scope).HasColumnName("scope").HasMaxLength(512);
+            e.Property(x => x.ExpiresAt).HasColumnName("expires_at").HasColumnType("timestamptz").IsRequired();
+            e.Property(x => x.ConsumedAt).HasColumnName("consumed_at").HasColumnType("timestamptz");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamptz").IsRequired();
+            e.HasIndex(x => x.Code).IsUnique().HasDatabaseName("oauth_codes_code_unique");
+            e.HasIndex(x => x.AppId).HasDatabaseName("idx_oauth_codes_app_id");
+            e.HasIndex(x => x.ExpiresAt).HasDatabaseName("idx_oauth_codes_expires_at");
+            e.HasIndex(x => x.UserId).HasDatabaseName("idx_oauth_codes_user_id");
         });
     }
 }
