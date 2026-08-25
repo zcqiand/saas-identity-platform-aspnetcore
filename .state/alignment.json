@@ -6,19 +6,8 @@
     "features": 20,
     "items": 57
   },
-  "warnings_total": 6,
-  "warnings": {
-    "已上线但无设计映射": [
-      "M04.F03.I07",
-      "M04.F03.I08",
-      "M04.F03.I09"
-    ],
-    "已上线但不在任何流程且非孤儿白名单": [
-      "M04.F03.I07",
-      "M04.F03.I08",
-      "M04.F03.I09"
-    ]
-  },
+  "warnings_total": 0,
+  "warnings": {},
   "unreachable_shipped": [],
   "function_map": {
     "M00.F01.I01": {
@@ -385,8 +374,12 @@
       "status": "已上线",
       "type": "接口",
       "requirements": [],
-      "flows": [],
-      "designs": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
       "tests": [
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_happyPath_returnsCode",
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidClient_throwsUnauthorized",
@@ -400,8 +393,12 @@
       "status": "已上线",
       "type": "接口",
       "requirements": [],
-      "flows": [],
-      "designs": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
       "tests": [
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_alreadyConsumedCode_throws",
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_authorizationCode_happyPath",
@@ -414,8 +411,12 @@
       "status": "已上线",
       "type": "接口",
       "requirements": [],
-      "flows": [],
-      "designs": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
       "tests": [
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshTokenReuse_throws",
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshToken_happyPath"
