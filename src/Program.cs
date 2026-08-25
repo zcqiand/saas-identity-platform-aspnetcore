@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -139,6 +140,31 @@ app.UseSwaggerUI(c =>
 app.UseCors("NextDev");
 app.UseAuthentication();
 app.UseAuthorization();
+// OAuth 端点的参数校验错误（INVALID_SCOPE / INVALID_REDIRECT_URI / ...）以 400 JSON 返回，
+// 而不是 ASP.NET 默认的 500 空 body —— lab 后端 EnsureSuccessStatusCode 只能看到裸 500，
+// 排障时无从区分（曾因此把 scope 不匹配当成网络/DB 故障查了一轮）。
+// UnauthorizedAccessException（INVALID_CLIENT / INVALID_GRANT）→ 401，带同样的 JSON body。
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async ctx =>
+    {
+        var ex = ctx.Features.Get<IExceptionHandlerFeature>()?.Error;
+        ctx.Response.StatusCode = ex switch
+        {
+            UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+            ArgumentException => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status500InternalServerError,
+        };
+        ctx.Response.ContentType = "application/json";
+        var code = ex switch
+        {
+            UnauthorizedAccessException => "UNAUTHORIZED",
+            ArgumentException => "INVALID_REQUEST",
+            _ => "INTERNAL_ERROR",
+        };
+        await ctx.Response.WriteAsJsonAsync(new { error = code, error_description = ex?.Message ?? "unknown" });
+    });
+});
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
