@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
@@ -51,13 +52,19 @@ public class OauthController : OauthControllerBase
         if (app == null || app.Status != "active")
             throw new UnauthorizedAccessException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
 
-        // 2. redirectUri 必须在 apps.redirect_uris 白白里（exact match, 不做 path normalize）
-        if (!app.RedirectUris.Contains(body.RedirectUri))
+        // 2. redirectUri 必须在 apps.redirect_uris 白名单里。RFC 6749 §3.1.2 允许 query
+        //    参数差异（lab 前端回跳带 ?from=<业务路径>），匹配规则 = 白名单条目是
+        //    请求 redirectUri 的前缀且边界在 '?' 处。
+        if (!app.RedirectUris.Any(u => body.RedirectUri == u
+                || (body.RedirectUri.StartsWith(u, StringComparison.Ordinal)
+                    && body.RedirectUri[u.Length] == '?')))
             throw new ArgumentException($"INVALID_REDIRECT_URI: {body.RedirectUri} not in app.redirect_uris");
 
-        // 3. scope 必须是 apps.scopes 的子集（dev 允许单 scope; prod 应支持 space-separated）
-        if (string.IsNullOrEmpty(body.Scope) || !app.Scopes.Contains(body.Scope))
-            throw new ArgumentException($"INVALID_SCOPE: scope '{body.Scope}' not in app.scopes");
+        // 3. scope：RFC 6749 §3.3 space-separated 列表，请求的每个 scope 都必须 ∈ apps.scopes
+        //    （子集校验）。曾用整串 Contains 精确匹配，lab 发 "lab.read lab.write" 被拒。
+        var requestedScopes = (body.Scope ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (requestedScopes.Length == 0 || requestedScopes.Any(s => !app.Scopes.Contains(s)))
+            throw new ArgumentException($"INVALID_SCOPE: scope '{body.Scope}' not a subset of app.scopes");
 
         // 4. 生成 code 格式: saas-code-{ts-ms}-{rand-base64}（与 saas-nextjs 同款便于跨 IdP 排障）
         var code = GenerateCode();
