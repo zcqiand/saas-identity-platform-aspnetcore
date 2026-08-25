@@ -80,9 +80,11 @@
 | M04.F01.I04    | 更新应用 | 接口 | 规划 |
 | M04.F01.I05    | 删除应用 | 接口 | 规划 |
 | M04.F02.I06    | 启用/停用应用 | 接口 | 规划 |
-| M04.F03.I07    | 授权码签发 | 接口 | 规划 |
-| M04.F03.I08    | 令牌交换 | 接口 | 规划 |
-| M04.F03.I09    | 令牌刷新 | 接口 | 规划 |
+| M04.F03.I07    | 授权码签发 | 接口 | 已上线 |
+| M04.F03.I08    | 令牌交换 | 接口 | 已上线 |
+| M04.F03.I09    | 令牌刷新 | 接口 | 已上线 |
+
+> M04.F03 备注：v0.2.0 Phase 6 真 OAuth — apps.client_id/redirect_uris/scopes 校验 + oauth_codes 表 (V014) 存 saas-code-{ts}-{rand} (TTL 10min) + refresh_token (TTL 7d, 旋转换发)。JwtIssuer 抽到独立服务, AuthController + OauthController 共用 HS256 签发。9 个单元测试用 EF Core InMemory provider, 不依赖 PG Testcontainers (M10.F04 范畴)。
 | M05.F01.I01    | API Key 列表 | 接口 | 规划 |
 | M05.F01.I02    | 创建 API Key | 接口 | 规划 |
 | M05.F01.I03    | 吊销 API Key | 接口 | 规划 |

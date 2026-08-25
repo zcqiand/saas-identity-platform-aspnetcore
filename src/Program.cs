@@ -73,6 +73,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<TenantContext>();
 builder.Services.AddSingleton<TenantGuard>();
+// JwtIssuer (v0.2.0 Phase 6)：HS256 签 access token，AuthController + OauthController 共用。
+// 配置: Jwt:SigningKey (≥32B), Jwt:Issuer, Jwt:Audience。3 个 saas 后端用同一 key (共享 JWT)。
+builder.Services.AddSingleton<JwtIssuer>();
 
 // M10.Database — EF Core + Npgsql + snake_case 命名（ADR-0010）
 // shared SQL 是 SSOT；EF Model 镜像；启动时**不调** Database.Migrate()（避免与 shared SQL 重复执行）。
