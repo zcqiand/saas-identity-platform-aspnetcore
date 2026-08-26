@@ -29,7 +29,7 @@
 | **路由 / DTO 来源** | NSwag 读 `../saas-identity-platform-shared/generated/openapi/openapi.yaml` → `src/Controllers/Generated/Controllers.cs`（11 个 abstract base + DTO records） |
 | **业务实现** | 手写 `partial class` `src/Controllers/Implementation/<Tag>Controller.cs`，继承 NSwag 抽象基类，覆盖 abstract 方法 + 调 `TenantGuard.VerifyPathTenant(...)` |
 | **运行时存储** | `InMemoryStore`（进程内 fixture，进程重启丢失） + EF Core（持久层镜像是 ADR-0010 主线） |
-| **认证 (OAuth 2.0 + JWT HS256)** | `JwtIssuer.IssueAccessToken` 签 HS256（`Security/JwtIssuer.cs`）；`AddJwtBearer()` + `TokenValidationParameters` 真验签；dev profile 才有 `RequireSignedTokens=false` 兜底；prod 走 `Jwt:SigningKey` 对称密钥或 JWKS |
+| **认证 (OAuth 2.0 + JWT HS256)** | `JwtIssuer.IssueAccessToken` 签 HS256（`Security/JwtIssuer.cs`）；`AddJwtBearer()` + `TokenValidationParameters` 真验签；prod 走 `Jwt:SigningKey` 对称密钥或 JWKS |
 | **共享 JWT key** | 与 saas-nextjs / saas-springboot 同一 `Jwt:SigningKey`，HS256 互签 |
 
 **绝不**：
@@ -275,7 +275,7 @@ virtual 方法便于测试 stub（`tests/StubTenantContext.cs`）。
 | 段 | 行号附近 | 职责 |
 |---|---|---|
 | ContentRoot | 13-17 | 强制 `ContentRootPath = AppContext.BaseDirectory` —— 任意 cwd 都能加载 appsettings（仓根 csproj 显式 Include + CopyToOutput） |
-| JwtBearer 双配置 | 20-55 | dev：`UseSecurityTokenValidators + RequireSignedTokens=false + SignatureValidator`(bypass `alg=none`)；prod：标准 HS256 验签 |
+| JwtBearer 单配置 | 20-55 | `TokenValidationParameters` HS256 真验签 (Phase 2B 起统一 dev/prod 路径，无 dev 兜底分支) |
 | CORS | 63-71 | `NextDev` policy，allowlist 来自 `Saas:Cors:AllowedOrigins`（默认 :3000/:5173/:3001） |
 | DI 注册 | 73-79 | `AddSingleton<TenantContext>()` + `AddSingleton<TenantGuard>()` + `AddSingleton<JwtIssuer>()` |
 | EF Core + Npgsql | 81-94 | `EnableDynamicJson()`（Npgsql 8 必需）；DbContext 用 `__ef_migrations_history` 表 |
@@ -288,22 +288,11 @@ virtual 方法便于测试 stub（`tests/StubTenantContext.cs`）。
 **JwtBearer dev 分支详解**（`Program.cs:42-54`）：
 
 ```csharp
-if (builder.Environment.IsDevelopment())
-{
-    options.UseSecurityTokenValidators = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,         // dev MSW 不签标准 iss
-        ValidateAudience = false,       // dev MSW 不签标准 aud
-        ValidateLifetime = true,        // 但 exp 必查
-        ValidateIssuerSigningKey = false,
-        RequireSignedTokens = false,    // ← 真正接受 alg=none 的开关
-        SignatureValidator = (token, _) => new JwtSecurityToken(token),  // belt-and-suspenders
-    };
-}
+// Removed in v0.2.1 Phase 2B — RequireSignedTokens=false dev branch was deleted.
+// JwtBearer now uses the standard TokenValidationParameters for HS256 验签 in dev + prod.
 ```
 
-> **关键开关是 `RequireSignedTokens=false`** —— 标准 JwtBearer 8 安全硬编码拒收 `alg=none`，dev 必须显式放行。
+> **已删除** (Phase 2B) —— 标准 JwtBearer 8 安全硬编码拒收 `alg=none`，v0.2.1 起统一走 HS256 真验签，无 dev 兜底分支。
 
 **prod 切换路径**（与 springboot 对称）：
 
@@ -349,7 +338,7 @@ if (builder.Environment.IsDevelopment())
 浏览器 / 前端 fetch
   └─ Authorization: Bearer <jwt>        ← 前端 orval + axios 注 baseURL 发起
       ↓ ASP.NET Core JwtBearer middleware
-      └─ TokenValidationParameters      ← dev 走 RequireSignedTokens=false 放行 alg=none
+      └─ TokenValidationParameters      ← HS256 真验签 (Phase 2B 起统一路径)
           └─ ClaimsPrincipal.User 装载
               ↓ MapControllers
               └─ TenantUsersController.ListUsersAsync(tenantId, ...)
@@ -485,7 +474,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 |---|---|
 | v0.2.0 NSwag codegen 迁移（不再 cp `shared/generated/csharp/`） | `scripts/gen-shared.sh` 头部注释 |
 | `Jwt:SigningKey` HS256 ≥32B 强约束 | `src/Security/JwtIssuer.cs:43-45` |
-| dev profile `RequireSignedTokens=false` 放行 MSW `alg=none` test fixture（三道开关：`UseSecurityTokenValidators` + `RequireSignedTokens=false` + `SignatureValidator`） | `src/Program.cs:42-54`；prod profile 不加载此分支 |
+| 已删除 (Phase 2B)；MSW 现在真签 HS256，dev/prod 走同一 `TokenValidationParameters` | `src/Program.cs:42-54` 旧分支；v0.2.1 起删除 |
 | 错误分流到 JSON（OAuth `INVALID_*` 不再裸 500） | `src/Program.cs:147-167` |
 | `InMemoryStore` 是 `internal static` + `InternalsVisibleTo` 给 tests | `src/Controllers/Implementation/InMemoryStore.cs:1-4` |
 
