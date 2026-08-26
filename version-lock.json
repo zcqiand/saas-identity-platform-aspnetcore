@@ -1,0 +1,12 @@
+{
+  "version_lock": {
+    ".net": "8.0 (net8.0)",
+    "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
+    "Microsoft.EntityFrameworkCore": "8.0.0",
+    "Swashbuckle.AspNetCore": "6.6.2",
+    "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.0",
+    "EFCore.NamingConventions": "8.0.0",
+    "xunit": "2.9.0",
+    "Moq": "4.20.70"
+  }
+}
