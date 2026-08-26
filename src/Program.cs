@@ -19,13 +19,16 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Jwt:Authority"];
+        // Phase 4 env 对称化: env var 走 flat JWT_SIGNING_KEY/JWT_ISSUER/JWT_AUDIENCE (与 saas-springboot + saas-msw 镜像)
+        // ASP.NET Core 默认 env provider 直接把 flat key 当 flat config 读, 不走 `:` 段映射
+        // (`:` 段会变成 `__` 双下划线)。所以这里读 flat key, 与其他 6 仓命名对齐。
+        options.Authority = builder.Configuration["JWT_AUTHORITY"];
         // v0.2.1 Phase 2B：删除 dev 分支 RequireSignedTokens=false + SignatureValidator（alg=none 占位路径）。
-        // 现统一 HS256 真验签（RFC 7519），与 JwtIssuer 共享 Jwt:SigningKey。
+        // 现统一 HS256 真验签（RFC 7519），与 JwtIssuer 共享 JWT_SIGNING_KEY。
         // saas-identity-platform-msw (Phase 1A) + saas-identity-platform-nextjs-self 签出来的
-        // token 都能被本仓 NimbusJwtDecoder 走标准路径验签通过；不再需要 dev 兜底分支。
+        // token 都能被本仓 JwtBearer 走标准路径验签通过；不再需要 dev 兜底分支。
         //
-        // Production：配 Jwt:Authority (issuer-uri) 让 JwtBearer 自动切 JWKS；本 TokenValidationParameters
+        // Production：配 JWT_AUTHORITY (issuer-uri) 让 JwtBearer 自动切 JWKS；本 TokenValidationParameters
         // 在 prod profile 可被覆盖（appsettings.Production.json 重写）或整段删除走默认 JWKS。
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -33,10 +36,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration["JWT_ISSUER"],
+            ValidAudience = builder.Configuration["JWT_AUDIENCE"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"] ?? "dev-key-32-bytes-minimum-length!")),
+                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT_SIGNING_KEY"] ?? "dev-key-32-bytes-minimum-length!")),
         };
     });
 
@@ -48,7 +51,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // 与 springboot 端的 SecurityConfig.corsConfigurationSource() 对称 — 同一 env var。
 builder.Services.AddCors(options =>
 {
-    var origins = builder.Configuration["Saas:Cors:AllowedOrigins"]
+    var origins = builder.Configuration["SAAS_CORS_ALLOWED_ORIGINS"]
         ?? "http://localhost:3000,http://localhost:5173,http://localhost:3001";
     options.AddPolicy("NextDev", policy =>
         policy.WithOrigins(origins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -61,7 +64,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<TenantContext>();
 builder.Services.AddSingleton<TenantGuard>();
 // JwtIssuer (v0.2.0 Phase 6)：HS256 签 access token，AuthController + OauthController 共用。
-// 配置: Jwt:SigningKey (≥32B), Jwt:Issuer, Jwt:Audience。3 个 saas 后端用同一 key (共享 JWT)。
+// 配置: JWT_SIGNING_KEY (≥32B), JWT_ISSUER, JWT_AUDIENCE。3 个 saas 后端用同一 key (共享 JWT)。
 builder.Services.AddSingleton<JwtIssuer>();
 
 // M10.Database — EF Core + Npgsql + snake_case 命名（ADR-0010）

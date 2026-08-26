@@ -105,10 +105,10 @@ public class OauthControllerTests
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Jwt:SigningKey"] = TestSigningKey,
-                ["Jwt:Issuer"] = "saas-identity-platform",
-                ["Jwt:Audience"] = "saas-identity-platform-clients",
-                ["Jwt:TtlSeconds"] = "3600",
+                ["JWT_SIGNING_KEY"] = TestSigningKey,
+                ["JWT_ISSUER"] = "saas-identity-platform",
+                ["JWT_AUDIENCE"] = "saas-identity-platform-clients",
+                ["JWT_TTL_SECONDS"] = "3600",
             })
             .Build();
         var jwt = new JwtIssuer(config);
