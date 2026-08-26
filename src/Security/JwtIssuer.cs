@@ -33,18 +33,21 @@ public class JwtIssuer
 
     public JwtIssuer(IConfiguration config)
     {
-        _signingKey = config["Jwt:SigningKey"]
-            ?? throw new InvalidOperationException("Jwt:SigningKey not configured");
-        _issuer = config["Jwt:Issuer"]
-            ?? throw new InvalidOperationException("Jwt:Issuer not configured");
-        _audience = config["Jwt:Audience"]
-            ?? throw new InvalidOperationException("Jwt:Audience not configured");
+        // 统一 flat 命名: env JWT_SIGNING_KEY 直接被 ASP.NET 默认 env provider 当作 flat key 读
+        // (不通过 `:` 段映射)。Phase 4 env 对称化后所有 6 个 saas/lab 后端 + 2 个 msw + 2 个 nextjs-self
+        // 共 9 仓 + 6 个前端仓都用 JWT_SIGNING_KEY 这一名字, 跨 dev 环境互签互验。
+        _signingKey = config["JWT_SIGNING_KEY"]
+            ?? throw new InvalidOperationException("JWT_SIGNING_KEY not configured");
+        _issuer = config["JWT_ISSUER"]
+            ?? throw new InvalidOperationException("JWT_ISSUER not configured");
+        _audience = config["JWT_AUDIENCE"]
+            ?? throw new InvalidOperationException("JWT_AUDIENCE not configured");
 
         // HS256 ≥32 字节（256 bits），不足直接抛 — 防止 prod 用弱 dev 默认 key
         if (Encoding.UTF8.GetByteCount(_signingKey) < 32)
-            throw new InvalidOperationException($"Jwt:SigningKey must be >=32 bytes for HS256 (got {Encoding.UTF8.GetByteCount(_signingKey)})");
+            throw new InvalidOperationException($"JWT_SIGNING_KEY must be >=32 bytes for HS256 (got {Encoding.UTF8.GetByteCount(_signingKey)})");
 
-        _ttlSeconds = int.TryParse(config["Jwt:TtlSeconds"], out var t) ? t : 3600;
+        _ttlSeconds = int.TryParse(config["JWT_TTL_SECONDS"], out var t) ? t : 3600;
     }
 
     /// <summary>
