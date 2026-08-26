@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using Npgsql;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
@@ -21,6 +20,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.Authority = builder.Configuration["Jwt:Authority"];
+        // v0.2.1 Phase 2B：删除 dev 分支 RequireSignedTokens=false + SignatureValidator（alg=none 占位路径）。
+        // 现统一 HS256 真验签（RFC 7519），与 JwtIssuer 共享 Jwt:SigningKey。
+        // saas-identity-platform-msw (Phase 1A) + saas-identity-platform-nextjs-self 签出来的
+        // token 都能被本仓 NimbusJwtDecoder 走标准路径验签通过；不再需要 dev 兜底分支。
+        //
+        // Production：配 Jwt:Authority (issuer-uri) 让 JwtBearer 自动切 JWKS；本 TokenValidationParameters
+        // 在 prod profile 可被覆盖（appsettings.Production.json 重写）或整段删除走默认 JWKS。
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -32,26 +38,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"] ?? "dev-key-32-bytes-minimum-length!")),
         };
-
-        // Dev only：next.js 端 MSW/dev-helper 发的是 alg=none + .dev-placeholder 的模拟 token
-        // （见 Authorization header 解码：{"alg":"none"}.{...}.dev-placeholder）。
-        // 标准 JwtBearer 8 默认拒收 alg=none（安全硬编码）；dev 必须显式放行。
-        // 关键开关：RequireSignedTokens=false（放行 unsigned）+ ValidateIssuerSigningKey=false（不查 key）。
-        // 切 legacy JwtSecurityTokenHandler + SignatureValidator 是 belt-and-suspenders 双保险。
-        // Production 走真实对称 key 标准流程（上面的 TokenValidationParameters）。
-        if (builder.Environment.IsDevelopment())
-        {
-            options.UseSecurityTokenValidators = true;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = false,
-                RequireSignedTokens = false,                                       // ← 真正接受 alg=none 的开关
-                SignatureValidator = (token, _) => new JwtSecurityToken(token),
-            };
-        }
     });
 
 // CORS — 允许跨 origin 调本后端的白名单。默认给 dev：
