@@ -73,6 +73,36 @@ public class JwtIssuer
     }
 
     /// <summary>
+    /// 测试 helper：给 L4 单元测试签 HS256 token。 允许任意 sub/tenant_id（绕过 entity 校验），
+    /// 方便 fixture-driven 测试。prod 路径不走这里（AuthService.issueAccessToken 才走 entity）。
+    /// 镜像 saas-identity-platform-springboot JwtIssuer.issueAccessTokenForTest 形态。
+    /// </summary>
+    public string IssueAccessTokenForTest(string sub, string tenantId, int? ttlSeconds = null, string? scope = null)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_signingKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var ttl = ttlSeconds ?? _ttlSeconds;
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, sub),
+            new("tenant_id", tenantId),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        };
+        if (scope != null) claims.Add(new Claim("scope", scope));
+
+        var token = new JwtSecurityToken(
+            issuer: _issuer,
+            audience: _audience,
+            claims: claims,
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddSeconds(ttl),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    /// <summary>
     /// 生成 refresh token。格式 saas-rt-{userId}-{ts}-{rand} —— 与 saas-nextjs
     /// lib/oauth-store.ts:97-99 同款, 方便 lab 仓与 saas-nextjs 共享 audit log 排障。
     /// 实际不解析格式（仅 opaque string）, 存 oauth_codes 表的 code 列。
