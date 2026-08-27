@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using Saas.Identity.AspNetCore.Security;
 using DbMembership = Saas.Identity.AspNetCore.Domain.Entities.TenantMembership;
 using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 // alias 避免与 NSwag-generated DTO `TenantMembership` 冲突
@@ -83,6 +84,11 @@ public class MeController : MeControllerBase
 
     public override async Task<IDictionary<string, ICollection<EffectiveMenuNode>>> Menus()
     {
+        // M09.F03.I01 (PLAN-2026-001 T-6) — 先验 saas session
+        var session = _http.HttpContext?.Items[SaasSessionMiddleware.ItemsKey] as SaasSession;
+        if (session is null)
+            throw new UnauthorizedAccessException("saas session required for /me/menus");
+
         // Phase 5 占位：返回当前 tenant 所有 active menu（不接 role_menu_grants JOIN）
         var menus = await _db.Menus.Where(m => m.Status == "active").ToListAsync();
         var appIds = menus.Select(m => m.AppId).Distinct().ToList();
