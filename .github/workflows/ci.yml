@@ -61,15 +61,13 @@ jobs:
         # step env 注入 Actions env,with.envs 列出要转发的名字 (逗号分隔)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           NGINX_DOMAIN: ${{ vars.NGINX_DOMAIN }}
           NGINX_CERT_BASENAME: ${{ vars.NGINX_CERT_BASENAME }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: DATABASE_URL,DATABASE_USER,DATABASE_PASSWORD,NGINX_DOMAIN,NGINX_CERT_BASENAME
+          envs: DATABASE_URL,NGINX_DOMAIN,NGINX_CERT_BASENAME
           script: |
             # 自举: 首次部署无 /home/deploy/<repo>/ 时自动建 + 每次都重拉 deploy 脚本
             # （避免 v0.x.y 修了 deploy 脚本但 VPS 还跑着旧版的坑：
