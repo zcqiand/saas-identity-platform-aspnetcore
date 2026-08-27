@@ -28,14 +28,14 @@ public class SaasSessionMiddlewareTest
     public async Task ValidCookie_injectsSessionIntoItems()
     {
         var store = new SaasSessionStore();
-        var session = new SaasSession("user-1", System.Guid.NewGuid(),
+        var session = new SaasSession(System.Guid.NewGuid(), System.Guid.NewGuid(),
             System.DateTime.UtcNow, System.DateTime.UtcNow.AddHours(1));
         store.Put(session);
 
         var ctx = await Run(store, session.Id);
         var got = ctx.Items["saasSession"] as SaasSession;
         Assert.NotNull(got);
-        Assert.Equal("user-1", got!.UserId);
+        Assert.Equal(session.UserId, got!.UserId);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class SaasSessionMiddlewareTest
     public async Task ExpiredCookie_doesNotInject()
     {
         var store = new SaasSessionStore(TimeSpan.FromMilliseconds(100));
-        var session = new SaasSession("user-2", System.Guid.NewGuid(),
+        var session = new SaasSession(System.Guid.NewGuid(), System.Guid.NewGuid(),
             System.DateTime.UtcNow, System.DateTime.UtcNow.AddMilliseconds(100));
         store.Put(session);
         await System.Threading.Tasks.Task.Delay(200);
