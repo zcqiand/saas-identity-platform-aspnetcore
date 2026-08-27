@@ -9,10 +9,10 @@
 # CI 同时 push :latest + :<tag> 两份镜像,回滚只要手动指定旧 tag 再跑一次本脚本。
 #
 # 与姊妹仓 saas-identity-platform-springboot.sh 的差异:
-#   - 数据库：PostgreSQL 远程, ConnectionStrings__Postgres 从 aspnetcore.env 注入
+#   - 数据库：PostgreSQL 远程, DATABASE_URL 从 aspnetcore.env 注入
 #     （EF Core / Npgsql 无 ./data 卷, 程序重启数据不丢）
 #   - 容器内是 ASP.NET Core 8 监听 :8080 → -p 127.0.0.1:8024:8080
-#   - 密钥走 ./aspnetcore.env (ConnectionStrings__Postgres + Jwt__* + Saas__Cors__AllowedOrigins),
+#   - 密钥走 ./aspnetcore.env (DATABASE_URL + flat JWT_* + SAAS_CORS_ALLOWED_ORIGINS),
 #     setup-vps.sh 不预生成（fail-fast 不便）,本脚本首启自举。
 #   - JWT_SIGNING_KEY **不**写入: Program.cs:32 dev 路径 = Program.cs:41 if (IsDevelopment)
 #     显式覆盖 TokenValidationParameters 放 alg=none；prod 路径 = 删 dev 段 + 设
@@ -20,7 +20,7 @@
 #     不动 C# 代码 —— prod 路径由独立 PR 处理。
 #
 # 前置: deploy 用户需在 docker 组中(sudo usermod -aG docker deploy)。
-#        aspnetcore.env 必须由 setup-vps.sh 或本脚本首启生成(ConnectionStrings__Postgres 必填)。
+#        aspnetcore.env 必须由 setup-vps.sh 或本脚本首启生成(DATABASE_URL 必填)。
 
 set -eu
 
@@ -41,37 +41,43 @@ if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
   exit 2
 fi
 
-# aspnetcore.env 自举保护: 缺失时, 如 $DATABASE_URL + $DATABASE_USER + $DATABASE_PASSWORD 在环境里,
+# aspnetcore.env 自举保护: 缺失时, 如 $DATABASE_URL 在环境里,
 # 自动生成（含 CORS 默认白名单）; 否则 fail fast。
+# （DATABASE_USER/PASSWORD 不需要: 连接串内嵌凭据, 2026-08-28 删冗余 secrets。）
 # setup-vps.sh 仍是首推（VPS 一次性, 生成 nginx vhost + 目录 + sudoers）, 本分支仅给
 # "先有 DATABASE_URL 临时上线"的场景。
+# 老契约迁移提示: 旧 env-file 里是 Jwt__Authority/Issuer/Audience + Saas__Cors__*
+# 分段 key（Program.cs 读 flat JWT_*/SAAS_CORS_ALLOWED_ORIGINS, 分段无读者）——
+# 二选一: 手工改 key 名, 或备份后删掉 env-file 带 secrets 重跑本脚本重建。
+# 改后必须走本脚本重建容器（--env-file 只在 create 时读, restart 不重读）。
 if [ ! -f "$BASE/aspnetcore.env" ]; then
-  if [ -n "${DATABASE_URL:-}" ] && [ -n "${DATABASE_USER:-}" ] && [ -n "${DATABASE_PASSWORD:-}" ]; then
-    echo "→ bootstrapping $BASE/aspnetcore.env from env DATABASE_URL/USER/PASSWORD"
+  if [ -n "${DATABASE_URL:-}" ]; then
+    echo "→ bootstrapping $BASE/aspnetcore.env from env DATABASE_URL"
     umask 077
     {
-      printf 'ConnectionStrings__Postgres=%s\n' "$DATABASE_URL"
-      printf 'Jwt__Authority=https://auth.example.com\n'
-      printf 'Jwt__Issuer=saas-identity-platform\n'
-      printf 'Jwt__Audience=saas-identity-platform-clients\n'
-      # ASPNETCORE_ENVIRONMENT=Development 激活 Program.cs:41-53 dev JwtBearer 段
+      printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
+      # flat key 与 Program.cs 读者一致（2026-08-28 断链修复: 曾写 Jwt__* 分段 key 无读者）
+      printf 'JWT_AUTHORITY=https://auth.example.com\n'
+      printf 'JWT_ISSUER=saas-identity-platform\n'
+      printf 'JWT_AUDIENCE=saas-identity-platform-clients\n'
+      # ASPNETCORE_ENVIRONMENT=Development 激活 Program.cs dev JwtBearer 段
       # (RequireSignedTokens=false + SignatureValidator 接受 alg=none + .dev-placeholder)
       # —— AuthController.Login(line 25-26) 发的就是 alg=none dev token,
       # Production mode 默认拒收 → 401/500 路径全挂。
       # dev 环境先走 Development; prod 路径独立 PR（删 dev 段 + 换真 OIDC issuer）。
       printf 'ASPNETCORE_ENVIRONMENT=Development\n'
-      printf 'Saas__Cors__AllowedOrigins=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
+      printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
     } > "$BASE/aspnetcore.env"
     chown deploy:deploy "$BASE/aspnetcore.env" 2>/dev/null || true
     chmod 600 "$BASE/aspnetcore.env"
   else
-    echo "ERROR: $BASE/aspnetcore.env missing. Set DATABASE_URL/USER/PASSWORD env (e.g. DATABASE_URL='Host=100.79.128.25;Port=5432;Database=saas_prod;Username=postgres;Password=...' DATABASE_USER=postgres DATABASE_PASSWORD=... sudo -E sh deploy/setup-vps.sh saas-aspnetcore.example.com) or run setup-vps.sh first." >&2
+    echo "ERROR: $BASE/aspnetcore.env missing. Set DATABASE_URL env (e.g. DATABASE_URL='Host=100.79.128.25;Port=5432;Database=saas_prod;Username=postgres;Password=...' sudo -E sh deploy/setup-vps.sh saas-aspnetcore.example.com) or run setup-vps.sh first." >&2
     exit 1
   fi
 fi
-# 校验 aspnetcore.env 里有 ConnectionStrings__Postgres（即使 env-file 已存在, 内容可能是上一次失败留下的）
-if ! grep -q '^ConnectionStrings__Postgres=' "$BASE/aspnetcore.env"; then
-  echo "ERROR: $BASE/aspnetcore.env has no ConnectionStrings__Postgres line" >&2
+# 校验 aspnetcore.env 里有 DATABASE_URL（即使 env-file 已存在, 内容可能是上一次失败留下的）
+if ! grep -q '^DATABASE_URL=' "$BASE/aspnetcore.env"; then
+  echo "ERROR: $BASE/aspnetcore.env has no DATABASE_URL line" >&2
   exit 1
 fi
 

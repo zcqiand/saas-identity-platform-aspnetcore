@@ -15,6 +15,14 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ContentRootPath = AppContext.BaseDirectory,
 });
 
+// conventions §6: 家族统一监听 key SERVER_PORT（aspnetcore=5000）。ASPNETCORE_URLS
+// 优先级更高（容器内 Dockerfile ENV 已设）, 本 shim 只服务裸机 dotnet run。
+var shimUrls = Saas.Identity.AspNetCore.Hosting.ServerPortShim.ResolveUrls(builder.Configuration);
+if (shimUrls is not null)
+{
+    builder.WebHost.UseUrls(shimUrls);
+}
+
 // JWT bearer auth — tenant_id claim is mandatory for tenant-scoped routes
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -74,7 +82,10 @@ builder.Services.AddSingleton<JwtIssuer>();
 // Npgsql 8 起 Dictionary<string,object?> ↔ jsonb 动态映射需显式 EnableDynamicJson()（不再默认开启）。
 // 不开就报：Reading as 'Dictionary`2' is not supported for fields having DataTypeName 'jsonb'。
 // 同样 ToSettingsDto 里 Str() / maxUsers switch 仍是必要的——System.Text.Json 反序列化原语值仍是 JsonElement。
-var pgConn = builder.Configuration.GetConnectionString("Postgres");
+// DATABASE_URL 是全家族统一 key（2026-08-28 接线；deploy 脚本只写它，不再依赖
+// appsettings.json 内嵌的 dev 连接串）。ConnectionStrings:Postgres 仍作 fallback。
+var pgConn = builder.Configuration["DATABASE_URL"]
+    ?? builder.Configuration.GetConnectionString("Postgres");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(pgConn);
 dataSourceBuilder.EnableDynamicJson();
 var dataSource = dataSourceBuilder.Build();
