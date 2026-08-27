@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
@@ -59,7 +61,7 @@ public class OauthControllerTests
     private static readonly Guid TestAppId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid TestClientIdGuid = TestAppId;  // V014: client_id = app.id 固定 UUID
 
-    private static (AppDbContext db, JwtIssuer jwt, OauthController controller) Build(
+    private static (AppDbContext db, JwtIssuer jwt, OauthController controller, DefaultHttpContext ctx) Build(
         Guid? tenantId = null,
         Guid? userId = null,
         List<string>? redirectUris = null,
@@ -112,15 +114,22 @@ public class OauthControllerTests
             })
             .Build();
         var jwt = new JwtIssuer(config);
-        var controller = new OauthController(db, jwt);
-        return (db, jwt, controller);
+        var ctx = new DefaultHttpContext();
+        // 默认注入 saas session（与 M04.F03.I01 相符）— 测试 session 缺失时显式跳过
+        ctx.Items[SaasSessionMiddleware.ItemsKey] = new SaasSession(
+            uid, tid, DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+        var controller = new OauthController(db, jwt)
+        {
+            ControllerContext = new ControllerContext { HttpContext = ctx }
+        };
+        return (db, jwt, controller, ctx);
     }
 
     [Fact]
     [Trait("Fn", "M04.F03.I07")]
     public async Task Authorize_happyPath_returnsCode()
     {
-        var (_, _, c) = Build();
+        var (_, _, c, _) = Build();
         var res = await c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -138,7 +147,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I07")]
     public async Task Authorize_invalidClient_throwsUnauthorized()
     {
-        var (_, _, c) = Build();
+        var (_, _, c, _) = Build();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = Guid.NewGuid(),  // 不存在的 client
@@ -154,7 +163,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I07")]
     public async Task Authorize_invalidRedirectUri_throws()
     {
-        var (_, _, c) = Build();
+        var (_, _, c, _) = Build();
         await Assert.ThrowsAsync<ArgumentException>(() => c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -170,7 +179,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I07")]
     public async Task Authorize_invalidScope_throws()
     {
-        var (_, _, c) = Build();
+        var (_, _, c, _) = Build();
         await Assert.ThrowsAsync<ArgumentException>(() => c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -186,7 +195,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I08")]
     public async Task Token_authorizationCode_happyPath()
     {
-        var (db, _, c) = Build();
+        var (db, _, c, _) = Build();
         var code = (await c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -215,7 +224,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I08")]
     public async Task Token_alreadyConsumedCode_throws()
     {
-        var (db, _, c) = Build();
+        var (db, _, c, _) = Build();
         var code = (await c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -251,7 +260,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I08")]
     public async Task Token_redirectUriMismatch_throws()
     {
-        var (db, _, c) = Build();
+        var (db, _, c, _) = Build();
         var code = (await c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -276,7 +285,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I09")]
     public async Task Token_refreshToken_happyPath()
     {
-        var (db, _, c) = Build();
+        var (db, _, c, _) = Build();
         // 先 authorize + 拿 access+refresh
         var code = (await c.Authorize(new AuthorizeCodeRequest
         {
@@ -312,7 +321,7 @@ public class OauthControllerTests
     [Trait("Fn", "M04.F03.I09")]
     public async Task Token_refreshTokenReuse_throws()
     {
-        var (db, _, c) = Build();
+        var (db, _, c, _) = Build();
         var code = (await c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = TestClientIdGuid,
@@ -348,5 +357,46 @@ public class OauthControllerTests
             ClientId = TestClientIdGuid,
             TenantId = TestTenantId,
         }));
+    }
+
+    // === M04.F03.I01 Authorize 检查 saas session ===
+
+    [Fact]
+    [Trait("Fn", "M04.F03.I01")]
+    public async Task Authorize_noSession_throwsUnauthorized()
+    {
+        // 默认 Build() 注入 saas session -> 显式清掉验证未登录场景
+        var (_, _, c, ctx) = Build();
+        ctx.Items.Remove(SaasSessionMiddleware.ItemsKey);
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => c.Authorize(new AuthorizeCodeRequest
+        {
+            ClientId = TestClientIdGuid,
+            RedirectUri = "https://lab-vue.xiangru.uk/login",
+            ResponseType = AuthorizeCodeRequestResponseType.Code,
+            Scope = "lab.read",
+            State = "x",
+            TenantId = TestTenantId,
+        }));
+    }
+
+    [Fact]
+    [Trait("Fn", "M04.F03.I01")]
+    public async Task Authorize_withValidSession_returnsCode()
+    {
+        // 注入 saas session 后 Authorize 返 code
+        var (_, _, c, ctx) = Build();
+        var session = new SaasSession(TestTenantId, TestTenantId, DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+        ctx.Items["saasSession"] = session;
+        var res = await c.Authorize(new AuthorizeCodeRequest
+        {
+            ClientId = TestClientIdGuid,
+            RedirectUri = "https://lab-vue.xiangru.uk/login",
+            ResponseType = AuthorizeCodeRequestResponseType.Code,
+            Scope = "lab.read",
+            State = "session-state",
+            TenantId = TestTenantId,
+        });
+        Assert.StartsWith("saas-code-", res.Code);
+        Assert.Equal("session-state", res.State);
     }
 }
