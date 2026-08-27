@@ -46,7 +46,21 @@ lab 前端 -> /api/me/menus 验 session + 角色授权
 2. **vi.hoisted 的 TDZ 陷阱**：hoisted 回调执行先于 import，里面不能调 `ref()`——用普通 `{ value }` 对象。
 3. **cookie 标志大小写**：ASP.NET Core 序列化 `HttpOnly` 为小写 `httponly`，测试断言须 `OrdinalIgnoreCase`。
 4. **Authorize 的 code 与 body.TenantId 绑定**：集成流程测试传 seed 租户，不是任意 Guid。
-5. **指针别指没 UI 的仓**：deploy env 指向前先确认目标产物有对应路由（saas-nextjs 无 login 页）。
+5. **指针别指没 UI 的仓**：deploy env 指向前先确认目标产物有对应路由。
+
+## 勘误（2026-08-27 收口后核对）
+
+- **教训 5 的依据不成立**：ADR-0013 断言「saas-nextjs 没有 login UI 路由」，但 git 历史显示
+  `app/login/page.tsx` 自 2026-08-12（1c29929，App Router 骨架批次）就存在，早于 ADR-0013
+  诊断 15 天。当时的诊断很可能是查了 `src/app/`（nextjs 仓实际用根 `app/` 目录）。T-10 把
+  `LAB_SSO_LOGIN_URL` 指向 saas-react 仍然**有效**--vue/react 是 family 当前活跃维护的前端
+  产物--但理由应记为「产品决策」而非「nextjs 无 login 页」。教训修正为：
+  **诊断「某仓没有 X」之前先确认目录结构**（nextjs src/ 与根 app/ 两种布局并存）。
+- **nextjs LoginPage 是三前端中唯一带 OAuth code 回跳的**（`?code=&redirect_uri=&state=`
+  解析 + 302 RP）。T-10 重指向后，SSO 回跳由 lab 后端 pre-code 模式承担，nextjs 的回跳
+  逻辑成为未被 prod 引用的能力（保留不删）。
+- nextjs Route Handler 的 lockout 状态码是 **429**（aspnetcore 是 423）--LoginPage 前端
+  已兼容两者（收口后补测）。family 后端对同一语义用了不同状态码，值得后续归一。
 
 ## 遗留（Phase 5+）
 
