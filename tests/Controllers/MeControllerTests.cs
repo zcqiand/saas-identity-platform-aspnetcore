@@ -111,6 +111,58 @@ public class MeControllerTests
         Assert.NotEmpty(menus);
     }
 
+    // === T-11 (PLAN-2026-001) 集成覆盖：login -> cookie -> middleware -> me/menus ===
+
+    [Fact]
+    [Trait("Fn", "M09.F03.I01")]
+    [Trait("Fn", "M03.F01.I01")]
+    public async Task Flow_meMenus_withRealLoginSession()
+    {
+        // 真 AuthController.Login 写 cookie -> middleware 注入 -> MeController.Menus 返回菜单
+        var (db, uid, _) = OauthControllerTests.OauthSessionFlow.BuildFlowDb();
+        var (auth, loginCtx, sessions) = OauthControllerTests.OauthSessionFlow.LoginOnce(db);
+        await auth.Login(new()
+        {
+            Username = OauthControllerTests.OauthSessionFlow.FlowUsername,
+            Password = OauthControllerTests.OauthSessionFlow.FlowPassword,
+        });
+        var sid = OauthControllerTests.OauthSessionFlow.ExtractSid(loginCtx);
+        Assert.NotNull(sid);
+
+        var ctx = await OauthControllerTests.OauthSessionFlow.InvokeMiddleware(sessions, sid);
+        var session = ctx.Items[SaasSessionMiddleware.ItemsKey] as SaasSession;
+        Assert.NotNull(session);
+        Assert.Equal(uid, session!.UserId);
+
+        var me = new MeController(db, new HttpContextAccessor { HttpContext = ctx });
+        var menus = await me.Menus();
+        Assert.NotEmpty(menus);
+        // 流程库 seed 的 menu 挂在 lab-management app 下
+        Assert.True(menus.ContainsKey("lab-management"));
+        Assert.NotEmpty(menus["lab-management"]);
+    }
+
+    [Fact]
+    [Trait("Fn", "M09.F03.I01")]
+    public async Task Flow_meMenus_expiredLoginSession_throwsUnauthorized()
+    {
+        // 登录后 session 过期 -> middleware 不注入 -> Menus 401
+        var (db, _, _) = OauthControllerTests.OauthSessionFlow.BuildFlowDb();
+        var (auth, loginCtx, sessions) = OauthControllerTests.OauthSessionFlow.LoginOnce(db,
+            sessions: new SaasSessionStore(TimeSpan.FromMilliseconds(100)));
+        await auth.Login(new()
+        {
+            Username = OauthControllerTests.OauthSessionFlow.FlowUsername,
+            Password = OauthControllerTests.OauthSessionFlow.FlowPassword,
+        });
+        await Task.Delay(200);
+
+        var ctx = await OauthControllerTests.OauthSessionFlow.InvokeMiddleware(sessions, OauthControllerTests.OauthSessionFlow.ExtractSid(loginCtx));
+        Assert.False(ctx.Items.ContainsKey(SaasSessionMiddleware.ItemsKey));
+        var me = new MeController(db, new HttpContextAccessor { HttpContext = ctx });
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => me.Menus());
+    }
+
     // === M00.F02 占位 Phase 5 ===
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]

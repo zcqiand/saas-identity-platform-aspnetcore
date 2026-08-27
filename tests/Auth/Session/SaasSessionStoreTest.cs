@@ -18,11 +18,11 @@ public class SaasSessionStoreTest
     public void Put_thenGet_returnsSameSession()
     {
         var store = new SaasSessionStore(TimeSpan.FromMinutes(5));
-        var session = new SaasSession("user-1", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddMinutes(5));
+        var session = new SaasSession(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddMinutes(5));
         store.Put(session);
         var got = store.Get(session.Id);
         Assert.NotNull(got);
-        Assert.Equal("user-1", got!.UserId);
+        Assert.Equal(session.UserId, got!.UserId);
         Assert.Equal(session.TenantId, got.TenantId);
     }
 
@@ -40,7 +40,7 @@ public class SaasSessionStoreTest
     {
         // TTL 100ms — put 后等 200ms 再 get，应当作过期
         var store = new SaasSessionStore(TimeSpan.FromMilliseconds(100));
-        var session = new SaasSession("user-2", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddMilliseconds(100));
+        var session = new SaasSession(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddMilliseconds(100));
         store.Put(session);
         Thread.Sleep(200);
         Assert.Null(store.Get(session.Id));
@@ -53,7 +53,7 @@ public class SaasSessionStoreTest
     public void Delete_removesSession()
     {
         var store = new SaasSessionStore();
-        var session = new SaasSession("user-3", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddMinutes(5));
+        var session = new SaasSession(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddMinutes(5));
         store.Put(session);
         store.Delete(session.Id);
         Assert.Null(store.Get(session.Id));
