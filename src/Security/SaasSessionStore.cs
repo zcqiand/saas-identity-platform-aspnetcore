@@ -9,7 +9,7 @@ namespace Saas.Identity.AspNetCore.Security;
 /// 进程内 ConcurrentDictionary + TTL；Phase 6+ 切 Redis。
 /// </summary>
 public sealed record SaasSession(
-    string UserId,
+    Guid UserId,
     Guid TenantId,
     DateTime CreatedAt,
     DateTime ExpiresAt)
@@ -31,6 +31,9 @@ public sealed class SaasSessionStore
     public SaasSessionStore() : this(TimeSpan.FromHours(24)) { }
 
     public SaasSessionStore(TimeSpan defaultTtl) => _defaultTtl = defaultTtl;
+
+    /// <summary>默认 TTL（用于登录写 session 时计算 ExpiresAt）。</summary>
+    public TimeSpan DefaultTtl => _defaultTtl;
 
     /// <summary>生成新 session ID（base64 32B 随机）。</summary>
     public string GenerateId()
