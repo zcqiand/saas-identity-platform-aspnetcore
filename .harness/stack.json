@@ -2,7 +2,7 @@
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
   "stack": "aspnetcore",
-  "suite_version": "0.5.0",
+  "suite_version": "0.6.0",
   "source_dirs": ["src"],
   "test_dirs": ["tests"],
   "gates": {
