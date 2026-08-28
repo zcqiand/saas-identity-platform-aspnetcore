@@ -7,6 +7,7 @@
     "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.0",
     "EFCore.NamingConventions": "8.0.0",
     "xunit": "2.9.0",
-    "Moq": "4.20.70"
+    "Moq": "4.20.70",
+    "Microsoft.AspNetCore.Mvc.Testing": "8.0.0"
   }
 }

@@ -74,6 +74,12 @@ builder.Services.AddSingleton<TenantGuard>();
 // JwtIssuer (v0.2.0 Phase 6)：HS256 签 access token，AuthController + OauthController 共用。
 // 配置: JWT_SIGNING_KEY (≥32B), JWT_ISSUER, JWT_AUDIENCE。3 个 saas 后端用同一 key (共享 JWT)。
 builder.Services.AddSingleton<JwtIssuer>();
+// M03.F01 (ADR-0013 路线 A)：session 三件套。进程内存储 — AuthController.Login 写
+// cookie，SaasSessionMiddleware 读 store 注入 Items，Oauth/Me 控制器消费。
+// singleton：session 必须全进程共享；Phase 6+ 多副本部署切 Redis（ADR-0014）。
+builder.Services.AddSingleton<SaasSessionStore>();
+// M03.F01.I02 失败锁定（5 次 / 15min），进程内计数 — 同上 singleton。
+builder.Services.AddSingleton<FailedLoginStore>();
 
 // M10.Database — EF Core + Npgsql + snake_case 命名（ADR-0010）
 // shared SQL 是 SSOT；EF Model 镜像；启动时**不调** Database.Migrate()（避免与 shared SQL 重复执行）。
@@ -138,6 +144,9 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors("NextDev");
+// M03.F01.I01 — saas session cookie 解析（注册位置见 SaasSessionMiddleware 注释）。
+// 必须在 UseAuthentication 之前：OAuth 端点读 Items["saasSession"] 判登录态。
+app.UseMiddleware<SaasSessionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 // OAuth 端点的参数校验错误（INVALID_SCOPE / INVALID_REDIRECT_URI / ...）以 400 JSON 返回，
@@ -152,6 +161,7 @@ app.UseExceptionHandler(errorApp =>
         ctx.Response.StatusCode = ex switch
         {
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+            AccountLockedException => StatusCodes.Status423Locked,
             ArgumentException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError,
         };
@@ -159,6 +169,7 @@ app.UseExceptionHandler(errorApp =>
         var code = ex switch
         {
             UnauthorizedAccessException => "UNAUTHORIZED",
+            AccountLockedException => "ACCOUNT_LOCKED",
             ArgumentException => "INVALID_REQUEST",
             _ => "INTERNAL_ERROR",
         };
