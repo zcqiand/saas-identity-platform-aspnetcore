@@ -12,12 +12,11 @@
 #   - 数据库：PostgreSQL 远程, DATABASE_URL 从 aspnetcore.env 注入
 #     （EF Core / Npgsql 无 ./data 卷, 程序重启数据不丢）
 #   - 容器内是 ASP.NET Core 8 监听 :8080 → -p 127.0.0.1:8024:8080
-#   - 密钥走 ./aspnetcore.env (DATABASE_URL + flat JWT_* + SAAS_CORS_ALLOWED_ORIGINS),
+#   - 密钥走 ./aspnetcore.env (DATABASE_URL + JWT_SIGNING_KEY + flat JWT_* +
+#     SAAS_CORS_ALLOWED_ORIGINS, key 集合与仓内 .env.production 对齐),
 #     setup-vps.sh 不预生成（fail-fast 不便）,本脚本首启自举。
-#   - JWT_SIGNING_KEY **不**写入: Program.cs:32 dev 路径 = Program.cs:41 if (IsDevelopment)
-#     显式覆盖 TokenValidationParameters 放 alg=none；prod 路径 = 删 dev 段 + 设
-#     Jwt__Authority env 走真实对称 key / OIDC issuer-uri。本脚本只覆盖环境变量,
-#     不动 C# 代码 —— prod 路径由独立 PR 处理。
+#   - JWT_SIGNING_KEY 必填(GitHub Secret → ssh-action envs): v0.2.1 已删 dev
+#     alg=none 分支,现统一 HS256 真验签,JwtIssuer.cs:39 fail-fast。
 #
 # 前置: deploy 用户需在 docker 组中(sudo usermod -aG docker deploy)。
 #        aspnetcore.env 必须由 setup-vps.sh 或本脚本首启生成(DATABASE_URL 必填)。
@@ -41,39 +40,43 @@ if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
   exit 2
 fi
 
-# aspnetcore.env 自举保护: 缺失时, 如 $DATABASE_URL 在环境里,
-# 自动生成（含 CORS 默认白名单）; 否则 fail fast。
+# aspnetcore.env 自举保护: 缺失时, 如 $DATABASE_URL + $JWT_SIGNING_KEY 在环境里,
+# 自动生成（key 集合与仓内 .env.production 严格对齐,suite L0.5 check_deploy_parity
+# 锁死,本地加 key 必须同步本脚本）; 否则 fail fast 指明缺哪个。
 # （DATABASE_USER/PASSWORD 不需要: 连接串内嵌凭据, 2026-08-28 删冗余 secrets。）
-# setup-vps.sh 仍是首推（VPS 一次性, 生成 nginx vhost + 目录 + sudoers）, 本分支仅给
-# "先有 DATABASE_URL 临时上线"的场景。
+# 禁默认值兜底: 非 secret 走已知 prod 字面量,secret（JWT_SIGNING_KEY）必须显式传入
+# —— JwtIssuer.cs:39 fail-fast,缺了容器起不来,绝不静默吃代码 fallback。
 # 老契约迁移提示: 旧 env-file 里是 Jwt__Authority/Issuer/Audience + Saas__Cors__*
 # 分段 key（Program.cs 读 flat JWT_*/SAAS_CORS_ALLOWED_ORIGINS, 分段无读者）——
 # 二选一: 手工改 key 名, 或备份后删掉 env-file 带 secrets 重跑本脚本重建。
 # 改后必须走本脚本重建容器（--env-file 只在 create 时读, restart 不重读）。
 if [ ! -f "$BASE/aspnetcore.env" ]; then
-  if [ -n "${DATABASE_URL:-}" ]; then
-    echo "→ bootstrapping $BASE/aspnetcore.env from env DATABASE_URL"
-    umask 077
-    {
-      printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
-      # flat key 与 Program.cs 读者一致（2026-08-28 断链修复: 曾写 Jwt__* 分段 key 无读者）
-      printf 'JWT_AUTHORITY=https://auth.example.com\n'
-      printf 'JWT_ISSUER=saas-identity-platform\n'
-      printf 'JWT_AUDIENCE=saas-identity-platform-clients\n'
-      # ASPNETCORE_ENVIRONMENT=Development 激活 Program.cs dev JwtBearer 段
-      # (RequireSignedTokens=false + SignatureValidator 接受 alg=none + .dev-placeholder)
-      # —— AuthController.Login(line 25-26) 发的就是 alg=none dev token,
-      # Production mode 默认拒收 → 401/500 路径全挂。
-      # dev 环境先走 Development; prod 路径独立 PR（删 dev 段 + 换真 OIDC issuer）。
-      printf 'ASPNETCORE_ENVIRONMENT=Development\n'
-      printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
-    } > "$BASE/aspnetcore.env"
-    chown deploy:deploy "$BASE/aspnetcore.env" 2>/dev/null || true
-    chmod 600 "$BASE/aspnetcore.env"
-  else
-    echo "ERROR: $BASE/aspnetcore.env missing. Set DATABASE_URL env (e.g. DATABASE_URL='Host=100.79.128.25;Port=5432;Database=saas_prod;Username=postgres;Password=...' sudo -E sh deploy/setup-vps.sh saas-aspnetcore.example.com) or run setup-vps.sh first." >&2
+  # v0.2.1 已删 dev alg=none 分支（Program.cs Phase 2B 注释）,JWT_SIGNING_KEY 是
+  # HS256 验签必需; ASPNETCORE_ENVIRONMENT=Development 不再写（dev 段已不存在）。
+  if [ -z "${DATABASE_URL:-}" ]; then
+    echo "ERROR: $BASE/aspnetcore.env missing and DATABASE_URL env not set (GitHub Secret DATABASE_URL → ssh-action envs)" >&2
     exit 1
   fi
+  if [ -z "${JWT_SIGNING_KEY:-}" ]; then
+    echo "ERROR: $BASE/aspnetcore.env missing and JWT_SIGNING_KEY env not set (add GitHub Secret JWT_SIGNING_KEY → ci.yml envs → ssh-action envs; JwtIssuer.cs fail-fast, 缺了容器起不来)" >&2
+    exit 1
+  fi
+  echo "→ bootstrapping $BASE/aspnetcore.env (key 集合 = .env.production, 9 key)"
+  umask 077
+  {
+    printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
+    printf 'JWT_SIGNING_KEY=%s\n' "$JWT_SIGNING_KEY"
+    # flat key 与 Program.cs 读者一致（2026-08-28 断链修复: 曾写 Jwt__* 分段 key 无读者）
+    printf 'JWT_AUTHORITY=https://auth.example.com\n'
+    printf 'JWT_ISSUER=saas-identity-platform\n'
+    printf 'JWT_AUDIENCE=saas-identity-platform-clients\n'
+    printf 'JWT_TTL_SECONDS=3600\n'
+    printf 'SERVER_PORT=8080\n'
+    printf 'DATABASE_NAME=saas_prod\n'
+    printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
+  } > "$BASE/aspnetcore.env"
+  chown deploy:deploy "$BASE/aspnetcore.env" 2>/dev/null || true
+  chmod 600 "$BASE/aspnetcore.env"
 fi
 # 校验 aspnetcore.env 里有 DATABASE_URL（即使 env-file 已存在, 内容可能是上一次失败留下的）
 if ! grep -q '^DATABASE_URL=' "$BASE/aspnetcore.env"; then
@@ -136,13 +139,45 @@ else
   echo "→ nginx vhost created. To enable: sudo nginx -t && sudo systemctl reload nginx"
 fi
 
-# 必要时补 Saas__Cors__AllowedOrigins（Program.cs 走 Saas:Cors:AllowedOrigins 通过 configuration binding）。
-# 已有则不覆盖（bootstrap 那段 line 67-85 首启会写; 后续 deploy 重跑只会缺失时 append,
-# 运维手工补的 prod origin 不会丢）。
-if ! grep -q '^Saas__Cors__AllowedOrigins=' "$BASE/aspnetcore.env"; then
-  echo "→ append Saas__Cors__AllowedOrigins to existing $BASE/aspnetcore.env"
-  umask 077
-  printf 'Saas__Cors__AllowedOrigins=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN" >> "$BASE/aspnetcore.env"
+# v0.2.12 key 对齐迁移(2026-08-28): 老 env-file 逐 key append-if-missing 到
+# .env.production 全集(key 集合契约由 suite L0.5 check_deploy_parity 锁死)。
+# JWT_SIGNING_KEY 是 secret:老文件已有则保留(换 key 会让所有登录态失效);
+# 没有则必须从 env 传入,fail-fast —— 不允许静默兜底。
+if [ -f "$BASE/aspnetcore.env" ]; then
+  append_if_missing() {
+    key="$1"; val="$2"
+    if ! grep -q "^${key}=" "$BASE/aspnetcore.env"; then
+      echo "→ append ${key} to existing $BASE/aspnetcore.env"
+      umask 077
+      printf '%s=%s\n' "$key" "$val" >> "$BASE/aspnetcore.env"
+    fi
+  }
+  if ! grep -q '^JWT_SIGNING_KEY=' "$BASE/aspnetcore.env"; then
+    if [ -z "${JWT_SIGNING_KEY:-}" ]; then
+      echo "ERROR: JWT_SIGNING_KEY missing in $BASE/aspnetcore.env and not set in env (JwtIssuer.cs fail-fast)" >&2
+      exit 1
+    fi
+    append_if_missing JWT_SIGNING_KEY "$JWT_SIGNING_KEY"
+  fi
+  append_if_missing JWT_AUTHORITY 'https://auth.example.com'
+  append_if_missing JWT_ISSUER 'saas-identity-platform'
+  append_if_missing JWT_AUDIENCE 'saas-identity-platform-clients'
+  append_if_missing JWT_TTL_SECONDS '3600'
+  append_if_missing SERVER_PORT '8080'
+  append_if_missing DATABASE_NAME 'saas_prod'
+  # CORS:老值保留(运维可能手工补过 prod origin),只在缺失时写默认白名单
+  if ! grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env"; then
+    append_if_missing SAAS_CORS_ALLOWED_ORIGINS "https://${NGINX_DOMAIN},https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk"
+  fi
+  # 死键清理:分段 key 无读者(Program.cs 读 flat),Saas__Cors__* 与 ASPNETCORE_ENVIRONMENT
+  # 一并删除,保 key 集合与 .env.production 对齐
+  for dead in Saas__Cors__AllowedOrigins ASPNETCORE_ENVIRONMENT; do
+    if grep -q "^${dead}=" "$BASE/aspnetcore.env"; then
+      echo "→ drop dead key ${dead} from $BASE/aspnetcore.env"
+      umask 077
+      sed -i "/^${dead}=/d" "$BASE/aspnetcore.env"
+    fi
+  done
 fi
 
 echo "→ image: $IMAGE"

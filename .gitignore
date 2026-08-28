@@ -17,3 +17,7 @@ obj/
 # Claude 临时文件
 .claude/
 .superpowers/
+
+# .env.production: 部署契约真值(含 secret),gitignored 不进 git(2026-08-28 起,同 .env.local 模式)
+# key 集合由 suite L0.5 门核对(存在时与 .env.example 严格双向比对);真值经 scripts/sync-secrets 进 GitHub Secrets
+.env.production
