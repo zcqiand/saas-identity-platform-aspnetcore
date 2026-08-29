@@ -1,25 +1,20 @@
 {
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
-  "current_task": "状态核准(无代码改动)— session.json 从 8/12 'Phase A 初始化' 对齐到 v0.2.2 实况",
-  "last_session_at": "2026-08-26",
-  "last_session_summary": "本 session 未改本仓代码,只做状态核准:仓实际已到 v0.2.2(Phase 6 真 OAuth IdP + RFC 6749 校验),gate 全绿。此前 session.json 停在 8/12 'Phase A 初始化' 严重失真,本次重写对齐实况。/handoff 二次门禁 --all exit 0(本仓 86 条目 0 软告警)",
+  "current_task": "JWT_SIGNING_KEY fail-fast 上线 + containerd 损坏待修(v0.3.18 部署失败)",
+  "last_session_at": "2026-08-29",
+  "last_session_summary": "deploy 脚本补 JWT_SIGNING_KEY fail-fast(v0.2.1 删 dev alg=none 后 JwtIssuer.cs:39 缺了容器起不来)+ 删死键 Saas__Cors__AllowedOrigins/ASPNETCORE_ENVIRONMENT + ci.yml 转发 secret;.env.production untrack。但 v0.3.18 两次部署均死于 VPS containerd 存储损坏(docker pull 'rename ... no such file or directory'),非脚本问题,rerun 无效",
   "done": [
-    "状态核准:v0.2.2-20260826(3c00ab9 fix(oauth): redirect_uri 前缀+query 匹配 + scope space-separated 子集校验 RFC 6749;c6e06ec 校验错误 500 空 body -> 4xx JSON UseExceptionHandler)",
-    "gate --all 全绿(本仓 L0-L5,含 NSwag codegen 链)",
-    "本次调查确认的债(未修,见 open_questions):Migrations/ 目录不存在 -- ADR-0010 要求的 EF migration 镜像(scripts/check-ef-mirrors-sql.sh)无产物落地,shared V014 未镜像到 EF 侧"
+    "deploy 脚本: JWT_SIGNING_KEY/JWT 三件套/SERVER_PORT/DATABASE_NAME 补齐 + 死键清理 + secret fail-fast",
+    "ci.yml 转发 JWT_SIGNING_KEY(GitHub Secret 已推)",
+    "test job GREEN,deploy 失败与代码无关(containerd)"
   ],
   "next": [
-    "无阻塞。EF 镜像债若要还:dotnet ef migrations add InitialSchema --project src 然后 check-ef-mirrors-sql.sh 校验字段级 diff=0"
+    "用户 SSH 上 VPS: sudo docker system prune -f(不行则 sudo systemctl restart docker)→ gh run rerun 失败的 deploy job → 验证 https://saas-aspnetcore.xiangru.uk/health"
   ],
-  "open_questions": [
-    "EF migration 镜像(ADR-0010)从未落地 -- 是补 InitialSchema 迁移,还是承认 saas-aspnetcore 走「运行时 drizzle/sync-db 管库、EF 只读映射」路线并修订 ADR-0010?需要人决策"
-  ],
+  "open_questions": [],
   "dont": [
-    "不要手改 src/Controllers/Generated/Controllers.cs(NSwag 产物,gen-shared.sh 会覆盖)",
-    "不要在本仓加新 NuGet 包(CLAUDE.md §1 锁定 xUnit + dotnet format + TRX trace)",
-    "Response N 自动编号顺序依赖 regen 时序,不要硬编码预期编号",
-    "不要在 Controller / Program.cs 写业务逻辑、不要 catch 吞异常、不要硬编码连接串(CLAUDE.md §2)"
+    "docker pull 报 'lease does not exist' 或 'rename ... no such file' 是 VPS containerd 存储损坏,不是网络瞬时错,rerun 不自愈——必须 SSH 清理"
   ],
   "last_gate_passed_at": "2026-08-26T17:30+08:00",
   "active_branch": "master",
