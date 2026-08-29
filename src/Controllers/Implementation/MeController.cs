@@ -84,10 +84,19 @@ public class MeController : MeControllerBase
 
     public override async Task<IDictionary<string, ICollection<EffectiveMenuNode>>> Menus()
     {
-        // M09.F03.I01 (PLAN-2026-001 T-6) — 先验 saas session
-        var session = _http.HttpContext?.Items[SaasSessionMiddleware.ItemsKey] as SaasSession;
-        if (session is null)
-            throw new UnauthorizedAccessException("saas session required for /me/menus");
+        // 2026-08-29: lab 后端调 saas /me/menus 是 server-to-server (无浏览器 cookie,
+        // SameSite=Lax 跨域不带)。Bearer token 路径 (JwtBearer middleware 验签)
+        // 必须可用,跟 Me() / Tenants() / Switch() 端点一致。保留 saas session
+        // fallback 给浏览器 saas-vue/saas-react 调本端用 (cookie SameSite=Lax
+        // 同站 / 直接 fetch 时浏览器带 cookie)。
+        var uid = CurrentUserId();
+        if (uid is null)
+        {
+            var session = _http.HttpContext?.Items[SaasSessionMiddleware.ItemsKey] as SaasSession;
+            if (session is null)
+                throw new UnauthorizedAccessException("saas session or Bearer token required for /me/menus");
+            uid = session.UserId;
+        }
 
         // Phase 5 占位：返回当前 tenant 所有 active menu（不接 role_menu_grants JOIN）
         var menus = await _db.Menus.Where(m => m.Status == "active").ToListAsync();
