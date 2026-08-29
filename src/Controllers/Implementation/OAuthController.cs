@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
@@ -46,11 +47,28 @@ public class OauthController : OauthControllerBase
     // M04.F03.I07 — 授权码签发
     public override async Task<Response3> Authorize(AuthorizeCodeRequest body)
     {
-        // M04.F03.I01 (PLAN-2026-001 T-4) — 先验 saas session cookie (中间件已注入)
-        // 未登录访问 /api/v1/oauth/authorize -> 401, 让前端跳 login UI
+        // 2026-08-29 修 saas-vue / saas-react → saas-aspnetcore 跨域 POST 401:
+        // saasSession cookie 写了 SameSite=Lax,跨子域 POST fetch 浏览器不自动带 cookie
+        // (只有顶级导航 GET 带)。Authorize 端点 fallback Bearer token 验签(JwtBearer
+        // middleware 已配置,User.Claims 自动从 Authorization header 填充)。
+        // 安全模型保留: token 由 saas /auth/login 用同一 JWT_SIGNING_KEY 签,
+        // Bearer token 验签通过 = user 是 saas 真用户(同 cookie 路径)。
         var session = HttpContext.Items[SaasSessionMiddleware.ItemsKey] as SaasSession;
         if (session is null)
-            throw new UnauthorizedAccessException("saas session required for OAuth authorize");
+        {
+            // Fallback: Bearer token (跨域 POST 浏览器不带 saasSession cookie)
+            var sub = User.FindFirstValue("sub");
+            var tid = User.FindFirstValue("tenant_id");
+            if (Guid.TryParse(sub, out var uid) && Guid.TryParse(tid, out var t))
+            {
+                session = new SaasSession(uid, t, DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+            }
+            else
+            {
+                throw new UnauthorizedAccessException(
+                    "saas session or Bearer token required for OAuth authorize");
+            }
+        }
 
         // 1. clientId 必须是已注册 OAuth client（apps.client_id；Guid → string 后查）
         var clientIdStr = body.ClientId.ToString();
