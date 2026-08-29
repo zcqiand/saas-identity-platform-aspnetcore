@@ -9,6 +9,8 @@ using DbMembership = Saas.Identity.AspNetCore.Domain.Entities.TenantMembership;
 using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 // alias 避免与 NSwag-generated DTO `TenantMembership` 冲突
 using ApiMembership = Saas.Identity.AspNetCore.Controllers.Generated.TenantMembership;
+// alias 避免与 NSwag-generated DTO `Menu` (用于 menu_type enum) 冲突
+using DbMenu = Saas.Identity.AspNetCore.Domain.Entities.Menu;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
@@ -103,9 +105,21 @@ public class MeController : MeControllerBase
         var appIds = menus.Select(m => m.AppId).Distinct().ToList();
         var apps = await _db.Apps.Where(a => appIds.Contains(a.Id)).ToListAsync();
         var codeById = apps.ToDictionary(a => a.Id, a => a.Code);
-        var grouped = menus
-            .Where(m => codeById.ContainsKey(m.AppId))
-            .Select(m => new EffectiveMenuNode
+
+        // 2026-08-29 修 prod 菜单树不显示: 之前每个 EffectiveMenuNode.Children 都赋
+        // 空 List,父子关系没建立 → lab 端 MapSaasMenu 透传 children=[] → 前端
+        // use-backend-menus 收到 flat 列表,children.length === 0 → 全判为 page →
+        // 树形丢失 (分组节点应 type='group' 且 children=子菜单)。
+        // 修: 一次性建 parent→children 映射,递归挂载;roots = ParentId == null。
+        var byId = menus.ToDictionary(m => m.Id);
+        var childrenByParent = menus
+            .Where(m => m.ParentId.HasValue && byId.ContainsKey(m.ParentId.Value))
+            .GroupBy(m => m.ParentId!.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        EffectiveMenuNode BuildNode(DbMenu m)
+        {
+            var dto = new EffectiveMenuNode
             {
                 Id = m.Id,
                 AppId = m.AppId,
@@ -122,7 +136,20 @@ public class MeController : MeControllerBase
                 },
                 SortOrder = m.SortOrder,
                 Children = new List<EffectiveMenuNode>(),
-            })
+            };
+            if (childrenByParent.TryGetValue(m.Id, out var children))
+            {
+                foreach (var c in children.OrderBy(c => c.SortOrder))
+                {
+                    dto.Children.Add(BuildNode(c));
+                }
+            }
+            return dto;
+        }
+
+        var grouped = menus
+            .Where(m => m.ParentId == null && codeById.ContainsKey(m.AppId))
+            .Select(m => BuildNode(m))
             .GroupBy(n => codeById[n.AppId])
             .ToDictionary(g => g.Key, g => (ICollection<EffectiveMenuNode>)g.ToList());
         return grouped;
