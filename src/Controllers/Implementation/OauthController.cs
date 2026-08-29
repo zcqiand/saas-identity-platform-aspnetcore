@@ -99,10 +99,13 @@ public class OauthController : OauthControllerBase
     // M04.F03.I08 + I09 — 令牌交换 + 刷新（按 grantType 路由）
     public override async Task<TokenResponse> Token(TokenRequest body)
     {
-        // M04.F03.I02 (PLAN-2026-001 T-5) — 先验 saas session
-        var session = HttpContext.Items[SaasSessionMiddleware.ItemsKey] as SaasSession;
-        if (session is null)
-            throw new UnauthorizedAccessException("saas session required for OAuth token");
+        // 2026-08-29: 放宽 session 要求 (RFC 6749 §4.1.3 — token 端点只验 code +
+        // client_credentials,不需要浏览器 cookie)。路线 A 安全模型保留:
+        //   - code 必须由 /authorize 端点 用 saas session 签出(强制要求用户在 saas 登录)
+        //   - oauthCode.UserId/TenantId 已在 authorize 时绑定
+        //   - token 端点只做 confidential client 验证 + code 一次性消费
+        // lab 后端代理 OAuth 场景: lab 后端 server-to-server 调 /token 时无浏览器 cookie
+        // (cookie HttpOnly + SameSite),放宽后 lab 后端才能换到 token。
 
         var clientIdStr = body.ClientId.ToString();
         var app = await _db.Apps.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
@@ -114,13 +117,13 @@ public class OauthController : OauthControllerBase
 
         return body.GrantType switch
         {
-            TokenRequestGrantType.Authorization_code => await ExchangeAuthorizationCode(app, session, body),
-            TokenRequestGrantType.Refresh_token => await RotateRefreshToken(app, session, body),
+            TokenRequestGrantType.Authorization_code => await ExchangeAuthorizationCode(app, body),
+            TokenRequestGrantType.Refresh_token => await RotateRefreshToken(app, body),
             _ => throw new ArgumentException("UNSUPPORTED_GRANT_TYPE"),
         };
     }
 
-    private async Task<TokenResponse> ExchangeAuthorizationCode(AppEntity app, SaasSession session, TokenRequest body)
+    private async Task<TokenResponse> ExchangeAuthorizationCode(AppEntity app, TokenRequest body)
     {
         if (string.IsNullOrEmpty(body.Code))
             throw new ArgumentException("INVALID_REQUEST: code required for grantType=authorization_code");
@@ -138,19 +141,18 @@ public class OauthController : OauthControllerBase
             throw new UnauthorizedAccessException("INVALID_GRANT: code expired");
         if (oauthCode.AppId != app.Id)
             throw new UnauthorizedAccessException("INVALID_GRANT: code does not belong to this client");
-        if (oauthCode.TenantId != session.TenantId)
-            throw new UnauthorizedAccessException("INVALID_GRANT: tenantId mismatch (session vs request)");
         if (oauthCode.RedirectUri != body.RedirectUri)
             throw new UnauthorizedAccessException("INVALID_GRANT: redirectUri mismatch");
 
-        // M04.F03.I02: user 从 session.UserId 取 (不再 tenantId 直发 — Phase 5 mock bug 修)
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == session.UserId);
+        // user/tenant 已在 /authorize 端点用 saas session 绑定,不再信 body.TenantId。
+        if (oauthCode.UserId == null)
+            throw new UnauthorizedAccessException("INVALID_GRANT: code has no user binding (authorize must run under saas session)");
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == oauthCode.UserId.Value);
         if (user == null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: session user not in saas");
+            throw new UnauthorizedAccessException("INVALID_GRANT: code user not in saas");
 
-        // 一次性消费 — 标记 consumed + 写 user_id 供 audit 用
+        // 一次性消费 — 标记 consumed
         oauthCode.ConsumedAt = DateTimeOffset.UtcNow;
-        oauthCode.UserId = user.Id;
 
         // 发新 refresh token + access token
         var refresh = JwtIssuer.GenerateRefreshToken(user.Id);
@@ -160,7 +162,7 @@ public class OauthController : OauthControllerBase
             GrantType = "refresh_token",
             AppId = app.Id,
             UserId = user.Id,
-            TenantId = session.TenantId,
+            TenantId = oauthCode.TenantId,
             Scope = oauthCode.Scope,
             ExpiresAt = DateTimeOffset.UtcNow.Add(RefreshTtl),
             CreatedAt = DateTimeOffset.UtcNow,
@@ -170,7 +172,7 @@ public class OauthController : OauthControllerBase
 
         return new TokenResponse
         {
-            AccessToken = _jwt.IssueAccessToken(user.Id, session.TenantId),
+            AccessToken = _jwt.IssueAccessToken(user.Id, oauthCode.TenantId),
             RefreshToken = refresh,
             TokenType = "Bearer",
             ExpiresIn = 3600,
@@ -178,7 +180,7 @@ public class OauthController : OauthControllerBase
         };
     }
 
-    private async Task<TokenResponse> RotateRefreshToken(AppEntity app, SaasSession session, TokenRequest body)
+    private async Task<TokenResponse> RotateRefreshToken(AppEntity app, TokenRequest body)
     {
         if (string.IsNullOrEmpty(body.RefreshToken))
             throw new ArgumentException("INVALID_REQUEST: refreshToken required for grantType=refresh_token");
@@ -195,8 +197,6 @@ public class OauthController : OauthControllerBase
             throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token does not belong to this client");
         if (oldRefresh.UserId == null)
             throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token has no user_id");
-        if (oldRefresh.TenantId != session.TenantId)
-            throw new UnauthorizedAccessException("INVALID_GRANT: tenantId mismatch (session vs request)");
 
         // 旋转: 旧 refresh 标记 consumed, 新 refresh 写入
         oldRefresh.ConsumedAt = DateTimeOffset.UtcNow;
@@ -217,7 +217,7 @@ public class OauthController : OauthControllerBase
 
         return new TokenResponse
         {
-            AccessToken = _jwt.IssueAccessToken(oldRefresh.UserId.Value, session.TenantId),
+            AccessToken = _jwt.IssueAccessToken(oldRefresh.UserId.Value, oldRefresh.TenantId),
             RefreshToken = newRefresh,
             TokenType = "Bearer",
             ExpiresIn = 3600,
