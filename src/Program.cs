@@ -31,6 +31,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // ASP.NET Core 默认 env provider 直接把 flat key 当 flat config 读, 不走 `:` 段映射
         // (`:` 段会变成 `__` 双下划线)。所以这里读 flat key, 与其他 6 仓命名对齐。
         options.Authority = builder.Configuration["JWT_AUTHORITY"];
+        // 2026-08-29 修 saas-vue → saas-aspnetcore /api/v1/oauth/authorize Bearer
+        // token fallback 401: JwtBearer 默认 MapInboundClaims=true,把 JWT 'sub' 映射
+        // 到 ClaimTypes.NameIdentifier (= http://schemas.xmlsoap.org/ws/2005/05/
+        // identity/claims/nameidentifier)。OAuthController.Authorize 用 User.FindFirstValue
+        // ('sub') / ('tenant_id') 读 claim,默认配置下 'sub' 找不到 → fallback 失败。
+        // 关 MapInboundClaims 后,claim 名原样保留 'sub' / 'tenant_id' (与 JwtIssuer
+        // 写的名字一致,RFC 7519 标准命名)。
+        options.MapInboundClaims = false;
         // v0.2.1 Phase 2B：删除 dev 分支 RequireSignedTokens=false + SignatureValidator（alg=none 占位路径）。
         // 现统一 HS256 真验签（RFC 7519），与 JwtIssuer 共享 JWT_SIGNING_KEY。
         // saas-identity-platform-msw (Phase 1A) + saas-identity-platform-nextjs-self 签出来的
