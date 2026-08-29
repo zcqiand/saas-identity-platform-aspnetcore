@@ -57,7 +57,10 @@ public class OauthController : OauthControllerBase
         if (session is null)
         {
             // Fallback: Bearer token (跨域 POST 浏览器不带 saasSession cookie)
-            var sub = User.FindFirstValue("sub");
+            // JwtBearer 默认 MapInboundClaims=true 时 'sub' 映射到 ClaimTypes.NameIdentifier;
+            // Program.cs 已设 MapInboundClaims=false,claim 名原样保留 'sub' / 'tenant_id'。
+            // 双查找兼容两种配置。
+            var sub = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             var tid = User.FindFirstValue("tenant_id");
             if (Guid.TryParse(sub, out var uid) && Guid.TryParse(tid, out var t))
             {
