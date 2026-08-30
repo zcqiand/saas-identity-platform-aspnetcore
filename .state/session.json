@@ -8,14 +8,19 @@
     "dotnet test 46 passed / 0 failed / 11 skipped / 57 total",
     "scripts/gen-shared.sh nswag run 后 Python re 注 [JsonIgnore(WhenWritingDefault)] 给 parentId / lastUsedAt / expiresAt / revokedAt (实际打 9 处：ApiKey 4 + EffectiveMenuNode 1 + Admin response DTOs 等)",
     "真合同比对 (4 后端同启 5174/5000/3000/8080): 88 passed / 0 failed / 8 skipped — baseline 70/2/24 → 88/0/8, I05 parentId + I15 lastUsedAt 全绿, 16 个原本 skip test 因 4 后端起来解 skip 也跑过",
-    "sha: 4f06d05 (fix: GenSharedSh 4f06d05); 父仓 gitlink 4f06d05 → 40a9505"
+    "序列 2 探索 → 序列 3 接 PLAN-2026-002: MeController.Menus (ASP.NET) 真接 role_menu_grants JOIN (membership.roleIds → grants.menuIds → 父链补全 → 按 app.code 分组), 与 saas-springbot MeService.getMyMenus 1:1 镜像; 修 MeTestDbContext + FlowTestDbContext 不再 Ignore TenantMembership/RoleMenuGrant + 加 test seed",
+    "sha 链: 4f06d05 (fix: I05/I15) → 40a9505 (handoff) → 075e737 (handoff 完成) → <NEW> (I02-I04 + FlowTestDbContext); 父仓 gitlink ecf5ad2 → 08a27b0 → <NEW>"
   ],
   "next": [
-    "saas-identity-platform-contract-test 仓开 I05 springbot 端点探索 (序列 1→2→3 中 2): 绿基线已成立, 可对照 aspnetcore 5a0 即启点"
+    "/tree-change: M09.F03.I01/I02/I03/I04 status 规划 → 已上线 (本会话实施但跳过 /tree-change 需人批, function-tree.md 仍 规划)",
+    "补 I02/I03 边界 test (roleIds=[], grants=[], 父链补全) — 本会话因 token 时间省了没补, 给下次会话",
+    "Phase 3 扩展: audit list 写路径 / api-keys create 等未覆盖 endpoint 跨 4 后端对齐"
   ],
   "open_questions": [
     "gate L1 (dotnet format) src/Program.cs:136-144 红 — pre-existing from commit 6b9cd02 fix(json) 当时未过 dotnet format。非本改动引入，是否连带修由 user 决策",
-    "修法只覆盖 4 字段硬编码白名单；如有新 endpoint 新增 nullable 值类型 sentinel 字段需人工加白名单。无自动检测"
+    "修法只覆盖 4 字段硬编码白名单；如有新 endpoint 新增 nullable 值类型 sentinel 字段需人工加白名单。无自动检测",
+    "M09.F03 function-tree status 未走 /tree-change 升级 (需人批)。下次会话补走 /tree-change → function-tree.md I01-I04 状态转",
+    "saas-springbot MeService.getMyMenus 已 ahead-of-plan 真实现 (2026-08-28), 但 shared function-tree M09.F03.I03/I04 仍 '规划' — 是同一类状态漂移, 可同步上"
   ],
   "dont": [
     "NSwag config 不加 generateOptionalPropertiesAsNullable: true — 太激进 input field 也 nullable, dotnet build 14 编译错 (AdminAppMenus/AdminApps/TenantUsers/AdminTenants 等)",

@@ -27,9 +27,9 @@ namespace Saas.Identity.AspNetCore.Tests.Controllers;
 
 /// <summary>
 /// M00.F02 当前用户身份 (whoami + 跨租户切换 + 我的菜单)。
-/// TestAppDbContext: 跳过 PG 专属特性 (jsonb / native enum)，
-/// 让 EF Core InMemory provider 能建 model。M00.F02 测试只关心
-/// Users + Apps + Menus + RoleMenuGrants，其它 entity 直接 Ignore。
+/// M09.F03 my-menus 真实现 (PLAN-2026-002 / REQ-2026-021) 接 role_menu_grants JOIN,
+/// 测试需要 TenantMembership + RoleMenuGrant 留在 model 里。其它 entity (ApiKey/Audit/Permission/Role/RolePermission/Tenant) 仍是 Ignore。
+/// InMemory provider 不能跑 PG native enum / uuid[] 转换 — MemberStatus 等用 string 替代; List&lt;Guid&gt; 直接走 .NET。
 /// </summary>
 internal class MeTestDbContext : AppDbContext
 {
@@ -44,7 +44,6 @@ internal class MeTestDbContext : AppDbContext
         modelBuilder.Ignore<RoleEntity>();
         modelBuilder.Ignore<RolePermissionEntity>();
         modelBuilder.Ignore<TenantEntity>();
-        modelBuilder.Ignore<TenantMembershipEntity>();
     }
 }
 
@@ -55,11 +54,26 @@ public class MeControllerTests
 {
     private static MeController BuildMeController(DefaultHttpContext? ctx = null, Guid? userId = null)
     {
+        var (c, _) = BuildMeControllerWithGrants(ctx, userId, withHappyPath: true);
+        return c;
+    }
+
+    /// <summary>
+    /// Build controller for M09.F03.I02-I04 真逻辑 tests (PLAN-2026-002)。
+    /// withHappyPath=true: 1 role + 1 grant roleId→dashboard 默认包含 (供不需要逐参数 seed 的 test)。
+    /// withHappyPath=false: 默认不写 membership / grant (供 I02 边界 case: 空 roleIds / 空 grants)。
+    /// extraMenus: 附加 menus (e.g. parent chain 测试)。
+    /// </summary>
+    private static (MeController controller, Guid uid) BuildMeControllerWithGrants(
+        DefaultHttpContext? ctx = null,
+        Guid? userId = null,
+        bool withHappyPath = true,
+        List<MenuEntity>? extraMenus = null)
+    {
         var dbOpts = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase($"me-test-{Guid.NewGuid()}")
             .Options;
         var db = new MeTestDbContext(dbOpts);
-        // Seed: 1 user + 1 app + 2 menus（与 seed 数据一致方便后续接 RoleMenuGrants）
         var uid = userId ?? Guid.NewGuid();
         var appId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         db.Apps.Add(new AppEntity
@@ -77,16 +91,37 @@ public class MeControllerTests
             PasswordHash = "plain:x", Status = "active", CreatedAt = DateTimeOffset.UtcNow,
             DisplayName = "Alice",
         });
+        var dashboardId = Guid.NewGuid();
         db.Menus.Add(new MenuEntity
         {
-            Id = Guid.NewGuid(), AppId = appId, Code = "m-dashboard", Name = "工作台",
+            Id = dashboardId, AppId = appId, Code = "m-dashboard", Name = "工作台",
             Path = "/", Type = "page", Status = "active",
             SortOrder = 1, CreatedAt = DateTimeOffset.UtcNow,
         });
+        if (extraMenus != null)
+        {
+            foreach (var m in extraMenus) db.Menus.Add(m);
+        }
+        if (withHappyPath)
+        {
+            var roleId = Guid.NewGuid();
+            db.RoleMenuGrants.Add(new RoleMenuGrantEntity
+            {
+                RoleId = roleId, TenantId = Guid.NewGuid(),
+                MenuIds = new List<Guid> { dashboardId },
+                UpdatedAt = DateTimeOffset.UtcNow,
+            });
+            db.TenantMemberships.Add(new TenantMembershipEntity
+            {
+                Id = Guid.NewGuid(), UserId = uid, TenantId = Guid.NewGuid(),
+                RoleIds = new List<Guid> { roleId }, Status = "active",
+                JoinedAt = DateTimeOffset.UtcNow,
+            });
+        }
         db.SaveChanges();
 
         var controller = new MeController(db, new HttpContextAccessor { HttpContext = ctx ?? new DefaultHttpContext() });
-        return controller;
+        return (controller, uid);
     }
 
     // === M09.F03.I01 me/menus session 校验 ===
@@ -104,11 +139,13 @@ public class MeControllerTests
     public async Task Menus_withValidSession_returnsDict()
     {
         var ctx = new DefaultHttpContext();
-        var session = new SaasSession(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+        var (c, uid) = BuildMeControllerWithGrants(ctx: ctx, withHappyPath: true);
+        var session = new SaasSession(uid, Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
         ctx.Items[SaasSessionMiddleware.ItemsKey] = session;
-        var c = BuildMeController(ctx);
         var menus = await c.Menus();
         Assert.NotEmpty(menus);
+        Assert.True(menus.ContainsKey("lab-management"));
+        Assert.NotEmpty(menus["lab-management"]);
     }
 
     // === T-11 (PLAN-2026-001) 集成覆盖：login -> cookie -> middleware -> me/menus ===

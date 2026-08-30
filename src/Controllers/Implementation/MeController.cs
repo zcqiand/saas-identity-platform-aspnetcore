@@ -100,8 +100,47 @@ public class MeController : MeControllerBase
             uid = session.UserId;
         }
 
-        // Phase 5 占位：返回当前 tenant 所有 active menu（不接 role_menu_grants JOIN）
-        var menus = await _db.Menus.Where(m => m.Status == "active").ToListAsync();
+        // M09.F03.I02 — 从 membership.roleIds 拿 user 授权 role 集合 →
+        //   role_menu_grants JOIN 得 granted menuIds。
+        // 不再像原 placeholder 给全库 active menu (混租户/越权,见 REQ-2026-021)。
+        // 与 saas-springbot MeService.getMyMenus:122-205 镜像; Npgsql 原生支持 uuid[],
+        // EF Core LINQ Contains 不走 unnest(), 不会现 prod 500 (jdbctemplate-unnest-list-uuid 教训)。
+        var memberships = await _db.TenantMemberships
+            .Where(m => m.UserId == uid && m.Status != "removed")
+            .Select(m => m.RoleIds)
+            .ToListAsync();
+        var roleIds = memberships.SelectMany(r => r ?? new List<Guid>()).Distinct().ToList();
+        if (roleIds.Count == 0)
+        {
+            return new Dictionary<string, ICollection<EffectiveMenuNode>>();
+        }
+
+        var grants = await _db.RoleMenuGrants
+            .Where(g => roleIds.Contains(g.RoleId))
+            .ToListAsync();
+        var grantedMenuIds = grants.SelectMany(g => g.MenuIds).Distinct().ToHashSet();
+        if (grantedMenuIds.Count == 0)
+        {
+            return new Dictionary<string, ICollection<EffectiveMenuNode>>();
+        }
+
+        // M09.F03.I03 — 树装配 + 父链补全: granted menu 的祖先 (可能本 user 没授权但显示需要) 一并加载。
+        // 镜像 saas-springbot MeService.java:152-168 模式: 整批查询 + 内存迭代补全祖先。
+        var allMenuIds = new HashSet<Guid>(grantedMenuIds);
+        List<DbMenu> menus;
+        while (true)
+        {
+            menus = await _db.Menus
+                .Where(m => allMenuIds.Contains(m.Id) && m.Status == "active")
+                .ToListAsync();
+            var missingParents = menus
+                .Where(m => m.ParentId.HasValue && !allMenuIds.Contains(m.ParentId.Value))
+                .Select(m => m.ParentId!.Value)
+                .ToHashSet();
+            if (missingParents.Count == 0) break;
+            allMenuIds.UnionWith(missingParents);
+        }
+
         var appIds = menus.Select(m => m.AppId).Distinct().ToList();
         var apps = await _db.Apps.Where(a => appIds.Contains(a.Id)).ToListAsync();
         var codeById = apps.ToDictionary(a => a.Id, a => a.Code);

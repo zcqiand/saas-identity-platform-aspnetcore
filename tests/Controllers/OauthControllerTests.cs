@@ -413,7 +413,8 @@ public class OauthControllerTests
         public const string FlowPassword = "dev123456";
         public static readonly Guid FlowAppId = TestAppId;
 
-        /// <summary>集成流程 TestAppDbContext：User + App + OauthCode + Menu（供 me/menus）。</summary>
+        /// <summary>集成流程 TestAppDbContext：User + App + OauthCode + Menu + Membership + RoleMenuGrant（供 me/menus 真权限 JOIN）。
+        /// PLAN-2026-002 实施后，menus 真接 role_menu_grants，必须保留 TenantMembership + RoleMenuGrant 在 model 里。</summary>
         internal class FlowTestDbContext : AppDbContext
         {
             public FlowTestDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
@@ -422,16 +423,13 @@ public class OauthControllerTests
             {
                 base.OnModelCreating(modelBuilder);
                 // InMemory 不支持 PG 专属特性 (jsonb / native enum)
-                // 与 TestAppDbContext 的差别：不 Ignore Menu - 集成流程要跑 me/menus
                 modelBuilder.Ignore<ApiKeyEntity>();
                 modelBuilder.Ignore<AuditEventEntity>();
                 modelBuilder.Ignore<AuditRetentionPolicyEntity>();
                 modelBuilder.Ignore<PermissionEntity>();
                 modelBuilder.Ignore<RoleEntity>();
                 modelBuilder.Ignore<RolePermissionEntity>();
-                modelBuilder.Ignore<RoleMenuGrantEntity>();
                 modelBuilder.Ignore<TenantEntity>();
-                modelBuilder.Ignore<TenantMembershipEntity>();
             }
         }
 
@@ -475,6 +473,23 @@ public class OauthControllerTests
                 Id = Guid.NewGuid(), AppId = TestAppId, Code = "m-dashboard", Name = "工作台",
                 Path = "/", Type = "page", Status = "active",
                 SortOrder = 1, CreatedAt = DateTimeOffset.UtcNow,
+            });
+            var flowRoleId = Guid.NewGuid();
+            // PLAN-2026-002：me/menus 真接 role_menu_grants JOIN。
+            // 给 flow 用户绑 1 个 role + 该 role grant 那个 dashboard menu,
+            // 让集成测试的 me/menus 返非空 (原 placeholder 不需要这个 seed)。
+            db.TenantMemberships.Add(new TenantMembershipEntity
+            {
+                Id = Guid.NewGuid(), UserId = uid, TenantId = tid,
+                RoleIds = new List<Guid> { flowRoleId }, Status = "active",
+                JoinedAt = DateTimeOffset.UtcNow,
+            });
+            var dashId = db.Menus.Local.Single(m => m.Code == "m-dashboard").Id;
+            db.RoleMenuGrants.Add(new RoleMenuGrantEntity
+            {
+                RoleId = flowRoleId, TenantId = tid,
+                MenuIds = new List<Guid> { dashId },
+                UpdatedAt = DateTimeOffset.UtcNow,
             });
             db.SaveChanges();
             return (db, uid, tid);
