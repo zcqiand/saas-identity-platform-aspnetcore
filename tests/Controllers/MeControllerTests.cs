@@ -54,20 +54,24 @@ public class MeControllerTests
 {
     private static MeController BuildMeController(DefaultHttpContext? ctx = null, Guid? userId = null)
     {
-        var (c, _) = BuildMeControllerWithGrants(ctx, userId, withHappyPath: true);
+        var (c, _) = BuildMeControllerWithGrants(ctx, userId);  // default seedMembership+seedGrant=true
         return c;
     }
 
     /// <summary>
     /// Build controller for M09.F03.I02-I04 真逻辑 tests (PLAN-2026-002)。
-    /// withHappyPath=true: 1 role + 1 grant roleId→dashboard 默认包含 (供不需要逐参数 seed 的 test)。
-    /// withHappyPath=false: 默认不写 membership / grant (供 I02 边界 case: 空 roleIds / 空 grants)。
-    /// extraMenus: 附加 menus (e.g. parent chain 测试)。
+    /// seedMembership=false: 不写 membership — I02 空 roleIds 路径。
+    /// seedGrant=false:     不写 grant — I02 roleIds 有但 grants=[] 路径。
+    /// seedMembership=true + seedGrant=true: default happy path (1 role grant dashboard)。
+    /// grantMenuIds (default=[dashboard]): grant 授权的 menuIds, 让 I03 父链补全测试可以 grant child 而非 dashboard。
+    /// extraMenus: 附加 menus (e.g. I03 父链补全测试)。
     /// </summary>
     private static (MeController controller, Guid uid) BuildMeControllerWithGrants(
         DefaultHttpContext? ctx = null,
         Guid? userId = null,
-        bool withHappyPath = true,
+        bool seedMembership = true,
+        bool seedGrant = true,
+        List<Guid>? grantMenuIds = null,
         List<MenuEntity>? extraMenus = null)
     {
         var dbOpts = new DbContextOptionsBuilder<AppDbContext>()
@@ -102,19 +106,26 @@ public class MeControllerTests
         {
             foreach (var m in extraMenus) db.Menus.Add(m);
         }
-        if (withHappyPath)
+        Guid? roleId = null;
+        if (seedGrant)
         {
-            var roleId = Guid.NewGuid();
+            roleId = Guid.NewGuid();
             db.RoleMenuGrants.Add(new RoleMenuGrantEntity
             {
-                RoleId = roleId, TenantId = Guid.NewGuid(),
-                MenuIds = new List<Guid> { dashboardId },
+                RoleId = roleId.Value, TenantId = Guid.NewGuid(),
+                MenuIds = grantMenuIds ?? new List<Guid> { dashboardId },
                 UpdatedAt = DateTimeOffset.UtcNow,
             });
+        }
+        if (seedMembership)
+        {
+            var roleIds = roleId.HasValue
+                ? new List<Guid> { roleId.Value }
+                : new List<Guid> { Guid.NewGuid() };  // 不关联 grant, 测 roleIds→空 grants
             db.TenantMemberships.Add(new TenantMembershipEntity
             {
                 Id = Guid.NewGuid(), UserId = uid, TenantId = Guid.NewGuid(),
-                RoleIds = new List<Guid> { roleId }, Status = "active",
+                RoleIds = roleIds, Status = "active",
                 JoinedAt = DateTimeOffset.UtcNow,
             });
         }
@@ -139,13 +150,94 @@ public class MeControllerTests
     public async Task Menus_withValidSession_returnsDict()
     {
         var ctx = new DefaultHttpContext();
-        var (c, uid) = BuildMeControllerWithGrants(ctx: ctx, withHappyPath: true);
+        var (c, uid) = BuildMeControllerWithGrants(ctx: ctx);  // default happy path
         var session = new SaasSession(uid, Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
         ctx.Items[SaasSessionMiddleware.ItemsKey] = session;
         var menus = await c.Menus();
         Assert.NotEmpty(menus);
         Assert.True(menus.ContainsKey("lab-management"));
         Assert.NotEmpty(menus["lab-management"]);
+    }
+
+    // === M09.F03.I02 — 角色授权菜单 ID 查询 (空路径) ===
+
+    [Fact]
+    [Trait("Fn", "M09.F03.I02")]
+    public async Task Menus_userWithoutMembership_returnsEmpty()
+    {
+        // 没有 membership → roleIds=[] → 返回空 Map (early exit)
+        var ctx = new DefaultHttpContext();
+        var (c, uid) = BuildMeControllerWithGrants(
+            ctx: ctx,
+            seedMembership: false,
+            seedGrant: false);
+        var session = new SaasSession(uid, Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+        ctx.Items[SaasSessionMiddleware.ItemsKey] = session;
+        var menus = await c.Menus();
+        Assert.Empty(menus);
+    }
+
+    [Fact]
+    [Trait("Fn", "M09.F03.I02")]
+    public async Task Menus_membershipButRoleHasNoGrants_returnsEmpty()
+    {
+        // membership 有 roleId, 但 role_menu_grants 表里没那个 role 行 → grantedMenuIds=[]
+        var ctx = new DefaultHttpContext();
+        var (c, uid) = BuildMeControllerWithGrants(
+            ctx: ctx,
+            seedMembership: true,
+            seedGrant: false);
+        var session = new SaasSession(uid, Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+        ctx.Items[SaasSessionMiddleware.ItemsKey] = session;
+        var menus = await c.Menus();
+        Assert.Empty(menus);
+    }
+
+    // === M09.F03.I03 — 菜单树装配 + 父链补全 ===
+
+    [Fact]
+    [Trait("Fn", "M09.F03.I03")]
+    public async Task Menus_grantedChildIncludesParentChain()
+    {
+        // user 只授权 child; parent "group" 不在 grant 但应该自动补上
+        var appId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var parentId = Guid.NewGuid();
+        var childId = Guid.NewGuid();
+        var ctx = new DefaultHttpContext();
+        // 必须先塞 parent + child 进 menus; grant 指 child; helper 默认 grant 是 dashboard, 不适用
+        // 这里手动控: 不通过 helper 默认 seedGrant, 改成只 seed child 命名 grant
+        var (c, uid) = BuildMeControllerWithGrants(
+            ctx: ctx,
+            seedGrant: true,
+            grantMenuIds: new List<Guid> { childId },
+            extraMenus: new List<MenuEntity>
+            {
+                new MenuEntity
+                {
+                    Id = parentId, AppId = appId, ParentId = null, Code = "m-group", Name = "分组",
+                    Type = "group", SortOrder = 0, Status = "active",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                },
+                new MenuEntity
+                {
+                    Id = childId, AppId = appId, ParentId = parentId, Code = "m-leaf", Name = "叶子",
+                    Type = "page", SortOrder = 1, Status = "active",
+                    CreatedAt = DateTimeOffset.UtcNow,
+                },
+            });
+        var session = new SaasSession(uid, Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(1));
+        ctx.Items[SaasSessionMiddleware.ItemsKey] = session;
+        var menus = await c.Menus();
+        Assert.True(menus.ContainsKey("lab-management"));
+        var roots = menus["lab-management"];
+        // roots 应只有 parent; child 是叶子 (ParentId=parentId) 不应是 root
+        Assert.Single(roots);
+        var onlyRoot = roots.First();
+        Assert.Equal(parentId, onlyRoot.Id);
+        Assert.Equal("Group", onlyRoot.Type.ToString());
+        // 父链补全: parent.children 包括 child
+        Assert.Single(onlyRoot.Children);
+        Assert.Equal(childId, onlyRoot.Children.First().Id);
     }
 
     // === T-11 (PLAN-2026-001) 集成覆盖：login -> cookie -> middleware -> me/menus ===
