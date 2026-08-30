@@ -7,11 +7,11 @@
     "dotnet build 0 warn 0 err",
     "dotnet test 46 passed / 0 failed / 11 skipped / 57 total",
     "scripts/gen-shared.sh nswag run 后 Python re 注 [JsonIgnore(WhenWritingDefault)] 给 parentId / lastUsedAt / expiresAt / revokedAt (实际打 9 处：ApiKey 4 + EffectiveMenuNode 1 + Admin response DTOs 等)",
-    "sha: 4f06d05 (fix: GenSharedSh 4f06d05)"
+    "真合同比对 (4 后端同启 5174/5000/3000/8080): 88 passed / 0 failed / 8 skipped — baseline 70/2/24 → 88/0/8, I05 parentId + I15 lastUsedAt 全绿, 16 个原本 skip test 因 4 后端起来解 skip 也跑过",
+    "sha: 4f06d05 (fix: GenSharedSh 4f06d05); 父仓 gitlink 4f06d05 → 40a9505"
   ],
   "next": [
-    "用户在能起 4 后端的 dev/CI 跳: `cd output/saas-identity-platform-contract-test && CONTRACT_TARGETS=msw,aspnetcore,springboot,nextjs npx vitest run` 验 I05/I15 70/2/24 → 72/0/24",
-    "绿后 saas-identity-platform-contract-test 仓开 I05 springbot 端点探索 (按序列 1→2→3)"
+    "saas-identity-platform-contract-test 仓开 I05 springbot 端点探索 (序列 1→2→3 中 2): 绿基线已成立, 可对照 aspnetcore 5a0 即启点"
   ],
   "open_questions": [
     "gate L1 (dotnet format) src/Program.cs:136-144 红 — pre-existing from commit 6b9cd02 fix(json) 当时未过 dotnet format。非本改动引入，是否连带修由 user 决策",
