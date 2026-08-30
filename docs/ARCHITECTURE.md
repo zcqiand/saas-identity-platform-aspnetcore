@@ -28,7 +28,7 @@
 | **C# / .NET 版本** | `<TargetFramework>net8.0</TargetFramework>`（`src/Saas.Identity.AspNetCore.csproj:4`） |
 | **路由 / DTO 来源** | NSwag 读 `../saas-identity-platform-shared/generated/openapi/openapi.yaml` → `src/Controllers/Generated/Controllers.cs`（11 个 abstract base + DTO records） |
 | **业务实现** | 手写 `partial class` `src/Controllers/Implementation/<Tag>Controller.cs`，继承 NSwag 抽象基类，覆盖 abstract 方法 + 调 `TenantGuard.VerifyPathTenant(...)` |
-| **运行时存储** | `InMemoryStore`（进程内 fixture，进程重启丢失） + EF Core（持久层镜像是 ADR-0010 主线） |
+| **运行时存储** | EF Core 8 + Npgsql 读 shared PG（schema 由 saas-identity-platform-shared V001..V016 SQL 单一来源管理，本仓 `Program.cs` 启动不调 `Database.Migrate()`） |
 | **认证 (OAuth 2.0 + JWT HS256)** | `JwtIssuer.IssueAccessToken` 签 HS256（`Security/JwtIssuer.cs`）；`AddJwtBearer()` + `TokenValidationParameters` 真验签；prod 走 `Jwt:SigningKey` 对称密钥或 JWKS |
 | **共享 JWT key** | 与 saas-nextjs / saas-springboot 同一 `Jwt:SigningKey`，HS256 互签 |
 
@@ -39,7 +39,7 @@
 - 手写 `HttpClient` / `fetch` 调用（直接实现 abstract 方法即可，框架绑定）；
 - 把 `@saas/identity-platform-shared` 列为 NuGet / 项目依赖（NSwag 直接读相对路径 `../shared/...`）；
 - 直接编辑 `src/Controllers/Generated/Controllers.cs`（NSwag 产物，下次 `gen-shared.sh` 重写）；
-- 测试并行运行（InMemoryStore 是 static fixture，并发修改 throw `Collection was modified`）。
+- 测试并行运行（历史原因：InMemoryStore 是 static fixture；2026-08-30 已删 InMemoryStore 并落到 AppDbContext 的 InMemory provider，本规则随之失效，留此条防止误恢复 InMemoryStore 时漏掉并行约束）。
 
 ---
 
@@ -64,7 +64,7 @@ saas-identity-platform-aspnetcore/
 │   ├── Controllers/
 │   │   ├── Generated/Controllers.cs       ← NSwag 产物（gitignored）
 │   │   └── Implementation/                ← 手写 partial class（11 个 controller）
-│   │       ├── InMemoryStore.cs           ← 进程内 fixture + Reset()
+│   │       └── (InMemoryStore.cs 已删除 2026-08-30；运行时全部走 AppDbContext)
 │   │       ├── AuthController.cs
 │   │       ├── OauthController.cs
 │   │       ├── MeController.cs
@@ -88,7 +88,7 @@ saas-identity-platform-aspnetcore/
 │   └── appsettings*.json                  ← 由 .csproj 显式 Include + CopyToOutput
 ├── tests/
 │   ├── Saas.Identity.AspNetCore.Tests.csproj
-│   ├── TestBase.cs / SequentialCollection.cs / StubTenantContext.cs
+│   ├── (TestBase.cs / SequentialCollection.cs 已删除 2026-08-30；并发约束随之解绑) / StubTenantContext.cs
 │   ├── Harness/FnAttribute.cs              ← xUnit Fact/Theory wrapper
 │   ├── TenantGuardTests.cs
 │   └── Controllers/                       ← 11 个 controller 各一份测试
@@ -106,11 +106,11 @@ saas-identity-platform-aspnetcore/
 | `src/Security/TenantContext.cs` | 从 `IHttpContextAccessor` 读 JWT `tenant_id` claim（virtual 便于测试 stub） |
 | `src/Security/TenantGuard.cs` | path `tenantId` vs JWT claim 校验；不匹配 throw `UnauthorizedAccessException` |
 | `src/Security/JwtIssuer.cs` | HS256 access token 签发（AuthController + OauthController 共用） |
-| `src/Controllers/Implementation/InMemoryStore.cs` | 进程内 fixture（Tenants/Users/Roles/Apps/Menus/ApiKeys/RoleMenuGrants/AuditEvents）+ `Reset()` |
+| `src/Controllers/Implementation/InMemoryStore.cs` | **已删除 2026-08-30** —— 运行时全走 `AppDbContext` |
 | `scripts/gen-shared.sh` | NSwag 集成：`(cd ../shared && npm run emit:openapi)` → `nswag run aspnetcore.nswag` → cp SQL |
 | `aspnetcore.nswag` | NSwag 配置（`controllerStyle: Abstract` + `typeStyle: Record` + `output: src/Controllers/Generated/Controllers.cs`） |
 | `src/Program.cs` | DI 注册 + JwtBearer 双配置（dev/prod）+ CORS + Swagger + health endpoint |
-| `tests/SequentialCollection.cs` | `[assembly: CollectionBehavior(DisableTestParallelization)]` |
+| `tests/SequentialCollection.cs` | **已删除 2026-08-30** —— InMemoryStore 删了，并发约束随之解绑 |
 
 ---
 
@@ -176,7 +176,7 @@ cp ../shared/sql/migrations/V*.sql ./Migrations/
 public class TenantUsersController : TenantUsersControllerBase
 {
     private readonly TenantGuard _guard;
-    private readonly InMemoryStore _store;
+    private readonly InMemoryStore _store; // 2026-08-30 后改为 AppDbContext _db
 
     public TenantUsersController(TenantGuard guard)
     {
@@ -186,7 +186,7 @@ public class TenantUsersController : TenantUsersControllerBase
     public override Task<IActionResult> ListUsersAsync(string tenantId, ...)
     {
         _guard.VerifyPathTenant(tenantId);   // ← 第一行必调
-        // ... 调 InMemoryStore / EF ...
+        // ... 调 EF DbContext ...
     }
 }
 ```
@@ -197,30 +197,9 @@ public class TenantUsersController : TenantUsersControllerBase
 - 手写 `HttpClient.GetAsync(...)` 调其他服务（直接实现 abstract，框架绑定）；
 - 漏调 `TenantGuard.VerifyPathTenant(tenantId)`（`§3.4`）。
 
-### 3.3 InMemoryStore（scaffold fixture）
+### 3.3 持久层（AppDbContext + 共享 PG）
 
-`src/Controllers/Implementation/InMemoryStore.cs`：
-
-| 字段 | 类型 | 含义 |
-|---|---|---|
-| `Tenants` | `List<Tenant>` | 平台级租户（`acme` / `globex`） |
-| `Users` | `List<User>` | tenant-scoped 用户 |
-| `Roles` | `List<Role>` | tenant-scoped 角色 |
-| `Apps` | `List<App>` | 平台级应用（`lab-portal`） |
-| `Menus` | `List<Menu>` | App 下树形菜单 |
-| `ApiKeys` | `List<ApiKey>` | tenant-scoped Key |
-| `RoleMenuGrants` | `List<RoleMenuGrant>` | 角色 ↔ 菜单授权 |
-| `AuditEvents` | `List<AuditEvent>` | 审计事件 |
-| `Reset()` | `internal static` | 测试用重置到 fixture 初始状态 |
-
-**约束**：
-
-- `internal static class`（`[assembly: InternalsVisibleTo("Saas.Identity.AspNetCore.Tests")]` 给 tests 用）；
-- 所有 ID 用 `Guid` 硬编码 fixture（`AcmeId` / `GlobexId` / `AliceId` ...），与 NSwag 生成的 DTO record 字段名/类型强绑定；
-- 进程重启全部丢失（scaffold 阶段不接持久层）；
-- 接入持久层时只需替换 controller 内 `InMemoryStore.Xxx.Add(...)` 为 `DbContext.Xxx.Add(...)`，Controller 签名不动。
-
-**字段名绝不可改**：NSwag 生成的 DTO record 的 property 名（`TenantStatus.Active` / `MenuType.Page` / `UserStatus.Invited`）与 InMemoryStore 内的字面量绑定，改名会导致测试 + 编译同时红。
+> 2026-08-30 落地：原本 `§3.3 InMemoryStore（scaffold fixture）` 的整节已被 AppDbContext 取代。EF Core 8 + Npgsql 读 shared PG，schema 由 `../saas-identity-platform-shared/sql/migrations/V001..V016.sql` 单一来源管理。`Program.cs` 启动不调 `Database.Migrate()`（shared SQL 已在部署前由 saas-nextjs `scripts/seed-db.mjs` 应用）。EF migrations 目录 `src/Migrations/` 提供 `InitialSchema` 镜像，用于 `scripts/check-ef-mirrors-sql.sh` 做 EF↔SQL diff。
 
 ### 3.4 TenantGuard 安全层
 
@@ -321,7 +300,7 @@ virtual 方法便于测试 stub（`tests/StubTenantContext.cs`）。
 3. 改 concrete Controller 业务逻辑?
    └─ src/Controllers/Implementation/<Tag>Controller.cs
        └─ 第一行调 _guard.VerifyPathTenant(tenantId)
-       └─ 调 InMemoryStore.Xxx / EF DbContext.Xxx
+       └─ 调 EF DbContext.Xxx（运行时已无 InMemoryStore）
 
 4. dotnet build
    └─ dotnet test      ← xUnit，顺序跑（[assembly: CollectionBehavior(DisableTestParallelization)])
@@ -346,7 +325,7 @@ virtual 方法便于测试 stub（`tests/StubTenantContext.cs`）。
                       └─ TenantContext.CurrentTenantId() → jwt "tenant_id" claim
                           └─ path tenantId == jwt tenantId ? 继续 : throw UnauthorizedAccessException
                               ↓
-                              └─ InMemoryStore.Users.Where(u => u.TenantId == tenantId)
+                              └─ _db.Users.Where(u => u.TenantId == tenantId)
                                   └─ 返回 JSON
 ```
 
@@ -390,7 +369,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 [本仓] 检查 NSwag 重生后 abstract method 列表变化
   └─ 新增?  → 在 src/Controllers/Implementation/<Tag>Controller.cs 加 override
   └─ 删除?  → 删对应 override + 检查测试 fnTest 引用
-  └─ DTO 字段变化? → 检查 InMemoryStore fixture 字段名 + 测试断言
+  └─ DTO 字段变化? → 检查 EF entity 字段名 + 测试断言（InMemoryStore 已删 2026-08-30）
 [本仓] dotnet test
 [父仓] git update-index --add --cacheinfo 160000,<NEW_HASH>,output/saas-identity-platform-aspnetcore
 ```
@@ -476,7 +455,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 | `Jwt:SigningKey` HS256 ≥32B 强约束 | `src/Security/JwtIssuer.cs:43-45` |
 | 已删除 (Phase 2B)；MSW 现在真签 HS256，dev/prod 走同一 `TokenValidationParameters` | `src/Program.cs:42-54` 旧分支；v0.2.1 起删除 |
 | 错误分流到 JSON（OAuth `INVALID_*` 不再裸 500） | `src/Program.cs:147-167` |
-| `InMemoryStore` 是 `internal static` + `InternalsVisibleTo` 给 tests | `src/Controllers/Implementation/InMemoryStore.cs:1-4` |
+| `InMemoryStore` 是 `internal static` + `InternalsVisibleTo` 给 tests | **已删除 2026-08-30** |
 
 ---
 
@@ -487,15 +466,15 @@ saas-identity-platform-aspnetcore/    (本仓)
 | **NSwag codegen** | OpenAPI → C# Controllers + DTOs 的工具链 | `aspnetcore.nswag` 配置 + `nswag run` CLI |
 | **abstract base** | NSwag 产物（`controllerStyle: Abstract`），含路由 attribute 与 `throw NotImplementedException` 的 abstract 方法 | `src/Controllers/Generated/Controllers.cs` |
 | **partial class concrete** | 手写继承 abstract base，覆盖 abstract 方法 + 调 TenantGuard | `src/Controllers/Implementation/<Tag>Controller.cs` |
-| **InMemoryStore** | scaffold 阶段进程内 fixture（重启丢失） | `src/Controllers/Implementation/InMemoryStore.cs` |
+| **InMemoryStore** | **已删除 2026-08-30**；运行时全走 AppDbContext | （无） |
 | **TenantGuard** | path `tenantId` vs JWT `tenant_id` claim 校验 | `src/Security/TenantGuard.cs`；dev 兜底信 path |
 | **TenantContext** | 从 `IHttpContextAccessor` 读 JWT claims | `src/Security/TenantContext.cs` |
 | **JwtIssuer** | HS256 access token 签发（Auth + Oauth 共用） | `src/Security/JwtIssuer.cs` |
 | **dev JWT fixture** | dev-only `alg=none` + dev-placeholder sig 模拟 token（test/MSW 用） | prod profile 不加载 `RequireSignedTokens=false` 分支；prod 走 `JwtIssuer` HS256 真签 + JwtBearer 真验签 |
 | **RequireSignedTokens=false** | JwtBearer 8 放行 unsigned token 的开关 | dev 分支唯一必须开关 |
-| **`[assembly: CollectionBehavior(DisableTestParallelization)]`** | xUnit 顺序跑测试（InMemoryStore 是 static fixture） | `tests/SequentialCollection.cs` |
+| **`[assembly: CollectionBehavior(DisableTestParallelization)]`** | **已删除 2026-08-30** —— InMemoryStore 删了，并发约束随之解绑 | （无） |
 | **`ApplicationPart`** | ASP.NET Core 把 NSwag 产物所在 assembly 注册进来 | `Program.cs:99-100` |
-| **`InternalsVisibleTo` attribute** | 让 tests assembly 访问 `internal` 类型（InMemoryStore） | `InMemoryStore.cs:1-4` |
+| **`InternalsVisibleTo` attribute** | **已删除 2026-08-30** —— InMemoryStore 删了，attribute 一并移除 | （无） |
 | **`__ef_migrations_history` 表** | EF Core 迁移历史表（启动**不**用它跑 migrate） | `Program.cs:94` |
 | **`EnableDynamicJson()`** | Npgsql 8 显式开启 `Dictionary<string,object?>` ↔ `jsonb` 动态映射 | `Program.cs:90` |
 | **`ErrorApp`** | ASP.NET Core 错误分流中间件（OAuth `INVALID_*` → JSON body） | `Program.cs:147-167` |
@@ -545,7 +524,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 
 **关键差异**：
 
-- **测试并行**：本仓**禁并行**（InMemoryStore 是 static fixture）；springboot `@DirtiesContext` 隔离但仍可并行；
+- **测试并行**：本仓**已开并行**（2026-08-30 删 InMemoryStore 后解绑）；springboot `@DirtiesContext` 隔离但仍可并行；
 - **DB 落地**：springboot 用 Hibernate `ddl-auto=none` + shared SQL 灌入；本仓 EF 镜像 SQL 是 ADR-0010 主线但 InitialSchema 尚未提交；
 - **路由继承**：本仓 `partial class` 继承 NSwag abstract base（路由在 base）；springboot `@RestController implements Api`（路由在 interface）。
 

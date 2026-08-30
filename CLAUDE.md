@@ -19,8 +19,7 @@ SaaS 多租户多应用身份平台的 C# 后端。NSwag 读 shared OpenAPI 生�
 - 禁止手写 fetch/HttpClient（直接实现 abstract 方法）
 - 禁止把 shared 列为依赖（NSwag 直接读相对路径）
 - 禁止删 `src/Controllers/Implementation/` 的 concrete 类；禁止直接编辑 NSwag 产物
-- 禁止修改 InMemoryStore 字段名（与 NSwag DTO 强绑定）
-- 禁止测试并行运行（InMemoryStore 是 static fixture）
+- 禁止删 `src/Controllers/Implementation/` 的 concrete 类；禁止直接编辑 NSwag 产物
 
 ## 3. 技术栈与版本（钉死于 version-lock.json）
 
@@ -36,7 +35,7 @@ ASP.NET Core 8 + xUnit + JwtBearer + NSwag codegen。明细见 `version-lock.jso
 ## 5. 指向别处
 
 - 契约真源 → `../saas-identity-platform-shared`
-- 核心基建：TenantContext / TenantGuard / InMemoryStore / gen-shared.sh
+- 核心基建：TenantContext / TenantGuard / AppDbContext / gen-shared.sh
 - 决策 → `docs/adr/`；细则 → `docs/conventions/`；待办 → `PLAN.md`；版本 → `CHANGELOG.md`
 
 ## 6. 工作循环

@@ -7,6 +7,27 @@ using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 
+// 2026-08-30 fail-fast：secret 缺失立即抛错，并指明缺哪个 key、去哪配。
+// dev 用 .env.test（带 dev-key-32-bytes-minimum-length!）；prod 用 VPS env-file 注入。
+// secret 长度 ≥32B 是 HS256 RFC 7518 硬约束（<32B 启动时直接抛）。
+static SymmetricSecurityKey BuildJwtSigningKey(IConfiguration cfg)
+{
+    var key = cfg["JWT_SIGNING_KEY"];
+    if (string.IsNullOrEmpty(key))
+    {
+        throw new InvalidOperationException(
+            "JWT_SIGNING_KEY 未配置。dev 加载 .env.test；prod 由 deploy 脚本写入 VPS env-file。" +
+            "本规则遵循 CLAUDE.md「禁止 env 默认值兜底」：secret 缺失必须 fail-fast。");
+    }
+    var bytes = System.Text.Encoding.UTF8.GetByteCount(key);
+    if (bytes < 32)
+    {
+        throw new InvalidOperationException(
+            $"JWT_SIGNING_KEY 长度不足 32B（HS256 RFC 7518 要求），当前 {bytes}B。");
+    }
+    return new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(key));
+}
+
 // appsettings*.json 在仓根，csproj 已拷到 bin/。强制 ContentRoot = bin 目录，
 // 这样不管 cwd 是 src/、仓根、还是生产部署的任意路径，配置文件都能被加载。
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -54,8 +75,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["JWT_ISSUER"],
             ValidAudience = builder.Configuration["JWT_AUDIENCE"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT_SIGNING_KEY"] ?? "dev-key-32-bytes-minimum-length!")),
+            // 2026-08-30 fail-fast：删掉 `?? "dev-key-32-bytes-minimum-length!"` 静默兜底。
+            // secret 缺失必须显式失败，并指出缺哪个 key、去哪配（CLAUDE.md 硬规则）。
+            IssuerSigningKey = BuildJwtSigningKey(builder.Configuration),
         };
     });
 
