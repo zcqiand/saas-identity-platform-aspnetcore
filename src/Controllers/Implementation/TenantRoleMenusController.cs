@@ -28,6 +28,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
     private static RoleMenuGrantDto ToDto(DbGrant e) => new()
     {
         RoleId = e.RoleId,
+        TenantId = e.TenantId,
         MenuIds = (e.MenuIds ?? new()).Select(g => g.ToString()).ToList(),
         UpdatedAt = e.UpdatedAt,
     };
@@ -35,6 +36,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
     public override async Task<RoleMenuGrantDto> MenusGet(string tenantId, string roleId)
     {
         _guard.VerifyPathTenant(tenantId);
+        var tid = Guid.Parse(tenantId);
         var id = Guid.Parse(roleId);
         var row = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
         if (row == null)
@@ -42,6 +44,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
             return new RoleMenuGrantDto
             {
                 RoleId = id,
+                TenantId = tid,
                 MenuIds = new List<string>(),
                 UpdatedAt = DateTimeOffset.UtcNow,
             };
@@ -85,6 +88,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         return new RoleMenuGrantDto
         {
             RoleId = id,
+            TenantId = tid,
             MenuIds = menuIds.Select(g => g.ToString()).ToList(),
             UpdatedAt = DateTimeOffset.UtcNow,
         };

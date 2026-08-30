@@ -14,6 +14,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 /// <summary>
 /// Concrete M02.F01 角色 CRUD（tenant-scoped）+ M02.F02 权限矩阵。
 /// v0.4.0：从 InMemoryStore 迁到 AppDbContext。
+/// 2026-08-30：ToDto 加 PermissionIds（join RolePermissions → permissions.id），
+///   contract-test M96.F02.I07/I08 要求 role 必含 permissionIds。
 /// </summary>
 public class TenantRolesController : TenantRolesControllerBase
 {
@@ -26,16 +28,36 @@ public class TenantRolesController : TenantRolesControllerBase
         _db = db;
     }
 
-    private static ApiRole ToDto(DbRole e) => new()
+    private static ApiRole ToDto(DbRole e, IEnumerable<Guid> permissionIds) => new()
     {
         Id = e.Id,
         TenantId = e.TenantId,
         Code = e.Code,
         Name = e.Name,
         Description = e.Description,
+        PermissionIds = permissionIds.Select(g => g.ToString()).ToList(),
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
     };
+
+    /// <summary>单 role 的 permission UUID 列表（M:N join）。</summary>
+    private Task<List<Guid>> PermissionIdsForRole(Guid roleId)
+        => _db.RolePermissions
+            .Where(rp => rp.RoleId == roleId)
+            .Select(rp => rp.PermissionId)
+            .ToListAsync();
+
+    /// <summary>批量：roleId → permissionIds（避免 N+1）。</summary>
+    private async Task<Dictionary<Guid, List<Guid>>> PermissionIdsForRoles(IReadOnlyCollection<Guid> roleIds)
+    {
+        if (roleIds.Count == 0) return new();
+        var rows = await _db.RolePermissions
+            .Where(rp => roleIds.Contains(rp.RoleId))
+            .Select(rp => new { rp.RoleId, rp.PermissionId })
+            .ToListAsync();
+        return rows.GroupBy(r => r.RoleId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.PermissionId).ToList());
+    }
 
     public override async Task<Response10> RolesGet(string tenantId, int? page, int? pageSize)
     {
@@ -47,9 +69,10 @@ public class TenantRolesController : TenantRolesControllerBase
         var total = await q.CountAsync();
         var items = await q.OrderByDescending(r => r.CreatedAt)
             .Skip((p - 1) * ps).Take(ps).ToListAsync();
+        var perms = await PermissionIdsForRoles(items.Select(r => r.Id).ToList());
         return new Response10
         {
-            Items = items.Select(ToDto).ToList(),
+            Items = items.Select(r => ToDto(r, perms.TryGetValue(r.Id, out var p) ? p : new())).ToList(),
             Page = p,
             PageSize = ps,
             Total = total,
@@ -69,7 +92,8 @@ public class TenantRolesController : TenantRolesControllerBase
         };
         _db.Roles.Add(e);
         await _db.SaveChangesAsync();
-        return ToDto(e);
+        // 新建角色无 permission
+        return ToDto(e, Array.Empty<Guid>());
     }
 
     public override async Task<ApiRole> RolesGet(string tenantId, string roleId)
@@ -77,7 +101,7 @@ public class TenantRolesController : TenantRolesControllerBase
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
         var e = await _db.Roles.FirstAsync(r => r.Id == id);
-        return ToDto(e);
+        return ToDto(e, await PermissionIdsForRole(id));
     }
 
     public override async Task<ApiRole> RolesPatch(string tenantId, string roleId, UpdateRoleRequest body)
@@ -88,7 +112,8 @@ public class TenantRolesController : TenantRolesControllerBase
         if (body.Name != null) e.Name = body.Name;
         if (body.Description != null) e.Description = body.Description;
         await _db.SaveChangesAsync();
-        return ToDto(e);
+        // PATCH 不动 permission，返回当前快照
+        return ToDto(e, await PermissionIdsForRole(id));
     }
 
     public override async Task RolesDelete(string tenantId, string roleId)
@@ -118,6 +143,7 @@ public class TenantRolesController : TenantRolesControllerBase
             .ToList();
         if (newPerms.Count > 0) _db.RolePermissions.AddRange(newPerms);
         await _db.SaveChangesAsync();
-        return ToDto(role);
+        // 返回刚设置完的 permissionIds
+        return ToDto(role, newPerms.Select(np => np.PermissionId).ToList());
     }
 }
