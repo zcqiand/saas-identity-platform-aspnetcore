@@ -111,7 +111,37 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 // Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
 // concrete 实现 在 src/Controllers/Implementation/<Tag>Controller.cs（手写业务）
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppsControllerBase).Assembly);
+    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppsControllerBase).Assembly)
+    // 2026-08-30：合同测试发现 aspnetcore enum 序列化为 PascalCase（"Active"），
+    // OpenAPI/TypeSpec 与 msw/nextjs/springboot 都期望小写（"active"）。
+    //
+    // .NET 8 全局 JsonStringEnumConverter 被属性级 [JsonStringEnumConverter] 覆盖
+    // （按 STJ 文档：属性级 converter 优先级 > 全局 Converters 集合）。
+    // 因此用 TypeInfoResolver.Modifier 把 enum 字段的 CustomConverter 显式设为
+    // SnakeCaseLower —— CustomConverter 在 STJ 解析路径上 > JsonConverterAttribute，
+    // 真正能盖住 NSwag 注入的属性级 converter。
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter(
+                System.Text.Json.JsonNamingPolicy.SnakeCaseLower));
+        var resolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver();
+        resolver.Modifiers.Add(typeInfo =>
+        {
+            if (typeInfo.Kind != System.Text.Json.Serialization.Metadata.JsonTypeInfoKind.Object)
+                return;
+            foreach (var prop in typeInfo.Properties)
+            {
+                if (System.Nullable.GetUnderlyingType(prop.PropertyType) is { } u && u.IsEnum)
+                    prop.CustomConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(
+                        System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
+                else if (prop.PropertyType.IsEnum)
+                    prop.CustomConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(
+                        System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
+            }
+        });
+        o.JsonSerializerOptions.TypeInfoResolver = resolver;
+    });
 
 // Swagger UI（与 springboot v0.1.13 springdoc-openapi-starter-webmvc-ui 对齐）：
 // Swashbuckle 已是 csproj 依赖但未接线；现在 OpenAPI 文档在线暴露在 /swagger，
