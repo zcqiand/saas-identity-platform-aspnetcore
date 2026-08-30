@@ -34,7 +34,7 @@ public class TenantRolesController : TenantRolesControllerBase
         TenantId = e.TenantId,
         Code = e.Code,
         Name = e.Name,
-        Description = e.Description,
+        // 2026-08-30 contract-test I07/I08: 不返 description(msw/nextjs 不返, 字节对齐)
         PermissionIds = permissionIds.Select(g => g.ToString()).ToList(),
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
@@ -63,12 +63,12 @@ public class TenantRolesController : TenantRolesControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);
-        var p = page ?? 1;
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var q = _db.Roles.Where(r => r.TenantId == tid);
         var total = await q.CountAsync();
         var items = await q.OrderByDescending(r => r.CreatedAt)
-            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+            .Skip(p * ps).Take(ps).ToListAsync();
         var perms = await PermissionIdsForRoles(items.Select(r => r.Id).ToList());
         return new Response10
         {

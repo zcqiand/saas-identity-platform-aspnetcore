@@ -49,7 +49,7 @@ public class TenantAuditController : TenantAuditControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);
-        var p = page ?? 1;
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var q = _db.AuditEvents.Where(e => e.TenantId == tid);
         if (!string.IsNullOrEmpty(actorUserId)) q = q.Where(e => e.ActorUserId == Guid.Parse(actorUserId));
@@ -58,7 +58,7 @@ public class TenantAuditController : TenantAuditControllerBase
         if (to.HasValue) q = q.Where(e => e.OccurredAt <= to.Value);
         var total = await q.CountAsync();
         var items = await q.OrderByDescending(e => e.OccurredAt)
-            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+            .Skip(p * ps).Take(ps).ToListAsync();
         return new Response5
         {
             Items = items.Select(ToEventDto).ToList(),
@@ -73,12 +73,12 @@ public class TenantAuditController : TenantAuditControllerBase
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);
         var uid = Guid.Parse(userId);
-        var p = page ?? 1;
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var q = _db.AuditEvents.Where(e => e.TenantId == tid && e.ActorUserId == uid);
         var total = await q.CountAsync();
         var items = await q.OrderByDescending(e => e.OccurredAt)
-            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+            .Skip(p * ps).Take(ps).ToListAsync();
         return new Response6
         {
             Items = items.Select(ToEventDto).ToList(),

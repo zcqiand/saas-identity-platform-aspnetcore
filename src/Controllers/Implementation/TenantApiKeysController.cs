@@ -58,12 +58,12 @@ public class TenantApiKeysController : TenantApiKeysControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);
-        var p = page ?? 1;
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var items = await _db.ApiKeys
             .Where(k => k.TenantId == tid)
             .OrderByDescending(k => k.CreatedAt)
-            .Skip((p - 1) * ps).Take(ps)
+            .Skip(p * ps).Take(ps)
             .ToListAsync();
         var total = await _db.ApiKeys.CountAsync(k => k.TenantId == tid);
         return new Response4
