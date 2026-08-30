@@ -37,6 +37,45 @@ mkdir -p "$ROOT/src/Controllers/Generated" "$ROOT/src/Models/Generated"
 # the path declared in `documentGenerator.fromDocument.url`.
 (cd "$ROOT" && nswag run "$NSWAG_CONFIG")
 
+# Post-process NSwag output: inject [JsonIgnore(WhenWritingDefault)] above
+# specific value-type fields whose TypeSpec uses '?' (optional) but the
+# TypeSpec → OpenAPI 3.1 emit doesn't carry a nullable union. NSwag then
+# generates non-nullable Guid / DateTimeOffset, and the implementation
+# encodes "missing value" as default (Guid.Empty / DateTimeOffset.MinValue)
+# via `?? Guid.Empty` / `?? default`. Without this attribute, System.Text.Json
+# would serialize Guid.Empty as "00000000-..." or MinValue as "0001-01-01...",
+# which contract-test normalize() can't reconcile with msw/nextjs/springboot's
+# null/missing output. The attribute suppresses default-value emission so the
+# JSON simply omits the field — which normalize() treats as identical to null
+# (M96.F01.I03: 「字段缺失」与「显式 null」等价).
+#
+# Keep this list aligned with [lab-management-systems-shared-aspnetcore-co-rule]
+# in the contract-test ADR; when a new endpoint emits a default-encoded field,
+# add it here.
+CONTROLLERS="$ROOT/src/Controllers/Generated/Controllers.cs"
+for FIELD in parentId lastUsedAt expiresAt revokedAt; do
+  # Match the JsonPropertyName attribute line and inject JsonIgnore above it.
+  # Use Python (not sed) so the multi-platform shell handles newline insertion reliably.
+  python3 - "$CONTROLLERS" "$FIELD" <<'PY'
+import re, sys, pathlib
+path, field = sys.argv[1], sys.argv[2]
+p = pathlib.Path(path)
+src = p.read_text(encoding="utf-8")
+attr = ('[System.Text.Json.Serialization.JsonIgnore(Condition = '
+        'System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]')
+pattern = re.compile(
+    r'^(\s*)\[System\.Text\.Json\.Serialization\.JsonPropertyName\("' + re.escape(field) + r'"\)\]',
+    re.MULTILINE,
+)
+new = pattern.sub(r'\1' + attr + r'\n\1[System.Text.Json.Serialization.JsonPropertyName("' + field + r'")]', src)
+if new == src:
+    print(f'[gen-shared] WARN: {field} not found in {path}', file=sys.stderr)
+else:
+    p.write_text(new, encoding="utf-8")
+    print(f'[gen-shared] patched [JsonIgnore] onto {field}')
+PY
+done
+
 # M10.Database (ADR-0007 + ADR-0010) — DB SQL SSOT 落地 + EF Migrations 镜像
 echo "[gen-shared] step 3/3 — DB: copy shared/sql/migrations/* + 触发 EF migrations script..."
 SHARED_SQL="$SHARED_DIR/sql/migrations"

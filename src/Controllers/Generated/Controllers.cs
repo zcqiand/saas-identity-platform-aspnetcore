@@ -341,11 +341,17 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset CreatedAt { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
         [System.Text.Json.Serialization.JsonPropertyName("lastUsedAt")]
         public System.DateTimeOffset LastUsedAt { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
         [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
         public System.DateTimeOffset ExpiresAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("revokedAt")]
         public System.DateTimeOffset RevokedAt { get; set; }
@@ -633,6 +639,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("scopes")]
         public System.Collections.Generic.List<string> Scopes { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
         [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
         public System.DateTimeOffset ExpiresAt { get; set; }
 
@@ -734,6 +742,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class CreateMenuRequest
     {
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
         public System.Guid ParentId { get; set; }
@@ -914,6 +924,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid AppId { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
         public System.Guid ParentId { get; set; }
 
@@ -1072,6 +1084,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("appId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid AppId { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
         public System.Guid ParentId { get; set; }
@@ -1323,6 +1337,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
         public string RefreshToken { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
@@ -1588,6 +1604,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     public partial class UpdateMenuRequest
     {
 
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
         public string ParentId { get; set; }
 
@@ -1776,6 +1794,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Body
     {
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
         public string ParentId { get; set; }
