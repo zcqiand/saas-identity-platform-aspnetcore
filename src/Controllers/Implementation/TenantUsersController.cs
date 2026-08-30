@@ -72,12 +72,13 @@ public class TenantUsersController : TenantUsersControllerBase
         // M01.F01.I01 用户列表（tenant-scoped）
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);
-        var p = page ?? 1;
+        // 2026-08-30 contract-test：其他 3 后端 0-indexed（Spring Data PageRequest 约定），aspnetcore 改为 0-indexed 对齐
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var q = _db.Users.Where(u => u.TenantId == tid);
         if (status.HasValue) q = q.Where(u => u.Status == ToDbStatus(status.Value));
         var items = await q.OrderByDescending(u => u.CreatedAt)
-            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+            .Skip(p * ps).Take(ps).ToListAsync();
         var total = await q.CountAsync();
         return new Response11
         {
