@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Domain.Entities;
@@ -184,5 +186,32 @@ public class TenantApiKeysController : TenantApiKeysControllerBase
             ApiKey = ToDto(newEntity),
             Secret = secret,
         };
+    }
+
+    // M05.F01.I05 物理删除（区别于 I03 revoke 软删：直接 DELETE FROM api_keys，无审计事件）
+    // 与 I03 revoke 并存：revoke 保留行（status=revoked + revokedAt）；本 op 行消失。
+    // 幂等：重复删已不存在的 keyId 抛 InvalidOperationException（FirstAsync 未找到），global handler → 404。
+    // @entry M05.F01.I05
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public override async Task ApiKeysDelete(string tenantId, string keyId)
+    {
+        _guard.VerifyPathTenant(tenantId);
+        var id = Guid.Parse(keyId);
+        var e = await _db.ApiKeys.FirstOrDefaultAsync(k => k.Id == id);
+        if (e == null)
+        {
+            // 2026-08-31 contract-test I21：重复 DELETE 期望 404（幂等性）而非 500。
+            // FirstAsync 抛 InvalidOperationException 落全局 catch → 500。
+            // 改 FirstOrDefaultAsync 后显式抛 KeyNotFoundException，由 Program.cs 映射 404。
+            throw new KeyNotFoundException($"api key {keyId} not found");
+        }
+        _db.ApiKeys.Remove(e);
+        await _db.SaveChangesAsync();
+        // NSwag 生成的 abstract 签名是 Task（非 Task<IActionResult>）—— ASP.NET Core 框架
+        // 对 Task DELETE action 不会自动返 204（默认 200 空 body）。OpenAPI 契约要求 204，
+        // 显式置状态码以满足 contract-test I21（参照 msw + springboot + nextjs 三家均返 204）。
+        HttpContext.Response.StatusCode = StatusCodes.Status204NoContent;
+        // 不写 audit event（物理删不留痕；与 revoke 写 api_key_revoked 形成对照）
     }
 }

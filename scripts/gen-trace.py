@@ -48,6 +48,11 @@ trace = {
         {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_redirectUriMismatch_throws", "fns": ["M04.F03.I08"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshToken_happyPath", "fns": ["M04.F03.I09"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshTokenReuse_throws", "fns": ["M04.F03.I09"], "inert": False},
+
+        # v0.4.0 写端点第二期 — TenantApiKeysControllerTests 5 个 Skip 占位测试不带 [Trait("Fn")]
+        # （CLAUDE.md §2「禁止给 skip/xfail 的测试挂功能 ID」）。等 Phase 5 Testcontainers PG
+        # 落地真启跑后再补 [Trait] + 登记到此处。M05.F01.I05 的 trace 锚点由 contract-test 仓
+        # M96.F02.I21 提供的实跑（start-family.sh + 4 后端 live vitest）承担。
     ],
 }
 

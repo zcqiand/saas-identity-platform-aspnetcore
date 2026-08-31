@@ -62,7 +62,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Username).HasColumnName("username").HasMaxLength(64).IsRequired();
             e.Property(x => x.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
             e.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(255);
-            e.Property(x => x.Status).HasColumnName("status").HasColumnType("user_status").IsRequired();
+            e.Property(x => x.Status).HasColumnName("status").HasColumnType("user_status")
+                .HasConversion(s => Enum.Parse<UserStatusPg>(s),
+                               pg => pg.ToString())
+                .IsRequired();
             e.Property(x => x.PasswordHash).HasColumnName("password_hash").HasMaxLength(255);
             e.Property(x => x.RoleIds).HasColumnName("role_ids").HasColumnType("uuid[]").IsRequired();
             e.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamptz").IsRequired();

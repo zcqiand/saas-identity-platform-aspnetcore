@@ -100,7 +100,7 @@ public class TenantUsersController : TenantUsersControllerBase
             Username = body.Username,
             Email = body.Email,
             DisplayName = body.DisplayName,
-            Status = "invited",
+            Status = "active",
             RoleIds = ParseRoleIds(body.RoleIds),
             // Phase 5：换 argon2.hash(body.Password)
             PasswordHash = body.Password != null ? $"plain:{body.Password}" : null,

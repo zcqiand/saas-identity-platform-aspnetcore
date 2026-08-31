@@ -4,23 +4,17 @@
   "functions": {
     "modules": 9,
     "features": 20,
-    "items": 57
+    "items": 58
   },
   "warnings_total": 3,
   "warnings": {
-    "已上线但无设计映射": [
-      "M09.F03.I04"
-    ],
     "已上线但无测试引用": [
-      "M09.F03.I04"
-    ],
-    "已上线但不在任何流程且非孤儿白名单": [
+      "M05.F01.I05",
+      "M09.F02.I02",
       "M09.F03.I04"
     ]
   },
-  "unreachable_shipped": [
-    "M09.F03.I04"
-  ],
+  "unreachable_shipped": [],
   "function_map": {
     "M00.F01.I01": {
       "name": "租户列表（平台）",
@@ -119,11 +113,15 @@
     },
     "M01.F01.I02": {
       "name": "邀请/创建用户",
-      "status": "规划",
+      "status": "已上线",
       "type": "接口",
       "requirements": [],
-      "flows": [],
-      "designs": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
       "tests": [
         "Saas.Identity.AspNetCore.Tests.TenantGuardTests.CreateUser_returnsUser"
       ],
@@ -475,6 +473,20 @@
       "tests": [],
       "entry": []
     },
+    "M05.F01.I05": {
+      "name": "物理删除 API Key（区别于 I03 revoke 软删；幂等——重复删 → 404）",
+      "status": "已上线",
+      "type": "接口",
+      "requirements": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
+      "tests": [],
+      "entry": []
+    },
     "M06.F01.I01": {
       "name": "审计事件列表",
       "status": "规划",
@@ -597,11 +609,15 @@
     },
     "M09.F02.I02": {
       "name": "设置角色菜单",
-      "status": "规划",
+      "status": "已上线",
       "type": "接口",
       "requirements": [],
-      "flows": [],
-      "designs": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
       "tests": [],
       "entry": []
     },
@@ -618,10 +634,14 @@
     "M09.F03.I04": {
       "name": "我的有效菜单",
       "status": "已上线",
-      "type": "查询",
+      "type": "接口",
       "requirements": [],
-      "flows": [],
-      "designs": [],
+      "flows": [
+        "docs\\design\\flow-function-map.md"
+      ],
+      "designs": [
+        "docs\\design\\design-function-map.md"
+      ],
       "tests": [],
       "entry": []
     }

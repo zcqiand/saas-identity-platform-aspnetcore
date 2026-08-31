@@ -188,6 +188,10 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys")]
         public abstract System.Threading.Tasks.Task<CreateApiKeyResponse> ApiKeysPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateApiKeyRequest body);
 
+        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}")]
+        public abstract System.Threading.Tasks.Task ApiKeysDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
+
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}/revoke")]
         public abstract System.Threading.Tasks.Task<ApiKey> Revoke([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);

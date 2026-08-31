@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -131,6 +132,7 @@ dataSourceBuilder.EnableDynamicJson();
 // EF Core 端写 string（`DbApiKey.Status = "active"`），读写双向 Npgsql 都做 enum↔string。
 dataSourceBuilder.MapEnum<ApiKeyStatusPg>("api_key_status");
 dataSourceBuilder.MapEnum<AuditActionPg>("audit_action");
+dataSourceBuilder.MapEnum<UserStatusPg>("user_status");
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddSingleton(dataSource);
 builder.Services.AddDbContext<AppDbContext>(o =>
@@ -233,6 +235,9 @@ app.UseExceptionHandler(errorApp =>
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             AccountLockedException => StatusCodes.Status423Locked,
             ArgumentException => StatusCodes.Status400BadRequest,
+            // 2026-08-31 contract-test I21：M05.F01.I05 物理删幂等 — 重复 DELETE 已不存在的 keyId
+            // 抛 KeyNotFoundException → 404（真后端要返 404，Next.js/m-sw/orval oracle 已对齐）。
+            KeyNotFoundException => StatusCodes.Status404NotFound,
             _ => StatusCodes.Status500InternalServerError,
         };
         ctx.Response.ContentType = "application/json";
@@ -241,6 +246,7 @@ app.UseExceptionHandler(errorApp =>
             UnauthorizedAccessException => "UNAUTHORIZED",
             AccountLockedException => "ACCOUNT_LOCKED",
             ArgumentException => "INVALID_REQUEST",
+            KeyNotFoundException => "NOT_FOUND",
             _ => "INTERNAL_ERROR",
         };
         await ctx.Response.WriteAsJsonAsync(new { error = code, error_description = ex?.Message ?? "unknown" });

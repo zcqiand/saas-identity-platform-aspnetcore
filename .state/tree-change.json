@@ -1,20 +1,14 @@
 {
   "schema": 1,
   "approved": true,
-  "base_sha": "11f14cd995d1ad62",
-  "summary": "M09.F03 + I04 状态 规划 → 已上线 — saas-aspnetcore MeController.Menus 真接 role_menu_grants JOIN (PLAN-2026-002 commit fe07654/495d197)。I01/I02/I03 不在本仓 function-tree 列表, 跨仓 shared 是 canonical (跟 shared 提案同步)",
+  "base_sha": "111774e0483dbe66",
+  "summary": "aspnetcore 本地 function-tree 补登：M05.F01.I05 (DELETE api-key 物理删，ApiKeysDelete 已实装 + 5 Skip 测试等 Phase 5 Testcontainers)",
   "changes": [
     {
-      "id": "M09.F03",
-      "action": "变更",
-      "new_status": "已上线",
-      "reason": "PLAN-2026-002 T-1 实施 (commit fe07654) MeController.Menus 真接 role_menu_grants JOIN; msw fixture 对齐; contract-test 88/0/8 实跑绿"
-    },
-    {
-      "id": "M09.F03.I04",
-      "action": "变更",
-      "new_status": "已上线",
-      "reason": "MeController.Menus 已实装 按 app.code 分组输出 (commit fe07654)"
+      "id": "M05.F01.I05",
+      "action": "新增",
+      "name": "物理删除 DELETE /tenants/{t}/api-keys/{k}（区别于 I03 revoke 软删；幂等——重复删 → 404）",
+      "reason": "写端点第二期：ApiKeysDelete() 已实装（NSwag regen 后 abstract base 含此方法）+ 5 测试 Skip 等 Phase 5 Testcontainers PG（InMemory provider 撞 ApiKey.Scopes text[] 跑不动）。当前 inert=true 不触发 L5，但防御性本地登记。"
     }
   ],
   "sync_files": [
