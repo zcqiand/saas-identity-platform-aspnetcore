@@ -1,10 +1,12 @@
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
-using DbApiKey = Saas.Identity.AspNetCore.Domain.Entities.ApiKey;
 using Saas.Identity.AspNetCore.Security;
+using Saas.Identity.AspNetCore.Services;
+using DbApiKey = Saas.Identity.AspNetCore.Domain.Entities.ApiKey;
 
 // alias 避免与 NSwag-generated DTO `ApiKey` 冲突
 using ApiKeyDto = Saas.Identity.AspNetCore.Controllers.Generated.ApiKey;
@@ -19,11 +21,26 @@ public class TenantApiKeysController : TenantApiKeysControllerBase
 {
     private readonly TenantGuard _guard;
     private readonly AppDbContext _db;
+    private readonly IAuditWriter _audit;
+    private readonly IHttpContextAccessor _http;
 
-    public TenantApiKeysController(TenantGuard guard, AppDbContext db)
+    public TenantApiKeysController(
+      TenantGuard guard,
+      AppDbContext db,
+      IAuditWriter audit,
+      IHttpContextAccessor http)
     {
         _guard = guard;
         _db = db;
+        _audit = audit;
+        _http = http;
+    }
+
+    private Guid? CallerUserId()
+    {
+        var sub = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? _http.HttpContext?.User.FindFirstValue("sub");
+        return Guid.TryParse(sub, out var id) ? id : null;
     }
 
     private static ApiKeyDto ToDto(DbApiKey e) => new()
@@ -93,6 +110,13 @@ public class TenantApiKeysController : TenantApiKeysControllerBase
         };
         _db.ApiKeys.Add(entity);
         await _db.SaveChangesAsync();
+        var caller = CallerUserId();
+        await _audit.WriteAsync(
+          tenantId,
+          caller?.ToString(),
+          "api_key_created",
+          targetUserId: null,
+          new Dictionary<string, object?> { ["apiKeyId"] = entity.Id.ToString() });
         return new CreateApiKeyResponse
         {
             ApiKey = ToDto(entity),
@@ -108,6 +132,13 @@ public class TenantApiKeysController : TenantApiKeysControllerBase
         e.Status = "revoked";
         e.RevokedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
+        var caller = CallerUserId();
+        await _audit.WriteAsync(
+          tenantId,
+          caller?.ToString(),
+          "api_key_revoked",
+          targetUserId: null,
+          new Dictionary<string, object?> { ["apiKeyId"] = e.Id.ToString() });
         return ToDto(e);
     }
 
@@ -135,6 +166,19 @@ public class TenantApiKeysController : TenantApiKeysControllerBase
         };
         _db.ApiKeys.Add(newEntity);
         await _db.SaveChangesAsync();
+        var caller = CallerUserId();
+        await _audit.WriteAsync(
+          tenantId,
+          caller?.ToString(),
+          "api_key_revoked",
+          targetUserId: null,
+          new Dictionary<string, object?> { ["apiKeyId"] = old.Id.ToString() });
+        await _audit.WriteAsync(
+          tenantId,
+          caller?.ToString(),
+          "api_key_created",
+          targetUserId: null,
+          new Dictionary<string, object?> { ["apiKeyId"] = newEntity.Id.ToString() });
         return new CreateApiKeyResponse
         {
             ApiKey = ToDto(newEntity),

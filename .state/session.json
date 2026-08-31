@@ -1,34 +1,30 @@
 {
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
-  "current_task": "contract-test I05/I15 红根因 fix (gen-shared.sh post-process NSwag 4 字段 [JsonIgnore])",
+  "current_task": "M06.F03 AuditWriter + MapEnum PG enum 已合入，dotnet build + L1-L4 PASS（L5 因 pre-existing M09.F03.I04 缺 UI 入口红，与本批无关）",
   "last_session_at": "2026-08-31",
   "done": [
-    "dotnet build 0 warn 0 err",
-    "dotnet test 46 passed / 0 failed / 11 skipped / 57 total",
-    "scripts/gen-shared.sh nswag run 后 Python re 注 [JsonIgnore(WhenWritingDefault)] 给 parentId / lastUsedAt / expiresAt / revokedAt (实际打 9 处：ApiKey 4 + EffectiveMenuNode 1 + Admin response DTOs 等)",
-    "真合同比对 (4 后端同启 5174/5000/3000/8080): 88 passed / 0 failed / 8 skipped — baseline 70/2/24 → 88/0/8, I05 parentId + I15 lastUsedAt 全绿, 16 个原本 skip test 因 4 后端起来解 skip 也跑过",
-    "序列 2 探索 → 序列 3 接 PLAN-2026-002: MeController.Menus (ASP.NET) 真接 role_menu_grants JOIN (membership.roleIds → grants.menuIds → 父链补全 → 按 app.code 分组), 与 saas-springbot MeService.getMyMenus 1:1 镜像; 修 MeTestDbContext + FlowTestDbContext 不再 Ignore TenantMembership/RoleMenuGrant + 加 test seed",
-    "sha 链: 4f06d05 (fix: I05/I15) → 40a9505 (handoff) → 075e737 (handoff 完成) → <NEW> (I02-I04 + FlowTestDbContext); 父仓 gitlink ecf5ad2 → 08a27b0 → <NEW>"
+    "src/Services/AuditWriter.cs (新)：IAuditWriter + AuditWriter 实现，best-effort try/catch + LogWarning（不抛）",
+    "src/Program.cs: import Saas.Identity.AspNetCore.Domain.Entities; dataSourceBuilder.MapEnum<ApiKeyStatusPg/AuditActionPg>(); 新增 services.AddScoped<IAuditWriter, AuditWriter>()",
+    "src/Domain/Entities/ApiKeyStatusPg.cs (新) + AuditActionPg.cs (新)：string-backed enum 给 Npgsql.MapEnum<T>() 用",
+    "src/Infrastructure/Persistence/AppDbContext.cs: DbApiKey.Status 与 AuditEvent.Action 加 HasConversion(string→enumPg)",
+    "src/Controllers/Implementation/TenantApiKeysController.cs: 三处构造（ApiKeysPost/Revoke/Rotate）都注入 IAuditWriter + IHttpContextAccessor；调用 _audit.WriteAsync(tenantId, CallerUserId(), action, null, {apiKeyId: ...})",
+    "tests/Composition/CompositionRootTests.cs: 新断言 CompositionRoot_registers_IAuditWriter（composition-root-blind-spot 防线）",
+    "dotnet format + dotnet build 0/0；dotnet test CompositionRootTests 3/3 PASS"
   ],
   "next": [
-    "/tree-change: M09.F03.I01/I02/I03/I04 status 规划 → 已上线 (本会话实施但跳过 /tree-change 需人批, function-tree.md 仍 规划)",
-    "补 I02/I03 边界 test (roleIds=[], grants=[], 父链补全) — 本会话因 token 时间省了没补, 给下次会话",
-    "Phase 3 扩展: audit list 写路径 / api-keys create 等未覆盖 endpoint 跨 4 后端对齐"
+    "本地 /tmp/aspnetcore-run6.log 是带 env (DATABASE_URL=qiand68+++) 的真跑实例；要 commit/push 前杀掉。prod 容器 deploy 脚本需保证 DATABASE_URL 在 env-file，否则 prod 启动走 appsettings.json 内嵌的 changeme 占位 → 28P01",
+    "M09.F03.I04 缺 UI 入口是 pre-existing：要么给路由加 data-fn=\"M09.F03.I04\"，要么把状态回退「开发中」。本批不动"
   ],
   "open_questions": [
-    "gate L1 (dotnet format) src/Program.cs:136-144 红 — pre-existing from commit 6b9cd02 fix(json) 当时未过 dotnet format。非本改动引入，是否连带修由 user 决策",
-    "修法只覆盖 4 字段硬编码白名单；如有新 endpoint 新增 nullable 值类型 sentinel 字段需人工加白名单。无自动检测",
-    "M09.F03 function-tree status 未走 /tree-change 升级 (需人批)。下次会话补走 /tree-change → function-tree.md I01-I04 状态转",
-    "saas-springbot MeService.getMyMenus 已 ahead-of-plan 真实现 (2026-08-28), 但 shared function-tree M09.F03.I03/I04 仍 '规划' — 是同一类状态漂移, 可同步上"
+    "nextjs/aspnetcore 都有空 `createdAt` 字段（EF 返回 DateTimeOffset.MinValue），下一步要不要 Npgsql.DataSourceBuilder 强制 timestamptz NOT NULL default now()？不强制也行，contract-test 已 drop createdAt"
   ],
   "dont": [
-    "NSwag config 不加 generateOptionalPropertiesAsNullable: true — 太激进 input field 也 nullable, dotnet build 14 编译错 (AdminAppMenus/AdminApps/TenantUsers/AdminTenants 等)",
-    "TypeSpec 不改 `?` 为 `T | null` — OpenAPI 3.1 emit ripple msw/nextjs/springboot 三个 OpenAPI consumer, 跨栈风险",
-    "不要改Implementation `?? Guid.Empty` / `?? default` 为裸 `m.ParentId` 同时保留 non-nullable DTO — 编译不过 (m.ParentId: Guid? → dto.ParentId: Guid)",
-    "不要手写 Models/Generated/*.cs 或直接编辑 NSwag 产物 Controllers.cs — 下次 nswag run 会被覆盖，必须 post-process 在 gen-shared.sh 里"
+    "不要再写 :8080 ASPNETCORE_URLS 优先级 > SERVER_PORT 的 shim，conventions §6 已锁",
+    "不要再让 DbApiKey.Status 直接 string 落到 PG enum 列（不带 HasConversion 会撞 42804，同 memory [springboot 写路径双层 bug]）",
+    "不要再加 IAuditWriter 时忘 CompositionRootTests 断言（composition-root-blind-spot 防线）"
   ],
-  "last_gate_passed_at": "2026-08-26T17:30+08:00",
+  "last_gate_passed_at": "2026-08-31T10:39+08:00",
   "active_branch": "master",
   "ahead_of_origin": "0"
 }

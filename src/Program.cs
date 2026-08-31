@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
+using Saas.Identity.AspNetCore.Services;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 
 // 2026-08-30 fail-fast：secret 缺失立即抛错，并指明缺哪个 key、去哪配。
@@ -124,6 +126,11 @@ var pgConn = builder.Configuration["DATABASE_URL"]
     ?? builder.Configuration.GetConnectionString("Postgres");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(pgConn);
 dataSourceBuilder.EnableDynamicJson();
+// M05.F01 / M06 PG native enum 映射（V004 api_key_status / V006 audit_action）——
+// 不绑 MapEnum 则 Npgsql 把字符串当 text 发，PG 报 42804 column is of type enum。
+// EF Core 端写 string（`DbApiKey.Status = "active"`），读写双向 Npgsql 都做 enum↔string。
+dataSourceBuilder.MapEnum<ApiKeyStatusPg>("api_key_status");
+dataSourceBuilder.MapEnum<AuditActionPg>("audit_action");
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddSingleton(dataSource);
 builder.Services.AddDbContext<AppDbContext>(o =>
@@ -190,6 +197,9 @@ builder.Services.AddScoped<TenantApiKeysController>();
 builder.Services.AddScoped<TenantAuditController>();
 builder.Services.AddScoped<TenantRolesController>();
 builder.Services.AddScoped<TenantRoleMenusController>();
+// M06.F03.I01 审计写入助手 —— 所有写端点副作用发 audit_events。
+// Scoped：与 EF DbContext 同生命周期，单请求内可共享事务上下文。
+builder.Services.AddScoped<IAuditWriter, AuditWriter>();
 builder.Services.AddScoped<TenantUsersController>();
 
 var app = builder.Build();

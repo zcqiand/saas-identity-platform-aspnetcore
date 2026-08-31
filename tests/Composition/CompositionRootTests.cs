@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using Saas.Identity.AspNetCore.Services;
 using Xunit;
 using AppEntity = Saas.Identity.AspNetCore.Domain.Entities.App;
 using MenuEntity = Saas.Identity.AspNetCore.Domain.Entities.Menu;
@@ -128,5 +129,16 @@ public class CompositionRootTests
 
         var menus = await client.GetAsync("/api/v1/me/menus");
         Assert.Equal(HttpStatusCode.Unauthorized, menus.StatusCode);
+    }
+
+    // M06.F03.I01 组合根断言 —— IAuditWriter 必须注册。未注册时 ValidateOnBuild 在
+    // prod 容器暴露；本测试沿用 composition root 盲区套路（记忆：composition-root-blind-spot）。
+    [Fact]
+    public void CompositionRoot_registers_IAuditWriter()
+    {
+        using var factory = NewFactory();
+        using var scope = factory.Services.CreateScope();
+        var writer = scope.ServiceProvider.GetRequiredService<IAuditWriter>();
+        Assert.NotNull(writer);
     }
 }

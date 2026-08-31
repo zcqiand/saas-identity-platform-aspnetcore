@@ -133,7 +133,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Name).HasColumnName("name").HasMaxLength(128).IsRequired();
             e.Property(x => x.Prefix).HasColumnName("prefix").HasMaxLength(16).IsRequired();
             e.Property(x => x.SecretHash).HasColumnName("secret_hash").HasMaxLength(255).IsRequired();
-            e.Property(x => x.Status).HasColumnName("status").HasColumnType("api_key_status").IsRequired();
+            e.Property(x => x.Status).HasColumnName("status").HasColumnType("api_key_status")
+                .HasConversion(s => Enum.Parse<ApiKeyStatusPg>(s),
+                               pg => pg.ToString())
+                .IsRequired();
             e.Property(x => x.Scopes).HasColumnName("scopes").HasColumnType("text[]").IsRequired();
             e.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamptz").IsRequired();
             e.Property(x => x.LastUsedAt).HasColumnName("last_used_at").HasColumnType("timestamptz");
@@ -205,7 +208,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id").HasColumnType("uuid").ValueGeneratedOnAdd();
             e.Property(x => x.TenantId).HasColumnName("tenant_id").HasColumnType("uuid").IsRequired();
             e.Property(x => x.ActorUserId).HasColumnName("actor_user_id").HasColumnType("uuid");
-            e.Property(x => x.Action).HasColumnName("action").HasColumnType("audit_action").IsRequired();
+            e.Property(x => x.Action).HasColumnName("action").HasColumnType("audit_action")
+                .HasConversion(a => Enum.Parse<AuditActionPg>(a),
+                               pg => pg.ToString())
+                .IsRequired();
             e.Property(x => x.TargetUserId).HasColumnName("target_user_id").HasColumnType("uuid");
             e.Property(x => x.Metadata).HasColumnName("metadata").HasColumnType("jsonb").IsRequired();
             e.Property(x => x.OccurredAt).HasColumnName("occurred_at").HasColumnType("timestamptz").IsRequired();
