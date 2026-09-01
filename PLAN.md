@@ -66,8 +66,23 @@ live mode 全量跑:
 ### 修复后回归
 
 - [ ] contract-test I19 / I34 / I57 `normalize 后所有目标的成功响应字段一致` 转绿
-- [ ] I15 / I71(列表端点)的 `items[*].createdAt` 不再触发「年份超出 [2000,2100]」
+- [ ] I15 / I71(列表端点)的 `items[*].createdAt` 不再触发「年份超出 [1970,2100]」
 - [ ] 本机 prod-build smoke:启动 → POST user/role → GET 列表 → createdAt 是当前时刻(ISO 8601 毫秒 UTC)
+
+### 推荐默认值(user 拍板 2026-09-01)
+
+entity 字段如果需要兜底默认值,**不要用 `DateTimeOffset.MinValue` 或 `default`**,用 **Unix 纪元**:
+
+```csharp
+// C# DateTime / DateTimeOffset (NET 6+)
+public static readonly DateTimeOffset CreatedAtDefault = DateTimeOffset.UnixEpoch;  // = 1970-01-01T00:00:00+00:00
+// 或手写:
+// public static readonly DateTime CreatedAtDefault = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+// DateTimeOffset.UnixEpoch 经 STJ round-trip 输出 "1970-01-01T00:00:00+00:00",
+// contract-test assertTimestampShape [1970, 2100] 合法
+```
+
+**验证 `DateTimeOffset.UnixEpoch` 在 .NET 8 实际值**:`DateTimeOffset.UnixEpoch` = `1970-01-01T00:00:00.0000000+00:00`(不是 `0001-01-01`)。**用 `DateTimeOffset.UnixEpoch` 即可**,无须手写。
 
 ### 风险
 
@@ -80,3 +95,4 @@ live mode 全量跑:
 ## 迭代方向
 
 - (待补)
+
