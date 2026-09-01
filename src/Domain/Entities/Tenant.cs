@@ -14,6 +14,6 @@ public class Tenant
     public string Name { get; set; } = "";
     public string Status { get; set; } = "active";  // PG native enum tenant_status
     public Dictionary<string, object?> Settings { get; set; } = new();
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+    public DateTimeOffset UpdatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

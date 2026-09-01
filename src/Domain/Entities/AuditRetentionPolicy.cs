@@ -7,5 +7,5 @@ public class AuditRetentionPolicy
 {
     public Guid TenantId { get; set; }
     public int RetentionDays { get; set; } = 90;
-    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

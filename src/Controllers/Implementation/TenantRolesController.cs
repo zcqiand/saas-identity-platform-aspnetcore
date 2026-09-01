@@ -89,6 +89,10 @@ public class TenantRolesController : TenantRolesControllerBase
             Code = body.Code,
             Name = body.Name,
             Description = body.Description,
+            // 2026-09-01 contract-test M96.F02.I34：补 CreatedAt/UpdatedAt，
+            // 与 AdminTenantsController.TenantsPost 对齐。
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         _db.Roles.Add(e);
         await _db.SaveChangesAsync();
@@ -100,7 +104,8 @@ public class TenantRolesController : TenantRolesControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
-        var e = await _db.Roles.FirstAsync(r => r.Id == id);
+        var e = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id)
+            ?? throw new KeyNotFoundException($"Role not found");;
         return ToDto(e, await PermissionIdsForRole(id));
     }
 
@@ -108,9 +113,13 @@ public class TenantRolesController : TenantRolesControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
-        var e = await _db.Roles.FirstAsync(r => r.Id == id);
+        var e = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id)
+            ?? throw new KeyNotFoundException($"Role not found");;
         if (body.Name != null) e.Name = body.Name;
         if (body.Description != null) e.Description = body.Description;
+        // 2026-09-01 contract-test：PATCH 同步刷 UpdatedAt，
+        // 与 AdminAppMenusController.Reorder line 160 对齐。
+        e.UpdatedAt = DateTimeOffset.UtcNow;
         await _db.SaveChangesAsync();
         // PATCH 不动 permission，返回当前快照
         return ToDto(e, await PermissionIdsForRole(id));
@@ -133,7 +142,8 @@ public class TenantRolesController : TenantRolesControllerBase
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
         // 校验 role 存在
-        var role = await _db.Roles.FirstAsync(r => r.Id == id);
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id)
+            ?? throw new KeyNotFoundException($"Role not found");;
         // 整批替换 role ↔ permission M:N
         var oldPerms = await _db.RolePermissions.Where(rp => rp.RoleId == id).ToListAsync();
         if (oldPerms.Count > 0) _db.RolePermissions.RemoveRange(oldPerms);

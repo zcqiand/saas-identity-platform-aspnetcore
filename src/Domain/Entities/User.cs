@@ -17,6 +17,6 @@ public class User
     public string Status { get; set; } = "invited";  // PG native enum user_status
     public string? PasswordHash { get; set; }
     public List<Guid> RoleIds { get; set; } = new();
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+    public DateTimeOffset UpdatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

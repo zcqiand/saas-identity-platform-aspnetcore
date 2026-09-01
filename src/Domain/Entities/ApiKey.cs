@@ -13,7 +13,7 @@ public class ApiKey
     public string SecretHash { get; set; } = "";
     public string Status { get; set; } = "active";  // PG native enum api_key_status
     public List<string> Scopes { get; set; } = new();
-    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
     public DateTimeOffset? LastUsedAt { get; set; }
     public DateTimeOffset? ExpiresAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }

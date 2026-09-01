@@ -7,5 +7,5 @@ public class RolePermission
 {
     public Guid RoleId { get; set; }
     public Guid PermissionId { get; set; }
-    public DateTimeOffset GrantedAt { get; set; }
+    public DateTimeOffset GrantedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

@@ -9,5 +9,5 @@ public class Permission
     public string Code { get; set; } = "";
     public string Name { get; set; } = "";
     public string? Description { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

@@ -15,13 +15,14 @@ public class App
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public int SortOrder { get; set; } = 0;
-    public string Status { get; set; } = "active";  // PG native enum app_status
+    // 2026-09-01 contract-test I45：属性换 PG enum 类型（string 参数化成 text → 写 42804）
+    public AppStatusPg Status { get; set; } = AppStatusPg.active;
     public string ClientId { get; set; } = "";
     public string? ClientSecretHash { get; set; }
     public List<string> RedirectUris { get; set; } = new();
     public List<string> Scopes { get; set; } = new();
-    public List<string> GrantTypes { get; set; } = new();  // oauth_grant_type[]
+    public List<OAuthGrantTypePg> GrantTypes { get; set; } = new();  // oauth_grant_type[]
     public bool IsFirstParty { get; set; } = false;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+    public DateTimeOffset UpdatedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

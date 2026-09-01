@@ -11,5 +11,5 @@ public class TenantMembership
     public Guid TenantId { get; set; }
     public List<Guid> RoleIds { get; set; } = new();
     public string Status { get; set; } = "invited";  // PG native enum membership_status
-    public DateTimeOffset JoinedAt { get; set; }
+    public DateTimeOffset JoinedAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }

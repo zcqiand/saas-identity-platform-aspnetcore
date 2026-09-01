@@ -104,6 +104,10 @@ public class TenantUsersController : TenantUsersControllerBase
             RoleIds = ParseRoleIds(body.RoleIds),
             // Phase 5：换 argon2.hash(body.Password)
             PasswordHash = body.Password != null ? $"plain:{body.Password}" : null,
+            // 2026-09-01 contract-test M96.F02.I19：补 CreatedAt/UpdatedAt，
+            // 与 AdminTenantsController.TenantsPost (line 116-117) 对齐。
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         _db.Users.Add(entity);
         await _db.SaveChangesAsync();
@@ -122,6 +126,9 @@ public class TenantUsersController : TenantUsersControllerBase
             Email = body.Email,
             Status = "invited",
             RoleIds = ParseRoleIds(body.RoleIds),
+            // 2026-09-01 contract-test M96.F02.I19：补 CreatedAt/UpdatedAt。
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         _db.Users.Add(entity);
         await _db.SaveChangesAsync();
@@ -133,7 +140,8 @@ public class TenantUsersController : TenantUsersControllerBase
         // M01.F01.I03 用户详情
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstAsync(u => u.Id == uid);
+        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException($"User not found");;
         return ToDto(entity);
     }
 
@@ -142,7 +150,8 @@ public class TenantUsersController : TenantUsersControllerBase
         // M01.F01.I04 更新用户
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstAsync(u => u.Id == uid);
+        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException($"User not found");;
         if (body.Email != null) entity.Email = body.Email;
         if (body.DisplayName != null) entity.DisplayName = body.DisplayName;
         entity.Status = ToDbStatus(body.Status);
@@ -169,7 +178,8 @@ public class TenantUsersController : TenantUsersControllerBase
         // M01.F01.I06 / M01.F02.I01 分配角色
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstAsync(u => u.Id == uid);
+        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException($"User not found");;
         entity.RoleIds = ParseRoleIds(body.RoleIds);
         await _db.SaveChangesAsync();
         return ToDto(entity);
@@ -180,7 +190,8 @@ public class TenantUsersController : TenantUsersControllerBase
         // M01.F02.I03 状态切换
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstAsync(u => u.Id == uid);
+        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException($"User not found");;
         entity.Status = ToDbStatus(body.Status);
         await _db.SaveChangesAsync();
         return ToDto(entity);

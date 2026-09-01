@@ -12,5 +12,5 @@ public class AuditEvent
     public string Action { get; set; } = "";  // PG native enum audit_action
     public Guid? TargetUserId { get; set; }
     public Dictionary<string, object?> Metadata { get; set; } = new();
-    public DateTimeOffset OccurredAt { get; set; }
+    public DateTimeOffset OccurredAt { get; set; } = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 }
