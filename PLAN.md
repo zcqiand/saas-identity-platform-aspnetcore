@@ -22,6 +22,17 @@ live mode 全量跑:
 
 `+00:00` 后缀是 `DateTimeOffset` 的 STJ round-trip 默认格式(注意:`DateTime` 是 `Z` 后缀,这里 `DateTimeOffset` 是 `+00:00`,根因确认是值类型未赋值 = `MinValue`,不是类型选错)。
 
+### 跨语言 MinValue 对照(2026-09-01 user 拍板,下个会话调试参考)
+
+| Language / Framework | Minimum Date Value | Standard Code Representation | 本仓抓到的具体字符串 | 备注 |
+|---|---|---|---|---|
+| **C# (`DateTime`)** | `0001-01-01 00:00:00` | `DateTime.MinValue` | (本仓不用) | 无 T 分隔、无时区偏移。STJ `DateTime` round-trip 输出 `0001-01-01T00:00:00.0000000`(无偏移后缀)。 |
+| **C# (`DateTimeOffset`)★本仓** | `0001-01-01 00:00:00 +00:00` | `DateTimeOffset.MinValue` | `0001-01-01T00:00:00+00:00` | STJ round-trip 加 `T` + `+00:00`。`+00:00` 是 `DateTimeOffset` 默认 UTC offset 输出格式(不是 `Z`)。 |
+| Java (`java.time`) | `-999999999-01-01T00:00:00` | `LocalDateTime.MIN` | `-292275055-05-16T23:00:00Z` | springboot 仓抓到不是 `LocalDateTime.MIN` 标准 toString。真凶 Hibernate 6 + PG `-infinity` 经 `OffsetDateTime` 映射。详见 [springboot PLAN.md 跨语言表](../saas-identity-platform-springboot/PLAN.md) |
+| Next.js (JS/TS) | `-271821-04-20T00:00:00Z` | `new Date(-8640000000000000)` | 未实测(本会话 nextjs 没起) | contract-test 抓到 nextjs `createdAt = undefined`(Drizzle `defaultNow()` 未填上推测),session.json 已记。 |
+
+**调试提示**:contract-test `assertTimestampShape` 用 `年份 [2000,2100]` 断言抓所有 MinValue —— 上述 3 个语言 MinValue 都不在区间,所以都能抓到。本仓用 `DateTimeOffset`(值类型,非可空),OpenAPI `format: date-time` → NSwag 生成 `DateTimeOffset`(不是 nullable),赋值兜底成 `MinValue` 时 STJ round-trip 输出 `0001-01-01T00:00:00.0000000+00:00`。下次会话调试时不要被「年份 0001」与 Java `-292275055` 的差距迷惑——两者各属不同语言/序列化器组合。
+
 ### 已知事实
 
 - 仓内 12 个 entity 的时间列全部用 `DateTimeOffset`(非 `DateTime`),PG 列是 `timestamptz`(见 `src/Migrations/20260830070144_InitialSchema.cs`)。
