@@ -7,6 +7,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
+using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
@@ -24,7 +25,7 @@ public class AppsController : AppsControllerBase
     {
         // 2026-08-30 contract-test: 直接读 DB (status 是 PG native enum 的字符串表示 "active")
         var row = await _db.Apps
-            .Where(a => a.Code == code && a.Status == "active")
+            .Where(a => a.Code == code && a.Status == AppStatusPg.active)
             .Select(a => new { a.Id, a.Code, a.Name, a.Description, a.Icon, a.Status })
             .FirstOrDefaultAsync();
         if (row is null)

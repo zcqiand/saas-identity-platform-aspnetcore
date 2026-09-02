@@ -82,11 +82,11 @@ public class MeControllerTests
         var appId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         db.Apps.Add(new AppEntity
         {
-            Id = appId, Code = "lab-management", Name = "lab-mgmt", Status = "active",
+            Id = appId, Code = "lab-management", Name = "lab-mgmt", Status = AppStatusPg.active,
             ClientId = appId.ToString(),
             RedirectUris = new List<string> { "https://lab-vue.xiangru.uk/login" },
             Scopes = new List<string> { "lab.read" },
-            GrantTypes = new List<string> { "authorization_code" },
+            GrantTypes = new List<OAuthGrantTypePg> { OAuthGrantTypePg.authorization_code },
             IsFirstParty = true, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow,
         });
         db.Users.Add(new UserEntity
@@ -99,7 +99,7 @@ public class MeControllerTests
         db.Menus.Add(new MenuEntity
         {
             Id = dashboardId, AppId = appId, Code = "m-dashboard", Name = "工作台",
-            Path = "/", Type = "page", Status = "active",
+            Path = "/", Type = MenuTypePg.page, Status = MenuStatusPg.active,
             SortOrder = 1, CreatedAt = DateTimeOffset.UtcNow,
         });
         if (extraMenus != null)
@@ -215,13 +215,13 @@ public class MeControllerTests
                 new MenuEntity
                 {
                     Id = parentId, AppId = appId, ParentId = null, Code = "m-group", Name = "分组",
-                    Type = "group", SortOrder = 0, Status = "active",
+                    Type = MenuTypePg.@group, SortOrder = 0, Status = MenuStatusPg.active,
                     CreatedAt = DateTimeOffset.UtcNow,
                 },
                 new MenuEntity
                 {
                     Id = childId, AppId = appId, ParentId = parentId, Code = "m-leaf", Name = "叶子",
-                    Type = "page", SortOrder = 1, Status = "active",
+                    Type = MenuTypePg.page, SortOrder = 1, Status = MenuStatusPg.active,
                     CreatedAt = DateTimeOffset.UtcNow,
                 },
             });
@@ -305,4 +305,68 @@ public class MeControllerTests
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
     [Trait("Fn", "M00.F02.I03")]
     public Task Switch_returnsNewToken() => Task.CompletedTask;
+
+    // === M00.F02.I03 — 2026-08-31 contract-test M96.F02.I28 抓获的分叉 ===
+    // aspnetcore Switch 不验 membership：不存在/非成员 tenant 也返 200，
+    // 而 msw(oracle)/springboot/nextjs 均拒绝。补齐后四方比对才可能绿。
+
+    private static MeController BuildSwitchController(AppDbContext db, Guid uid)
+    {
+        var http = new DefaultHttpContext();
+        // CurrentUserId() 读 ClaimsPrincipal sub（无真实验签，测试直接造 claims）
+        http.User = new System.Security.Claims.ClaimsPrincipal(
+            new System.Security.Claims.ClaimsIdentity(new[]
+            {
+                new System.Security.Claims.Claim("sub", uid.ToString()),
+            }));
+        return new MeController(db, new HttpContextAccessor { HttpContext = http });
+    }
+
+    [Fact]
+    [Trait("Fn", "M00.F02.I03")]
+    public async Task Switch_nonMemberTenant_throws404()
+    {
+        var (controller0, uid) = BuildMeControllerWithGrants();
+        // BuildMeControllerWithGrants 不注入 claims；Switch 走 CurrentUserId（sub claim）。
+        // 换成带 claims 的 controller（同一个 uid，memberships 不含 strangerTenant）。
+        var dbOpts = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase($"me-switch-x-{Guid.NewGuid()}")
+            .Options;
+        var db = new MeTestDbContext(dbOpts);
+        db.TenantMemberships.Add(new TenantMembershipEntity
+        {
+            Id = Guid.NewGuid(), UserId = uid, TenantId = Guid.NewGuid(),
+            RoleIds = new List<Guid>(), Status = "active",
+            JoinedAt = DateTimeOffset.UtcNow,
+        });
+        db.SaveChanges();
+        var controller = BuildSwitchController(db, uid);
+        var strangerTenant = Guid.NewGuid(); // 不在该 user 的 memberships 里
+        // 非成员 → KeyNotFoundException（Program.cs 映射 404，与 GET admin/tenants/{id} 同款）
+        await Assert.ThrowsAsync<KeyNotFoundException>(
+            () => controller.Switch(strangerTenant.ToString()));
+    }
+
+    [Fact]
+    [Trait("Fn", "M00.F02.I03")]
+    public async Task Switch_memberTenant_returnsTenantScopedToken()
+    {
+        var dbOpts = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase($"me-switch-{Guid.NewGuid()}")
+            .Options;
+        var db = new MeTestDbContext(dbOpts);
+        var uid = Guid.NewGuid();
+        var tid = Guid.NewGuid();
+        db.TenantMemberships.Add(new TenantMembershipEntity
+        {
+            Id = Guid.NewGuid(), UserId = uid, TenantId = tid,
+            RoleIds = new List<Guid>(), Status = "active",
+            JoinedAt = DateTimeOffset.UtcNow,
+        });
+        db.SaveChanges();
+        var controller = BuildSwitchController(db, uid);
+        var res = await controller.Switch(tid.ToString());
+        Assert.Equal(tid, res.TenantId);
+        Assert.False(string.IsNullOrEmpty(res.AccessToken));
+    }
 }

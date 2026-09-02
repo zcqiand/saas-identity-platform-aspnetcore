@@ -71,7 +71,7 @@ if [ ! -f "$BASE/aspnetcore.env" ]; then
     printf 'JWT_ISSUER=saas-identity-platform\n'
     printf 'JWT_AUDIENCE=saas-identity-platform-clients\n'
     printf 'JWT_TTL_SECONDS=3600\n'
-    printf 'SERVER_PORT=8080\n'
+    printf 'SERVER_PORT=5104\n'
     printf 'DATABASE_NAME=saas_prod\n'
     printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
   } > "$BASE/aspnetcore.env"
@@ -163,7 +163,7 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   append_if_missing JWT_ISSUER 'saas-identity-platform'
   append_if_missing JWT_AUDIENCE 'saas-identity-platform-clients'
   append_if_missing JWT_TTL_SECONDS '3600'
-  append_if_missing SERVER_PORT '8080'
+  append_if_missing SERVER_PORT '5104'
   append_if_missing DATABASE_NAME 'saas_prod'
   # CORS:老值保留(运维可能手工补过 prod origin),只在缺失时写默认白名单
   if ! grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env"; then
@@ -195,7 +195,7 @@ echo "→ docker run"
 docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
-  -p "127.0.0.1:${HOST_PORT}:8080" \
+  -p "127.0.0.1:${HOST_PORT}:5104" \
   --env-file "$BASE/aspnetcore.env" \
   "$IMAGE"
 

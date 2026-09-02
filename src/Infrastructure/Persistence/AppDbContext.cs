@@ -45,7 +45,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.Id).HasColumnName("id").HasColumnType("uuid").ValueGeneratedOnAdd();
             e.Property(x => x.Code).HasColumnName("code").HasMaxLength(64).IsRequired();
             e.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
-            e.Property(x => x.Status).HasColumnName("status").HasColumnType("tenant_status").IsRequired();
+            e.Property(x => x.Status).HasColumnName("status").HasColumnType("tenant_status")
+                .HasConversion(s => Enum.Parse<TenantStatusPg>(s),
+                               pg => pg.ToString())
+                .IsRequired();
             e.Property(x => x.Settings).HasColumnName("settings").HasColumnType("jsonb").IsRequired();
             e.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("timestamptz").IsRequired();
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("timestamptz").IsRequired();

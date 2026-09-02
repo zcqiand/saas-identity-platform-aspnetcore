@@ -33,7 +33,7 @@ public class AdminAppsController : AdminAppsControllerBase
         ClientId = e.ClientId,
         RedirectUris = e.RedirectUris,
         Scopes = e.Scopes,
-        GrantTypes = e.GrantTypes.Select(g => ParseGrantType(g)).ToList(),
+        GrantTypes = e.GrantTypes.Select(g => ParseGrantType(g.ToString().ToLowerInvariant())).ToList(),
         IsFirstParty = e.IsFirstParty,
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
@@ -48,26 +48,37 @@ public class AdminAppsController : AdminAppsControllerBase
         _ => OAuthGrantType.Authorization_code,
     };
 
-    private static AppStatus ToDtoStatus(string s) => s switch
+    private static AppStatus ToDtoStatus(AppStatusPg s) => s switch
     {
-        "active" => AppStatus.Active,
+        AppStatusPg.active => AppStatus.Active,
         _ => AppStatus.Disabled,
     };
 
-    private static string ToDbStatus(AppStatus s) => s switch
+    private static AppStatusPg ToDbStatus(AppStatus s) => s switch
     {
-        AppStatus.Active => "active",
-        _ => "disabled",
+        AppStatus.Active => AppStatusPg.active,
+        _ => AppStatusPg.disabled,
+    };
+
+    // 2026-09-01 I45：grant_types 是 oauth_grant_type[]（PG enum 数组），实体持
+    // List<OAuthGrantTypePg>；DTO 的 OAuthGrantType 枚举名 ↔ PG 枚举名互转
+    private static OAuthGrantTypePg ToDbGrantType(OAuthGrantType g) => g switch
+    {
+        OAuthGrantType.Refresh_token => OAuthGrantTypePg.refresh_token,
+        OAuthGrantType.Client_credentials => OAuthGrantTypePg.client_credentials,
+        _ => OAuthGrantTypePg.authorization_code,
     };
 
     // === endpoints ===
 
     public override async Task<Response> AppsGet(int? page, int? pageSize)
     {
-        var p = page ?? 1;
+        // 2026-09-01 contract-test I63：page 0-indexed 家族收口（AdminTenants/TenantUsers 同款；
+        // 原 page ?? 1 默认跳过第一页且与 oracle 分叉）
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var items = await _db.Apps.OrderByDescending(a => a.CreatedAt)
-            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+            .Skip(p * ps).Take(ps).ToListAsync();
         var total = await _db.Apps.CountAsync();
         return new Response
         {
@@ -93,8 +104,13 @@ public class AdminAppsController : AdminAppsControllerBase
             ClientSecretHash = body.ClientSecret != null ? $"plain:{body.ClientSecret}" : null,
             RedirectUris = body.RedirectUris?.ToList() ?? new(),
             Scopes = body.Scopes?.ToList() ?? new(),
-            GrantTypes = body.GrantTypes?.Select(g => g.ToString().ToLowerInvariant()).ToList() ?? new(),
+            GrantTypes = body.GrantTypes?.Select(ToDbGrantType).ToList() ?? new(),
             IsFirstParty = body.IsFirstParty,
+            // 2026-09-01 contract-test M96.F02.I45：显式写时间戳——实体 DateTimeOffset
+            // 默认 0001-01-01 超 timestamptz 范围，EF save 抛 INTERNAL_ERROR 500
+            // （同 AdminTenantsController.TenantsPost 上批修法）
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
         };
         _db.Apps.Add(e);
         await _db.SaveChangesAsync();
@@ -104,14 +120,17 @@ public class AdminAppsController : AdminAppsControllerBase
     public override async Task<ApiApp> AppsGet(string appId)
     {
         var id = Guid.Parse(appId);
-        var e = await _db.Apps.FirstAsync(a => a.Id == id);
+        // 2026-09-01 contract-test I46：不存在 id → 404（FirstAsync 抛 → 500）
+        var e = await _db.Apps.FirstOrDefaultAsync(a => a.Id == id)
+            ?? throw new KeyNotFoundException($"App {appId} not found");
         return ToDto(e);
     }
 
     public override async Task<ApiApp> AppsPatch(string appId, UpdateAppRequest body)
     {
         var id = Guid.Parse(appId);
-        var e = await _db.Apps.FirstAsync(a => a.Id == id);
+        var e = await _db.Apps.FirstOrDefaultAsync(a => a.Id == id)
+            ?? throw new KeyNotFoundException($"App {appId} not found");
         if (body.Name != null) e.Name = body.Name;
         if (body.Description != null) e.Description = body.Description;
         if (body.Icon != null) e.Icon = body.Icon;
@@ -119,7 +138,7 @@ public class AdminAppsController : AdminAppsControllerBase
         e.Status = ToDbStatus(body.Status);
         if (body.RedirectUris != null) e.RedirectUris = body.RedirectUris.ToList();
         if (body.Scopes != null) e.Scopes = body.Scopes.ToList();
-        if (body.GrantTypes != null) e.GrantTypes = body.GrantTypes.Select(g => g.ToString().ToLowerInvariant()).ToList();
+        if (body.GrantTypes != null) e.GrantTypes = body.GrantTypes.Select(ToDbGrantType).ToList();
         e.IsFirstParty = body.IsFirstParty;
         await _db.SaveChangesAsync();
         return ToDto(e);
@@ -139,7 +158,8 @@ public class AdminAppsController : AdminAppsControllerBase
     public override async Task<ApiApp> Status(string appId, Body2 body)
     {
         var id = Guid.Parse(appId);
-        var e = await _db.Apps.FirstAsync(a => a.Id == id);
+        var e = await _db.Apps.FirstOrDefaultAsync(a => a.Id == id)
+            ?? throw new KeyNotFoundException($"App {appId} not found");
         e.Status = ToDbStatus(body.Status);
         await _db.SaveChangesAsync();
         return ToDto(e);

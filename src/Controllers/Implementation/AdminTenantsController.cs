@@ -87,10 +87,12 @@ public class AdminTenantsController : AdminTenantsControllerBase
 
     public override async Task<Response2> TenantsGet(int? page, int? pageSize)
     {
-        var p = page ?? 1;
+        // 2026-08-31 contract-test M96.F02.I29：分页默认对齐家族约定 page=0 / pageSize=20
+        // （nextjs/springboot/msw 同款；原 page ?? 1 跳过第一页且与 oracle 分叉）
+        var p = page ?? 0;
         var ps = pageSize ?? 20;
         var items = await _db.Tenants.OrderByDescending(t => t.CreatedAt)
-            .Skip((p - 1) * ps).Take(ps).ToListAsync();
+            .Skip(p * ps).Take(ps).ToListAsync();
         var total = await _db.Tenants.CountAsync();
         return new Response2
         {
@@ -109,6 +111,10 @@ public class AdminTenantsController : AdminTenantsControllerBase
             Code = body.Code,
             Name = body.Name,
             Status = "active",
+            // 2026-08-31 contract-test M96.F02.I30：显式写时间戳——PG 列无 DEFAULT 时
+            // EF 不填，读回 0001-01-01 与其他 3 后端分叉
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
             Settings = body.Settings == null ? new() : new Dictionary<string, object?>
             {
                 ["themeColor"] = body.Settings.ThemeColor,
@@ -160,5 +166,12 @@ public class AdminTenantsController : AdminTenantsControllerBase
             _db.Tenants.Remove(e);
             await _db.SaveChangesAsync();
         }
+        // 2026-08-31 contract-test M96.F02.I33：无返回 action 默认 200 空体，
+        // 家族契约（msw/springboot/nextjs）DELETE 是 204 —— 显式对齐。
+        // 不存在时同样 204→改由测试的「重复删 404」分支覆盖：本方法不存在时不抛，
+        // 返 204（与 msw 404 分叉——msw 二次删 404；aspnetcore 幂等 204）。
+        // 家族语义统一为：首次 204；重复删 404。故不存在时抛 KeyNotFound。
+        if (e == null) throw new KeyNotFoundException($"tenant {id} not found");
+        Response.StatusCode = StatusCodes.Status204NoContent;
     }
 }

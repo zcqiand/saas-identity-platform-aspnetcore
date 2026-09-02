@@ -131,7 +131,7 @@ public class MeController : MeControllerBase
         while (true)
         {
             menus = await _db.Menus
-                .Where(m => allMenuIds.Contains(m.Id) && m.Status == "active")
+                .Where(m => allMenuIds.Contains(m.Id) && m.Status == MenuStatusPg.active)
                 .ToListAsync();
             var missingParents = menus
                 .Where(m => m.ParentId.HasValue && !allMenuIds.Contains(m.ParentId.Value))
@@ -169,8 +169,8 @@ public class MeController : MeControllerBase
                 Icon = m.Icon,
                 Type = m.Type switch
                 {
-                    "group" => MenuType.Group,
-                    "page" => MenuType.Page,
+                    MenuTypePg.@group => MenuType.Group,
+                    MenuTypePg.page => MenuType.Page,
                     _ => MenuType.Action,
                 },
                 SortOrder = m.SortOrder,
@@ -204,16 +204,24 @@ public class MeController : MeControllerBase
         return memberships.Select(ToMembershipDto).ToList();
     }
 
-    public override Task<SwitchTenantResponse> Switch(string tenantId)
+    public override async Task<SwitchTenantResponse> Switch(string tenantId)
     {
-        var uid = CurrentUserId() ?? Guid.Empty;
+        // 2026-08-31 contract-test M96.F02.I28：补 membership 校验。
+        // 之前不验证直接签 token —— 不存在/非成员 tenant 也返 200，
+        // 与 msw(oracle)/springboot/nextjs 分叉。非成员 → KeyNotFound → 404。
+        var uid = CurrentUserId()
+            ?? throw new UnauthorizedAccessException("Bearer sub required for tenant switch");
         var tid = Guid.Parse(tenantId);
-        return Task.FromResult(new SwitchTenantResponse
+        var member = await _db.TenantMemberships
+            .FirstOrDefaultAsync(m => m.UserId == uid && m.TenantId == tid && m.Status != "removed");
+        if (member is null)
+            throw new KeyNotFoundException($"user {uid} is not a member of tenant {tid}");
+        return new SwitchTenantResponse
         {
             AccessToken = IssueAccessToken(uid, tid),
             RefreshToken = $"refresh-{uid}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
             ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             TenantId = tid,
-        });
+        };
     }
 }

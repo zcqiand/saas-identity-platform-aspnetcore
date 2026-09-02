@@ -39,7 +39,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
     ContentRootPath = AppContext.BaseDirectory,
 });
 
-// conventions §6: 家族统一监听 key SERVER_PORT（aspnetcore=5000）。ASPNETCORE_URLS
+// conventions §6: 家族统一监听 key SERVER_PORT（aspnetcore=5104）。ASPNETCORE_URLS
 // 优先级更高（容器内 Dockerfile ENV 已设）, 本 shim 只服务裸机 dotnet run。
 var shimUrls = Saas.Identity.AspNetCore.Hosting.ServerPortShim.ResolveUrls(builder.Configuration);
 if (shimUrls is not null)
@@ -85,15 +85,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // CORS — 允许跨 origin 调本后端的白名单。默认给 dev：
-//   - saas-nextjs :3000（saas 全栈 Next.js API routes 调 saas 后端）
-//   - lab-react,vue :5173（lab 前端 dev server 调 saas 后端走 MSW switch）
-//   - lab-nextjs :3001（lab 全栈 Next.js API routes 调 saas 后端）
+//   - saas-nextjs :5101（saas 全栈 Next.js API routes 调 saas 后端）
+//   - saas-react :5102（saas-react dev server，2026-09-02 端口分段）
+//   - lab-nextjs :5201（lab 全栈 Next.js API routes 调 saas 后端）
+//   - saas-vue :5103（saas-vue dev server，2026-09-02 端口分段 — vite.config.ts
+//     FALLBACK_DEV_PORT=5103 钉死）
 // 生产用 SAAS_CORS_ALLOWED_ORIGINS env override（逗号分隔）改正式域名。
 // 与 springboot 端的 SecurityConfig.corsConfigurationSource() 对称 — 同一 env var。
 builder.Services.AddCors(options =>
 {
     var origins = builder.Configuration["SAAS_CORS_ALLOWED_ORIGINS"]
-        ?? "http://localhost:3000,http://localhost:5173,http://localhost:3001";
+        ?? "http://localhost:5101,http://localhost:5102,http://localhost:5103,http://localhost:5201";
     options.AddPolicy("NextDev", policy =>
         policy.WithOrigins(origins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
               .AllowAnyHeader()
@@ -133,6 +135,14 @@ dataSourceBuilder.EnableDynamicJson();
 dataSourceBuilder.MapEnum<ApiKeyStatusPg>("api_key_status");
 dataSourceBuilder.MapEnum<AuditActionPg>("audit_action");
 dataSourceBuilder.MapEnum<UserStatusPg>("user_status");
+// M00.F01 tenant_status（V001）——2026-08-31 contract-test M96.F02.I30 同款 42804 修复
+dataSourceBuilder.MapEnum<TenantStatusPg>("tenant_status");
+// M07/M08（V005）——2026-09-01 contract-test I45/I51 同款 42804 修复：
+// app_status / menu_status / menu_type / oauth_grant_type（含 enum 数组 grant_types）
+dataSourceBuilder.MapEnum<AppStatusPg>("app_status");
+dataSourceBuilder.MapEnum<MenuStatusPg>("menu_status");
+dataSourceBuilder.MapEnum<MenuTypePg>("menu_type");
+dataSourceBuilder.MapEnum<OAuthGrantTypePg>("oauth_grant_type");
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddSingleton(dataSource);
 builder.Services.AddDbContext<AppDbContext>(o =>

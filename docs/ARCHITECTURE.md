@@ -255,7 +255,7 @@ virtual 方法便于测试 stub（`tests/StubTenantContext.cs`）。
 |---|---|---|
 | ContentRoot | 13-17 | 强制 `ContentRootPath = AppContext.BaseDirectory` —— 任意 cwd 都能加载 appsettings（仓根 csproj 显式 Include + CopyToOutput） |
 | JwtBearer 单配置 | 20-55 | `TokenValidationParameters` HS256 真验签 (Phase 2B 起统一 dev/prod 路径，无 dev 兜底分支) |
-| CORS | 63-71 | `NextDev` policy，allowlist 来自 `Saas:Cors:AllowedOrigins`（默认 :3000/:5173/:3001） |
+| CORS | 63-71 | `NextDev` policy，allowlist 来自 `Saas:Cors:AllowedOrigins`（默认 :5101/:5102/:5103/:5201） |
 | DI 注册 | 73-79 | `AddSingleton<TenantContext>()` + `AddSingleton<TenantGuard>()` + `AddSingleton<JwtIssuer>()` |
 | EF Core + Npgsql | 81-94 | `EnableDynamicJson()`（Npgsql 8 必需）；DbContext 用 `__ef_migrations_history` 表 |
 | Controllers + ApplicationPart | 96-100 | `AddApplicationPart(typeof(...Controllers.Generated.AdminAppsControllerBase).Assembly)` 把 NSwag 产物所在 assembly 加进来 |
@@ -508,7 +508,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 
 | 维度 | aspnetcore（本仓） | springboot |
 |---|---|---|
-| 运行时 | .NET 8 Kestrel :5000 | Spring Boot 3.4 Tomcat :8080 |
+| 运行时 | .NET 8 Kestrel :5104 | Spring Boot 3.4 Tomcat :5105 |
 | 路由来源 | NSwag → `Abstract` controller | openapi-generator → `interface` controller |
 | 业务实现 | `partial class` 继承 abstract base | `@RestController` 实现 interface |
 | tenant 校验 | `TenantGuard.VerifyPathTenant(tenantId)` | `TenantGuard.verifyPathTenant(tenantId)` |

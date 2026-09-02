@@ -105,7 +105,7 @@ public class TenantRolesController : TenantRolesControllerBase
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
         var e = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id)
-            ?? throw new KeyNotFoundException($"Role not found");;
+            ?? throw new KeyNotFoundException($"Role not found"); ;
         return ToDto(e, await PermissionIdsForRole(id));
     }
 
@@ -114,7 +114,7 @@ public class TenantRolesController : TenantRolesControllerBase
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
         var e = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id)
-            ?? throw new KeyNotFoundException($"Role not found");;
+            ?? throw new KeyNotFoundException($"Role not found"); ;
         if (body.Name != null) e.Name = body.Name;
         if (body.Description != null) e.Description = body.Description;
         // 2026-09-01 contract-test：PATCH 同步刷 UpdatedAt，
@@ -143,7 +143,7 @@ public class TenantRolesController : TenantRolesControllerBase
         var id = Guid.Parse(roleId);
         // 校验 role 存在
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id)
-            ?? throw new KeyNotFoundException($"Role not found");;
+            ?? throw new KeyNotFoundException($"Role not found"); ;
         // 整批替换 role ↔ permission M:N
         var oldPerms = await _db.RolePermissions.Where(rp => rp.RoleId == id).ToListAsync();
         if (oldPerms.Count > 0) _db.RolePermissions.RemoveRange(oldPerms);

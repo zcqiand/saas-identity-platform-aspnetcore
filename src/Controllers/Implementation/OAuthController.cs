@@ -76,8 +76,8 @@ public class OauthController : OauthControllerBase
         // 1. clientId 必须是已注册 OAuth client（apps.client_id；Guid → string 后查）
         var clientIdStr = body.ClientId.ToString();
         var app = await _db.Apps.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
-        if (app == null || app.Status != "active")
-            throw new UnauthorizedAccessException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
+        if (app == null || app.Status != AppStatusPg.active)
+            throw new ArgumentException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
 
         // 2. redirectUri 必须在 apps.redirect_uris 白名单里。RFC 6749 §3.1.2 允许 query
         //    参数差异（lab 前端回跳带 ?from=<业务路径>），匹配规则 = 白名单条目是
@@ -135,8 +135,8 @@ public class OauthController : OauthControllerBase
 
         var clientIdStr = body.ClientId.ToString();
         var app = await _db.Apps.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
-        if (app == null || app.Status != "active")
-            throw new UnauthorizedAccessException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
+        if (app == null || app.Status != AppStatusPg.active)
+            throw new ArgumentException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
 
         // dev 暂不验 clientSecret（saas-nextjs 同模式; prod Phase 6+ 加 Argon2 hash 校验）
         // 生产路径：if (!BCrypt.Verify(body.ClientSecret ?? "", app.ClientSecretHash ?? "")) throw ...
@@ -160,22 +160,22 @@ public class OauthController : OauthControllerBase
         var oauthCode = await _db.OauthCodes.FirstOrDefaultAsync(c =>
             c.Code == body.Code && c.GrantType == "authorization_code");
         if (oauthCode == null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: code not found");
+            throw new ArgumentException("INVALID_GRANT: code not found");
         if (oauthCode.ConsumedAt != null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: code already consumed");
+            throw new ArgumentException("INVALID_GRANT: code already consumed");
         if (oauthCode.ExpiresAt < DateTimeOffset.UtcNow)
-            throw new UnauthorizedAccessException("INVALID_GRANT: code expired");
+            throw new ArgumentException("INVALID_GRANT: code expired");
         if (oauthCode.AppId != app.Id)
-            throw new UnauthorizedAccessException("INVALID_GRANT: code does not belong to this client");
+            throw new ArgumentException("INVALID_GRANT: code does not belong to this client");
         if (oauthCode.RedirectUri != body.RedirectUri)
-            throw new UnauthorizedAccessException("INVALID_GRANT: redirectUri mismatch");
+            throw new ArgumentException("INVALID_GRANT: redirectUri mismatch");
 
         // user/tenant 已在 /authorize 端点用 saas session 绑定,不再信 body.TenantId。
         if (oauthCode.UserId == null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: code has no user binding (authorize must run under saas session)");
+            throw new ArgumentException("INVALID_GRANT: code has no user binding (authorize must run under saas session)");
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == oauthCode.UserId.Value);
         if (user == null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: code user not in saas");
+            throw new ArgumentException("INVALID_GRANT: code user not in saas");
 
         // 一次性消费 — 标记 consumed
         oauthCode.ConsumedAt = DateTimeOffset.UtcNow;
@@ -214,15 +214,15 @@ public class OauthController : OauthControllerBase
         var oldRefresh = await _db.OauthCodes.FirstOrDefaultAsync(c =>
             c.Code == body.RefreshToken && c.GrantType == "refresh_token");
         if (oldRefresh == null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token not found");
+            throw new ArgumentException("INVALID_GRANT: refresh_token not found");
         if (oldRefresh.ConsumedAt != null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token already consumed (rotate-once semantics)");
+            throw new ArgumentException("INVALID_GRANT: refresh_token already consumed (rotate-once semantics)");
         if (oldRefresh.ExpiresAt < DateTimeOffset.UtcNow)
-            throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token expired");
+            throw new ArgumentException("INVALID_GRANT: refresh_token expired");
         if (oldRefresh.AppId != app.Id)
-            throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token does not belong to this client");
+            throw new ArgumentException("INVALID_GRANT: refresh_token does not belong to this client");
         if (oldRefresh.UserId == null)
-            throw new UnauthorizedAccessException("INVALID_GRANT: refresh_token has no user_id");
+            throw new ArgumentException("INVALID_GRANT: refresh_token has no user_id");
 
         // 旋转: 旧 refresh 标记 consumed, 新 refresh 写入
         oldRefresh.ConsumedAt = DateTimeOffset.UtcNow;

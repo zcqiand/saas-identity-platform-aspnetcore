@@ -85,14 +85,14 @@ public class CompositionRootTests
             Id = AppId,
             Code = "lab-management",
             Name = "lab-mgmt",
-            Status = "active",
+            Status = AppStatusPg.active,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
         });
         db.Menus.Add(new MenuEntity
         {
             Id = Guid.NewGuid(), AppId = AppId, Code = "m-dashboard", Name = "工作台",
-            Path = "/", Type = "page", Status = "active", SortOrder = 1,
+            Path = "/", Type = MenuTypePg.page, Status = MenuStatusPg.active, SortOrder = 1,
             CreatedAt = DateTimeOffset.UtcNow,
         });
         db.SaveChanges();
@@ -140,5 +140,31 @@ public class CompositionRootTests
         using var scope = factory.Services.CreateScope();
         var writer = scope.ServiceProvider.GetRequiredService<IAuditWriter>();
         Assert.NotNull(writer);
+    }
+
+    // 2026-09-02 CORS 白名单跟上端口分段 §6（saas=5100 段）
+    // 白名单 = saas 前端三仓 + lab-nextjs（SSO 跳板）
+    // saas-vue 登录页 preflight 被 CORS 拦（响应无 Access-Control-Allow-Origin）。
+    // 与 springboot SecurityConfig.corsConfigurationSource() 对称 — 同 env 同源。
+    [Theory]
+    [InlineData("http://localhost:5101")]   // saas-nextjs
+    [InlineData("http://localhost:5102")]   // saas-react
+    [InlineData("http://localhost:5103")]   // saas-vue
+    [InlineData("http://localhost:5201")]   // lab-nextjs
+    public async Task Cors_preflight_allowsFamilyDevOrigins(string origin)
+    {
+        using var factory = NewFactory();
+        var client = factory.CreateClient();
+
+        var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/auth/login");
+        request.Headers.Add("Origin", origin);
+        request.Headers.Add("Access-Control-Request-Method", "POST");
+        request.Headers.Add("Access-Control-Request-Headers", "content-type");
+
+        var response = await client.SendAsync(request);
+        Assert.True(
+            response.Headers.TryGetValues("Access-Control-Allow-Origin", out var values),
+            $"origin {origin} 被 CORS 白名单拒绝 — 响应缺 Access-Control-Allow-Origin");
+        Assert.Contains(origin, values);
     }
 }

@@ -44,18 +44,18 @@ RUN groupadd --system --gid 1001 saasasp \
 # 从 builder 拷 publish 产物
 COPY --from=builder --chown=saasasp:saasasp /app/publish /app
 
-# 容器内监听 :8080（vite SPA 仓走 :80, 后端仓统一 :8080）。
+# 容器内监听 :5104（2026-09-02 端口分段 §6；vite SPA 仓走 :80）。
 # ContentRootPath=AppContext.BaseDirectory → /app, 自动找到 appsettings*.json。
-ENV ASPNETCORE_URLS=http://+:8080 \
+ENV ASPNETCORE_URLS=http://+:5104 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_NOLOGO=true
 
-EXPOSE 8080
+EXPOSE 5104
 
 USER saasasp
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --tries=1 --timeout=3 -qO- http://127.0.0.1:8080/health >/dev/null || exit 1
+  CMD wget --tries=1 --timeout=3 -qO- http://127.0.0.1:5104/health >/dev/null || exit 1
 
 ENTRYPOINT ["dotnet", "Saas.Identity.AspNetCore.dll"]
