@@ -8,7 +8,7 @@
 
 - **状态**: 待修复
 - **首次发现**: 2026-09-01 live mode 全量 contract-test run
-- **关联 ADR**: [docs/adr/0015-amend-timestamps.md](../../../docs/adr/0015-amend-timestamps.md) §「已知非契约问题」
+- **关联 ADR**: [docs/adr/0015-amend-timestamps.md](../../docs/adr/0015-amend-timestamps.md) §「已知非契约问题」
 - **关联合约测试**: `M96.F02.I15` `I16` `I19` `I32` `I34` `I57` `I71` 七处
 
 ### 症状(活证据)

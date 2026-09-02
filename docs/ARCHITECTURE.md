@@ -19,16 +19,16 @@
 
 ## 1. 角色与定位
 
-`saas-identity-platform-aspnetcore` 是 **saas-identity-platform 家族的 7 个子仓之一**（家族角色见父仓 [ARCHITECTURE.md §2.2](../../docs/ARCHITECTURE.md)），承担「**后端 2/2**」的角色：
+`saas-identity-platform-aspnetcore` 是 **saas-identity-platform 家族的 7 个子仓之一**（家族角色见父仓 [ARCHITECTURE.md §2.2](../../../docs/ARCHITECTURE.md)），承担「**后端 2/2**」的角色：
 
 | 维度 | 内容 |
 |---|---|
 | **技术栈** | ASP.NET Core 8 (`net8.0`) + xUnit + JwtBearer + EF Core 8 / Npgsql + NSwag |
-| **运行时** | Kestrel，dev 默认 :5000，prod 由 deploy 脚本分配 |
+| **运行时** | Kestrel，dev 默认 :5104，prod 由 deploy 脚本分配 |
 | **C# / .NET 版本** | `<TargetFramework>net8.0</TargetFramework>`（`src/Saas.Identity.AspNetCore.csproj:4`） |
 | **路由 / DTO 来源** | NSwag 读 `../saas-identity-platform-shared/generated/openapi/openapi.yaml` → `src/Controllers/Generated/Controllers.cs`（11 个 abstract base + DTO records） |
 | **业务实现** | 手写 `partial class` `src/Controllers/Implementation/<Tag>Controller.cs`，继承 NSwag 抽象基类，覆盖 abstract 方法 + 调 `TenantGuard.VerifyPathTenant(...)` |
-| **运行时存储** | EF Core 8 + Npgsql 读 shared PG（schema 由 saas-identity-platform-shared V001..V016 SQL 单一来源管理，本仓 `Program.cs` 启动不调 `Database.Migrate()`） |
+| **运行时存储** | EF Core 8 + Npgsql 读 shared PG（schema 由 saas-identity-platform-shared V001..V018 SQL 单一来源管理，本仓 `Program.cs` 启动不调 `Database.Migrate()`） |
 | **认证 (OAuth 2.0 + JWT HS256)** | `JwtIssuer.IssueAccessToken` 签 HS256（`Security/JwtIssuer.cs`）；`AddJwtBearer()` + `TokenValidationParameters` 真验签；prod 走 `Jwt:SigningKey` 对称密钥或 JWKS |
 | **共享 JWT key** | 与 saas-nextjs / saas-springboot 同一 `Jwt:SigningKey`，HS256 互签 |
 
@@ -199,7 +199,7 @@ public class TenantUsersController : TenantUsersControllerBase
 
 ### 3.3 持久层（AppDbContext + 共享 PG）
 
-> 2026-08-30 落地：原本 `§3.3 InMemoryStore（scaffold fixture）` 的整节已被 AppDbContext 取代。EF Core 8 + Npgsql 读 shared PG，schema 由 `../saas-identity-platform-shared/sql/migrations/V001..V016.sql` 单一来源管理。`Program.cs` 启动不调 `Database.Migrate()`（shared SQL 已在部署前由 saas-nextjs `scripts/seed-db.mjs` 应用）。EF migrations 目录 `src/Migrations/` 提供 `InitialSchema` 镜像，用于 `scripts/check-ef-mirrors-sql.sh` 做 EF↔SQL diff。
+> 2026-08-30 落地：原本 `§3.3 InMemoryStore（scaffold fixture）` 的整节已被 AppDbContext 取代。EF Core 8 + Npgsql 读 shared PG，schema 由 `../saas-identity-platform-shared/sql/migrations/V001..V018.sql` 单一来源管理。`Program.cs` 启动不调 `Database.Migrate()`（shared SQL 已在部署前由 saas-nextjs `scripts/seed-db.mjs` 应用）。EF migrations 目录 `src/Migrations/` 提供 `InitialSchema` 镜像，用于 `scripts/check-ef-mirrors-sql.sh` 做 EF↔SQL diff。
 
 ### 3.4 TenantGuard 安全层
 
@@ -245,7 +245,7 @@ public virtual string? CurrentTenantId()
 
 virtual 方法便于测试 stub（`tests/StubTenantContext.cs`）。
 
-**为什么是 `UnauthorizedAccessException` 而不是 `403`**：与 [父仓 §3.4 OAuth 2.0 + JWT 契约](../../docs/ARCHITECTURE.md) 一致 —— 所有后端的 OAuth 错误语义用同一组异常类型分流。`Program.cs::UseExceptionHandler` 把 `UnauthorizedAccessException` 映射到 `401 UNAUTHORIZED` JSON body（见 [§3.5](#35-programcs-配置)）。
+**为什么是 `UnauthorizedAccessException` 而不是 `403`**：与 [父仓 §3.4 OAuth 2.0 + JWT 契约](../../../docs/ARCHITECTURE.md) 一致 —— 所有后端的 OAuth 错误语义用同一组异常类型分流。`Program.cs::UseExceptionHandler` 把 `UnauthorizedAccessException` 映射到 `401 UNAUTHORIZED` JSON body（见 [§3.5](#35-programcs-配置)）。
 
 ### 3.5 Program.cs 配置
 
@@ -376,7 +376,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 
 **关键检查点**：
 
-- 改契约时必须**先**改 shared BASE tree 的 F 级（[ADR-0003](../../docs/adr/0003-function-tree-requires-human-approval.md)），再改各仓 I 级子项；
+- 改契约时必须**先**改 shared BASE tree 的 F 级（[ADR-0003](../../../docs/adr/0003-function-tree-requires-human-approval.md)），再改各仓 I 级子项；
 - `gen-shared.sh` 拷 SQL 前必须 cp（**不**做 diff abort，因为本仓 `Migrations/` 是 EF mirror 起点，详细策略见 [§6](#6-adr-0010-ef-core-migrations-待落地)）；
 - 跨仓同步必须**同一批 commit**推完，避免一边指针新、一边指针旧的不一致窗口。
 
@@ -384,7 +384,7 @@ saas-identity-platform-aspnetcore/    (本仓)
 
 ## 6. ADR-0010 EF Core Migrations 待落地
 
-**当前状态**：本仓 `Migrations/` 目录**尚不存在**。ADR-0010 已 `Accepted`（[0010-aspnetcore-ef-mirrors-sql.md](../../docs/adr/0010-aspnetcore-ef-mirrors-sql.md)），但 InitialSchema 落地是 open question。
+**当前状态**：本仓 `Migrations/` 目录**尚不存在**。ADR-0010 已 `Accepted`（[0010-aspnetcore-ef-mirrors-sql.md](../../../docs/adr/0010-aspnetcore-ef-mirrors-sql.md)），但 InitialSchema 落地是 open question。
 
 ### 6.1 ADR-0010 决策摘要
 
@@ -427,25 +427,25 @@ saas-identity-platform-aspnetcore/    (本仓)
 
 | ADR | 主题 | 一句话 |
 |---|---|---|
-| [0007](../../docs/adr/0007-shared-sql-ssot.md) | shared 仓扩到双 SSOT | shared 仓同时是 API 契约 + DB schema 真源；ORM 只反射 |
-| [0010](../../docs/adr/0010-aspnetcore-ef-mirrors-sql.md) | aspnetcore EF 应镜像 SQL | EF Core Migrations 应镜像 shared SQL DDL（**待落地 InitialSchema**） |
-| [0009](../../docs/adr/0009-db-credentials-env.md) | DB 凭据走 env | env-file + deploy 烘焙；不写 connection string 硬编码 |
+| [0007](../../../docs/adr/0007-shared-sql-ssot.md) | shared 仓扩到双 SSOT | shared 仓同时是 API 契约 + DB schema 真源；ORM 只反射 |
+| [0010](../../../docs/adr/0010-aspnetcore-ef-mirrors-sql.md) | aspnetcore EF 应镜像 SQL | EF Core Migrations 应镜像 shared SQL DDL（**待落地 InitialSchema**） |
+| [0009](../../../docs/adr/0009-db-credentials-env.md) | DB 凭据走 env | env-file + deploy 烘焙；不写 connection string 硬编码 |
 
 ### 7.2 关于"端形态"
 
 | ADR | 主题 | 一句话 |
 |---|---|---|
-| [0008](../../docs/adr/0008-nextjs-full-stack.md) | saas-nextjs 兼全栈 | saas-nextjs 扩为 Frontend + Backend + DB 同仓；新增 profile `nextjs-backend.toml` |
-| [0012](../../docs/adr/0012-msw-as-http-server.md) | msw 仓升级为独立 HTTP 服务 | B 强度：Express + `@mswjs/http-middleware` 暴露为端口监听 |
-| [0014](../../docs/conventions/multi-repo-family.md#4-后端配置env-driven-单-urladr-0014) | env-driven 单 URL | 废弃 runtime BackendMode 联合类型 + localStorage；改 env-driven 3 getter |
+| [0008](../../../docs/adr/0008-nextjs-full-stack.md) | saas-nextjs 兼全栈 | saas-nextjs 扩为 Frontend + Backend + DB 同仓；新增 profile `nextjs-backend.toml` |
+| [0012](../../../docs/adr/0012-msw-as-http-server.md) | msw 仓升级为独立 HTTP 服务 | B 强度：Express + `@mswjs/http-middleware` 暴露为端口监听 |
+| [0014](../../../docs/conventions/multi-repo-family.md#4-后端配置env-driven-单-urladr-0014) | env-driven 单 URL | 废弃 runtime BackendMode 联合类型 + localStorage；改 env-driven 3 getter |
 
 ### 7.3 关于"谁来管什么"
 
 | ADR | 主题 | 一句话 |
 |---|---|---|
-| [0001](../../docs/adr/0001-suite-owns-l0-and-l5.md) | suite 保留 L0 / L5 门 | suite 拥有结构与引用完整性门，项目不能声明 |
-| [0002](../../docs/adr/0002-trace-json-as-cross-language-anchor-contract.md) | trace.json 是跨语言锚点 | 测试挂功能 ID 必须经 trace_cmd，禁止手写 |
-| [0003](../../docs/adr/0003-function-tree-requires-human-approval.md) | 功能清单变更需人批 | 改 F/I 必须先提 `/tree-change` 提案 |
+| [0001](../../../docs/adr/0001-suite-owns-l0-and-l5.md) | suite 保留 L0 / L5 门 | suite 拥有结构与引用完整性门，项目不能声明 |
+| [0002](../../../docs/adr/0002-trace-json-as-cross-language-anchor-contract.md) | trace.json 是跨语言锚点 | 测试挂功能 ID 必须经 trace_cmd，禁止手写 |
+| [0003](../../../docs/adr/0003-function-tree-requires-human-approval.md) | 功能清单变更需人批 | 改 F/I 必须先提 `/tree-change` 提案 |
 
 ### 7.4 本仓特有决策
 
@@ -488,19 +488,19 @@ saas-identity-platform-aspnetcore/    (本仓)
 
 | 主题 | 父仓 § | 本文件 § |
 |---|---|---|
-| 14 子仓全景 | [父仓 §1](../../docs/ARCHITECTURE.md) | — |
-| 五种角色拓扑 | [父仓 §2](../../docs/ARCHITECTURE.md) | — |
-| 双 SSOT（API + DB） | [父仓 §3.1](../../docs/ARCHITECTURE.md) | §5 |
-| 一份契约，三套 codegen | [父仓 §3.2](../../docs/ARCHITECTURE.md) | §3.1, §5.2 |
-| 后端 env-driven 单 URL | [父仓 §3.3](../../docs/ARCHITECTURE.md) | §3.5 |
-| OAuth 2.0 + JWT（HS256）契约 + DevJwtDecoder 兜底 | [父仓 §3.4](../../docs/ARCHITECTURE.md) | §3.5 |
-| 端口 + CORS | [父仓 §3.5 + §6](../../docs/ARCHITECTURE.md) | §3.5 |
-| aspnetcore 后端模板 | [父仓 §4.4.2](../../docs/ARCHITECTURE.md) | §1-§3（本文件 zoom in） |
-| 门禁链 | [父仓 §5.4](../../docs/ARCHITECTURE.md) | §4.1 |
-| 12 份 ADR | [父仓 §7](../../docs/ARCHITECTURE.md) | §7 |
-| 术语表 | [父仓 §8](../../docs/ARCHITECTURE.md) | §8 |
+| 14 子仓全景 | [父仓 §1](../../../docs/ARCHITECTURE.md) | — |
+| 五种角色拓扑 | [父仓 §2](../../../docs/ARCHITECTURE.md) | — |
+| 双 SSOT（API + DB） | [父仓 §3.1](../../../docs/ARCHITECTURE.md) | §5 |
+| 一份契约，三套 codegen | [父仓 §3.2](../../../docs/ARCHITECTURE.md) | §3.1, §5.2 |
+| 后端 env-driven 单 URL | [父仓 §3.3](../../../docs/ARCHITECTURE.md) | §3.5 |
+| OAuth 2.0 + JWT（HS256）契约 + DevJwtDecoder 兜底 | [父仓 §3.4](../../../docs/ARCHITECTURE.md) | §3.5 |
+| 端口 + CORS | [父仓 §3.5 + §6](../../../docs/ARCHITECTURE.md) | §3.5 |
+| aspnetcore 后端模板 | [父仓 §4.4.2](../../../docs/ARCHITECTURE.md) | §1-§3（本文件 zoom in） |
+| 门禁链 | [父仓 §5.4](../../../docs/ARCHITECTURE.md) | §4.1 |
+| 12 份 ADR | [父仓 §7](../../../docs/ARCHITECTURE.md) | §7 |
+| 术语表 | [父仓 §8](../../../docs/ARCHITECTURE.md) | §8 |
 
-**读法**：新人先读 [父仓 ARCHITECTURE.md](../../docs/ARCHITECTURE.md) 30 分钟全景，再读本文件 §1-§3 进入本仓。
+**读法**：新人先读 [父仓 ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) 30 分钟全景，再读本文件 §1-§3 进入本仓。
 
 ## 附录 B：与 springboot 后端仓的对照
 
@@ -528,17 +528,17 @@ saas-identity-platform-aspnetcore/    (本仓)
 - **DB 落地**：springboot 用 Hibernate `ddl-auto=none` + shared SQL 灌入；本仓 EF 镜像 SQL 是 ADR-0010 主线但 InitialSchema 尚未提交；
 - **路由继承**：本仓 `partial class` 继承 NSwag abstract base（路由在 base）；springboot `@RestController implements Api`（路由在 interface）。
 
-详见父仓 [§4.4 springboot 模板](../../docs/ARCHITECTURE.md) + [§4.4.2 aspnetcore 模板](../../docs/ARCHITECTURE.md)。
+详见父仓 [§4.4 springboot 模板](../../../docs/ARCHITECTURE.md) + [§4.4.2 aspnetcore 模板](../../../docs/ARCHITECTURE.md)。
 
 ## 附录 C：相关约定 / 决策 / 文档
 
-- 子仓 gitlink / 加减 / 回滚：[docs/conventions/submodule.md](../../docs/conventions/submodule.md)
-- 多仓家族拓扑细则：[docs/conventions/multi-repo-family.md](../../docs/conventions/multi-repo-family.md)
-- Tag 规约：[docs/conventions/tag.md](../../docs/conventions/tag.md)
-- 12 份 ADR：[docs/adr/](../../docs/adr/)
-- 编码细则（不入主上下文）：[docs/conventions/](../../docs/conventions/)
+- 子仓 gitlink / 加减 / 回滚：[docs/conventions/submodule.md](../../../docs/conventions/submodule.md)
+- 多仓家族拓扑细则：[docs/conventions/multi-repo-family.md](../../../docs/conventions/multi-repo-family.md)
+- Tag 规约：[docs/conventions/tag.md](../../../docs/conventions/tag.md)
+- 12 份 ADR：[docs/adr/](../../../docs/adr/)
+- 编码细则（不入主上下文）：[docs/conventions/](../../../docs/conventions/)
 - 本仓入口：[CLAUDE.md](../../saas-identity-platform-aspnetcore/CLAUDE.md)
 - 本仓功能清单：[docs/functions/function-tree.md](../../saas-identity-platform-aspnetcore/docs/functions/function-tree.md)
-- 父仓 CLAUDE.md：[CLAUDE.md](../../CLAUDE.md)
-- 父仓 ARCHITECTURE.md：[docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)
+- 父仓 CLAUDE.md：[CLAUDE.md](../CLAUDE.md)
+- 父仓 ARCHITECTURE.md：[docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md)
 - 跨仓经验教训（不入仓）：`~/.claude/.../memory/`

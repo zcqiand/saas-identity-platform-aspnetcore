@@ -1,30 +1,29 @@
 {
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
-  "current_task": "M06.F03 AuditWriter + MapEnum PG enum 已合入，dotnet build + L1-L4 PASS（L5 因 pre-existing M09.F03.I04 缺 UI 入口红，与本批无关）",
-  "last_session_at": "2026-08-31",
+  "current_task": "2026-09-03 L2 复绿（M06.F03 AuditWriter + MapEnum PG enum 已合入，本批只动了 dev server 残留进程）",
+  "last_session_at": "2026-09-03",
   "done": [
-    "src/Services/AuditWriter.cs (新)：IAuditWriter + AuditWriter 实现，best-effort try/catch + LogWarning（不抛）",
-    "src/Program.cs: import Saas.Identity.AspNetCore.Domain.Entities; dataSourceBuilder.MapEnum<ApiKeyStatusPg/AuditActionPg>(); 新增 services.AddScoped<IAuditWriter, AuditWriter>()",
-    "src/Domain/Entities/ApiKeyStatusPg.cs (新) + AuditActionPg.cs (新)：string-backed enum 给 Npgsql.MapEnum<T>() 用",
-    "src/Infrastructure/Persistence/AppDbContext.cs: DbApiKey.Status 与 AuditEvent.Action 加 HasConversion(string→enumPg)",
-    "src/Controllers/Implementation/TenantApiKeysController.cs: 三处构造（ApiKeysPost/Revoke/Rotate）都注入 IAuditWriter + IHttpContextAccessor；调用 _audit.WriteAsync(tenantId, CallerUserId(), action, null, {apiKeyId: ...})",
-    "tests/Composition/CompositionRootTests.cs: 新断言 CompositionRoot_registers_IAuditWriter（composition-root-blind-spot 防线）",
-    "dotnet format + dotnet build 0/0；dotnet test CompositionRootTests 3/3 PASS"
+    "taskkill /PID 15828 /F 清掉锁 bin/Debug/Saas.Identity.AspNetCore.exe 的残留 dev server 进程（dotnet run 不会自动停干净）",
+    "python scripts/gate.py -p saas-identity-platform-aspnetcore → L0/L0.5/L1/L2/L3/L4/L5 全 PASS（87 功能条目；L2 仍 10 warnings MSB3026 retry，全 PASS 不影响 exit；软告警 3：M05.F01.I05 + M09.F02.I02 + M09.F03.I04 缺测试引用，均 pre-existing 与本批无关）"
   ],
   "next": [
+    "M09.F03.I04 pre-existing 缺 UI 入口仍未动（要么给路由加 data-fn=\"M09.F03.I04\"，要么把状态回退「开发中」）",
     "本地 /tmp/aspnetcore-run6.log 是带 env (DATABASE_URL=qiand68+++) 的真跑实例；要 commit/push 前杀掉。prod 容器 deploy 脚本需保证 DATABASE_URL 在 env-file，否则 prod 启动走 appsettings.json 内嵌的 changeme 占位 → 28P01",
-    "M09.F03.I04 缺 UI 入口是 pre-existing：要么给路由加 data-fn=\"M09.F03.I04\"，要么把状态回退「开发中」。本批不动"
+    "本批未做提交动作；下个会话第一步：git status 看是否需要 commit ASPNETCORE_URLS/Program.cs 等遗留改动"
   ],
   "open_questions": [
-    "nextjs/aspnetcore 都有空 `createdAt` 字段（EF 返回 DateTimeOffset.MinValue），下一步要不要 Npgsql.DataSourceBuilder 强制 timestamptz NOT NULL default now()？不强制也行，contract-test 已 drop createdAt"
+    "nextjs/aspnetcore 都有空 `createdAt` 字段（EF 返回 DateTimeOffset.MinValue），下一步要不要 Npgsql.DataSourceBuilder 强制 timestamptz NOT NULL default now()？不强制也行，contract-test 已 drop createdAt",
+    "M09.F03.I04 怎么处理？UI 入口 vs 状态回退需要人定"
   ],
   "dont": [
     "不要再写 :8080 ASPNETCORE_URLS 优先级 > SERVER_PORT 的 shim，conventions §6 已锁",
     "不要再让 DbApiKey.Status 直接 string 落到 PG enum 列（不带 HasConversion 会撞 42804，同 memory [springboot 写路径双层 bug]）",
-    "不要再加 IAuditWriter 时忘 CompositionRootTests 断言（composition-root-blind-spot 防线）"
+    "不要再加 IAuditWriter 时忘 CompositionRootTests 断言（composition-root-blind-spot 防线）",
+    "不要再让 dotnet run 后不杀进程就跑 gate —— 必撞 MSB3027 exe 被锁红（本次实测）",
+    "不要再用 `dotnet run` 进程名查 PID（同名进程多个会杀错）—— 用 netstat -ano 端口反查"
   ],
-  "last_gate_passed_at": "2026-08-31T10:39+08:00",
+  "last_gate_passed_at": "2026-09-03T11:50+08:00",
   "active_branch": "master",
   "ahead_of_origin": "0"
 }
