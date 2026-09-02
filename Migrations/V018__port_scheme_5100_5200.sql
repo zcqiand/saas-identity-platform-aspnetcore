@@ -23,9 +23,9 @@ SET redirect_uris = (
             ELSE u
         END
         FROM unnest(redirect_uris) AS u
-    ),
-    updated_at = CURRENT_TIMESTAMP
-)
+    )
+),
+updated_at = CURRENT_TIMESTAMP
 WHERE redirect_uris && ARRAY[
     'http://localhost:5173/login',
     'http://localhost:5174/login',
