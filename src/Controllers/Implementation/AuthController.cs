@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
+using Saas.Identity.AspNetCore.Services;
 using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
@@ -24,17 +25,20 @@ public class AuthController : AuthControllerBase
     private readonly JwtIssuer _jwt;
     private readonly SaasSessionStore _sessions;
     private readonly FailedLoginStore _failedLogins;
+    private readonly IAuditWriter _audit;
 
     public AuthController(
         AppDbContext db,
         JwtIssuer jwt,
         SaasSessionStore sessions,
-        FailedLoginStore failedLogins)
+        FailedLoginStore failedLogins,
+        IAuditWriter audit)
     {
         _db = db;
         _jwt = jwt;
         _sessions = sessions;
         _failedLogins = failedLogins;
+        _audit = audit;
     }
 
     public override async Task<LoginResponse> Login(LoginRequest body)
@@ -63,6 +67,15 @@ public class AuthController : AuthControllerBase
 
         // 成功 — 清失败计数 + 写 saas session cookie
         _failedLogins.ResetSuccess(user.Username);
+
+        // M03.F01.I01 写端点副作用 — login_success（2026-09-02 contract-test M96 audit 覆盖对齐，
+        // 形状对齐 nextjs/msw/springboot：actor=target=登录用户，metadata={username}）
+        await _audit.WriteAsync(
+            user.TenantId.ToString(),
+            user.Id.ToString(),
+            "login_success",
+            targetUserId: null,
+            new Dictionary<string, object?> { ["username"] = user.Username });
 
         var sid = _sessions.GenerateId();
         var session = new SaasSession(
@@ -99,12 +112,20 @@ public class AuthController : AuthControllerBase
     public override Task Logout()
     {
         // M03.F03.I05/I06 登出（无状态 JWT 仅前端清 cookie）
+        // 2026-08-31 contract-test M96.F02.I23：无返回 action ASP.NET 默认给 200 空体，
+        // 家族契约（msw/springboot/nextjs）logout 是 204 noContent —— 显式对齐。
+        Response.StatusCode = StatusCodes.Status204NoContent;
         return Task.CompletedTask;
     }
 
     public override Task<TokenResponse> Callback(OidcCallbackRequest body)
     {
-        // M03.F02.I03 OIDC Code 换取（Phase 5 占位：直接返回 mock）
+        // M03.F02.I03 OIDC Code 换取。
+        // 2026-08-31 contract-test M96.F02.I25：补错误分支 —— 缺 code/state/clientId
+        // 原占位实现静默 200，与 msw/nextjs 的 400 分叉。
+        if (string.IsNullOrEmpty(body?.Code) || string.IsNullOrEmpty(body.State))
+            throw new ArgumentException("OIDC callback: code/state/clientId required");
+        // 成功分支需真 IdP code 交换（Phase 6+）；当前 dev 占位签发。
         return Task.FromResult(new TokenResponse
         {
             AccessToken = "oidc-access-token",
@@ -114,28 +135,41 @@ public class AuthController : AuthControllerBase
         });
     }
 
-    public override Task<TokenResponse> Refresh(TokenRequest body)
+    public override async Task<TokenResponse> Refresh(TokenRequest body)
     {
-        // M03.F02.I04 refresh token（Phase 5 占位：解析格式 + 重发）
-        var match = Refresh格式(body.RefreshToken);
-        var userId = match?.userId ?? Guid.Empty;
-        var tenantId = match?.tenantId ?? Guid.Empty;
-        return Task.FromResult(new TokenResponse
+        // M03.F02.I04 refresh token。
+        // 2026-08-31 contract-test M96.F02.I24 修复：未知/垃圾 token 之前静默重发
+        // （Guid.Empty 也签 token）；现在必须验 user 存在才发，否则 401。
+        var match = Refresh格式(body?.RefreshToken)
+            ?? throw new ArgumentException("invalid refresh_token");
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == match.userId);
+        if (user is null)
+            throw new ArgumentException("invalid refresh_token");
+        return new TokenResponse
         {
-            AccessToken = _jwt.IssueAccessToken(userId, tenantId),
-            RefreshToken = $"refresh-{userId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
+            AccessToken = _jwt.IssueAccessToken(user.Id, user.TenantId),
+            RefreshToken = $"refresh-{user.Id}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
             TokenType = "Bearer",
             ExpiresIn = 3600,
             Scope = "",
-        });
+        };
     }
 
     private static (Guid userId, Guid tenantId)? Refresh格式(string? token)
     {
         if (string.IsNullOrEmpty(token)) return null;
-        var parts = token.Split('-');
-        if (parts.Length < 3 || parts[0] != "refresh") return null;
-        if (!Guid.TryParse(parts[1], out var u)) return null;
-        return (u, Guid.Empty);  // Phase 5 占位
+        // 兼容两种格式：旧 "refresh-<uuid>-<epoch>"（本仓 login 签发）与
+        // "saas-rt-<uuid>-<ts>-<rand>"（家族新格式）。UUID 自身含 4 个 '-'，rand(base64url)
+        // 也可能含 '-' —— 不能按 lastIndexOf('-') 切（2026-08-31 contract-test M96.F02.I24
+        // 修复）：UUID = 前 5 段，后面全是 ts/rand。
+        var tokenBody = token.StartsWith("saas-rt-", StringComparison.Ordinal)
+            ? token["saas-rt-".Length..]
+            : token.StartsWith("refresh-", StringComparison.Ordinal)
+                ? token["refresh-".Length..]
+                : null;
+        if (tokenBody is null) return null;
+        var parts = tokenBody.Split('-');
+        if (parts.Length < 6) return null; // 5 段 UUID + 至少 1 段尾缀
+        return Guid.TryParse(string.Join("-", parts[..5]), out var u) ? (u, Guid.Empty) : null;
     }
 }

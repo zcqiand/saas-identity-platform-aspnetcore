@@ -29,7 +29,25 @@ public class AuthControllerTests
             .UseApplicationServiceProvider(new ServiceCollection().BuildServiceProvider())
             .EnableServiceProviderCaching(false)
             .Options;
-        return new AppDbContext(opts);
+        // InMemory 不支持 PG 专属映射（jsonb / native enum / 数组），
+        // Ignore 掉 Auth 流程不触表的实体（同 OauthControllerTests.TestAppDbContext 模式）
+        return new InMemoryTestDbContext(opts);
+    }
+
+    private sealed class InMemoryTestDbContext(DbContextOptions<AppDbContext> options) : AppDbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Ignore<Saas.Identity.AspNetCore.Domain.Entities.AuditEvent>();
+            modelBuilder.Ignore<Saas.Identity.AspNetCore.Domain.Entities.AuditRetentionPolicy>();
+            modelBuilder.Ignore<Saas.Identity.AspNetCore.Domain.Entities.ApiKey>();
+            modelBuilder.Ignore<Saas.Identity.AspNetCore.Domain.Entities.Menu>();
+            // Auth 流程触 Tenants 表（seed user 挂 tenant），实体不能整个 Ignore；
+            // jsonb Settings InMemory 不支持，属性级 Ignore
+            modelBuilder.Entity<Saas.Identity.AspNetCore.Domain.Entities.Tenant>()
+                .Ignore(t => t.Settings);
+        }
     }
 
     private static JwtIssuer NewJwt() => new(
@@ -50,7 +68,7 @@ public class AuthControllerTests
         sessionStore ??= new SaasSessionStore();
         failedStore ??= new FailedLoginStore();
         var ctx = new DefaultHttpContext();
-        var controller = new AuthController(db, NewJwt(), sessionStore, failedStore)
+        var controller = new AuthController(db, NewJwt(), sessionStore, failedStore, new NoopAuditWriter())
         {
             ControllerContext = new ControllerContext { HttpContext = ctx }
         };
@@ -187,6 +205,40 @@ public class AuthControllerTests
     [Fact(Skip = "M03.F02 refresh Phase 6 改造")]
     [Trait("Fn", "M03.F02.I04")]
     public Task Refresh_returnsNewToken() => Task.CompletedTask;
+
+    // === M03.F02.I04 — 2026-08-31 contract-test M96.F02.I24 抓获 ===
+    // 未知 refreshToken 必须拒绝（ Unauthorized → 401/400 契约面），不能静默重发。
+
+    [Fact]
+    [Trait("Fn", "M03.F02.I04")]
+    public async Task Refresh_unknownToken_throws()
+    {
+        var (controller, _) = NewController(NewDb());
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            controller.Refresh(new TokenRequest
+            {
+                GrantType = TokenRequestGrantType.Refresh_token,
+                RefreshToken = "saas-rt-00000000-0000-0000-0000-00000000dead-0-xyz",
+                ClientId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                TenantId = Guid.NewGuid(),
+            }));
+    }
+
+    [Fact]
+    [Trait("Fn", "M03.F02.I04")]
+    public async Task Refresh_malformedToken_throws()
+    {
+        var (controller, _) = NewController(NewDb());
+        // 非 refresh-/saas-rt- 前缀的垃圾 token 同样拒绝
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            controller.Refresh(new TokenRequest
+            {
+                GrantType = TokenRequestGrantType.Refresh_token,
+                RefreshToken = "garbage",
+                ClientId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                TenantId = Guid.NewGuid(),
+            }));
+    }
 
     // === M03.F03.I05 ===
 

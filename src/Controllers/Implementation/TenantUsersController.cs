@@ -1,7 +1,10 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
+using Saas.Identity.AspNetCore.Services;
 // alias to disambiguate from NSwag-generated DTO `User`
 using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 
@@ -21,11 +24,24 @@ public class TenantUsersController : TenantUsersControllerBase
 {
     private readonly TenantGuard _guard;
     private readonly AppDbContext _db;
+    private readonly IAuditWriter _audit;
+    private readonly IHttpContextAccessor _http;
 
-    public TenantUsersController(TenantGuard guard, AppDbContext db)
+    public TenantUsersController(
+        TenantGuard guard, AppDbContext db, IAuditWriter audit, IHttpContextAccessor http)
     {
         _guard = guard;
         _db = db;
+        _audit = audit;
+        _http = http;
+    }
+
+    // 同 TenantApiKeysController.CallerUserId：JWT sub claim → actor（解析失败 null = 系统动作）
+    private Guid? CallerUserId()
+    {
+        var sub = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? _http.HttpContext?.User.FindFirstValue("sub");
+        return Guid.TryParse(sub, out var id) ? id : null;
     }
 
     // === DTO ↔ Entity 转换 ===
@@ -111,6 +127,14 @@ public class TenantUsersController : TenantUsersControllerBase
         };
         _db.Users.Add(entity);
         await _db.SaveChangesAsync();
+        // M01.F01.I02 写端点副作用 — user_created（2026-09-02 contract-test M96 audit 覆盖对齐，
+        // 形状对齐 nextjs/springboot：metadata={userId}；caller 为 null 时系统动作语义）
+        await _audit.WriteAsync(
+            tenantId,
+            CallerUserId()?.ToString(),
+            "user_created",
+            targetUserId: entity.Id.ToString(),
+            new Dictionary<string, object?> { ["userId"] = entity.Id.ToString() });
         return ToDto(entity);
     }
 
@@ -141,7 +165,7 @@ public class TenantUsersController : TenantUsersControllerBase
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
         var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found");;
+            ?? throw new KeyNotFoundException($"User not found"); ;
         return ToDto(entity);
     }
 
@@ -151,7 +175,7 @@ public class TenantUsersController : TenantUsersControllerBase
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
         var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found");;
+            ?? throw new KeyNotFoundException($"User not found"); ;
         if (body.Email != null) entity.Email = body.Email;
         if (body.DisplayName != null) entity.DisplayName = body.DisplayName;
         entity.Status = ToDbStatus(body.Status);
@@ -179,7 +203,7 @@ public class TenantUsersController : TenantUsersControllerBase
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
         var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found");;
+            ?? throw new KeyNotFoundException($"User not found"); ;
         entity.RoleIds = ParseRoleIds(body.RoleIds);
         await _db.SaveChangesAsync();
         return ToDto(entity);
@@ -191,7 +215,7 @@ public class TenantUsersController : TenantUsersControllerBase
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
         var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found");;
+            ?? throw new KeyNotFoundException($"User not found"); ;
         entity.Status = ToDbStatus(body.Status);
         await _db.SaveChangesAsync();
         return ToDto(entity);

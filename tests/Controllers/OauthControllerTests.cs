@@ -81,11 +81,11 @@ public class OauthControllerTests
             Id = TestAppId,
             Code = "lab-management",
             Name = "lab-mgmt",
-            Status = appActive ? "active" : "disabled",
+            Status = appActive ? AppStatusPg.active : AppStatusPg.disabled,
             ClientId = TestClientIdGuid.ToString(),
             RedirectUris = redirectUris ?? new List<string> { "https://lab-vue.xiangru.uk/login" },
             Scopes = scopes ?? new List<string> { "lab.read", "lab.write" },
-            GrantTypes = new List<string> { "authorization_code", "refresh_token" },
+            GrantTypes = new List<OAuthGrantTypePg> { OAuthGrantTypePg.authorization_code, OAuthGrantTypePg.refresh_token },
             IsFirstParty = true,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -148,7 +148,7 @@ public class OauthControllerTests
     public async Task Authorize_invalidClient_throwsUnauthorized()
     {
         var (_, _, c, _) = Build();
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => c.Authorize(new AuthorizeCodeRequest
+        await Assert.ThrowsAsync<ArgumentException>(() => c.Authorize(new AuthorizeCodeRequest
         {
             ClientId = Guid.NewGuid(),  // 不存在的 client
             RedirectUri = "https://lab-vue.xiangru.uk/login",
@@ -246,7 +246,7 @@ public class OauthControllerTests
         });
 
         // 第二次重放应 throw (rotate-once)
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => c.Token(new TokenRequest
+        await Assert.ThrowsAsync<ArgumentException>(() => c.Token(new TokenRequest
         {
             GrantType = TokenRequestGrantType.Authorization_code,
             Code = code,
@@ -271,7 +271,7 @@ public class OauthControllerTests
             TenantId = TestTenantId,
         })).Code;
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => c.Token(new TokenRequest
+        await Assert.ThrowsAsync<ArgumentException>(() => c.Token(new TokenRequest
         {
             GrantType = TokenRequestGrantType.Authorization_code,
             Code = code,
@@ -350,7 +350,7 @@ public class OauthControllerTests
         });
 
         // 重放旧 refresh 应 throw
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => c.Token(new TokenRequest
+        await Assert.ThrowsAsync<ArgumentException>(() => c.Token(new TokenRequest
         {
             GrantType = TokenRequestGrantType.Refresh_token,
             RefreshToken = first.RefreshToken,
@@ -447,11 +447,11 @@ public class OauthControllerTests
                 Id = TestAppId,
                 Code = "lab-management",
                 Name = "lab-mgmt",
-                Status = "active",
+                Status = AppStatusPg.active,
                 ClientId = TestClientIdGuid.ToString(),
                 RedirectUris = new List<string> { "https://lab-vue.xiangru.uk/login" },
                 Scopes = new List<string> { "lab.read" },
-                GrantTypes = new List<string> { "authorization_code", "refresh_token" },
+                GrantTypes = new List<OAuthGrantTypePg> { OAuthGrantTypePg.authorization_code, OAuthGrantTypePg.refresh_token },
                 IsFirstParty = true,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
@@ -471,7 +471,7 @@ public class OauthControllerTests
             db.Menus.Add(new MenuEntity
             {
                 Id = Guid.NewGuid(), AppId = TestAppId, Code = "m-dashboard", Name = "工作台",
-                Path = "/", Type = "page", Status = "active",
+                Path = "/", Type = MenuTypePg.page, Status = MenuStatusPg.active,
                 SortOrder = 1, CreatedAt = DateTimeOffset.UtcNow,
             });
             var flowRoleId = Guid.NewGuid();
@@ -516,7 +516,7 @@ public class OauthControllerTests
             sessions ??= new SaasSessionStore();
             failed ??= new FailedLoginStore();
             var ctx = new DefaultHttpContext();
-            var auth = new AuthController(db, NewJwt(), sessions, failed)
+            var auth = new AuthController(db, NewJwt(), sessions, failed, new NoopAuditWriter())
             {
                 ControllerContext = new ControllerContext { HttpContext = ctx }
             };
