@@ -84,10 +84,9 @@ if ! grep -q '^DATABASE_URL=' "$BASE/aspnetcore.env"; then
   exit 1
 fi
 
-# nginx vhost 自举（缺时创建, 不 reload —— reload 要 root）:
-# 检测 /etc/nginx/sites-enabled/<NGINX_DOMAIN> 是否存在; 缺时从 nginx-vps.conf.example
-# 模板渲染, 做 symlink。reload 需 sudo, 留给手工:
-#   sudo nginx -t && sudo systemctl reload nginx
+# nginx vhost 重渲染（每次 deploy 都跑,ADR-0018:容器端口变了 vhost 必须跟）:
+# 模板从 master 拉,渲染后写入 sites-available,symlink sites-enabled,再 sudo nginx -t + reload。
+# diff 检测:内容未变跳过 reload (nginx -t 也省)。
 NGINX_SITES_AVAILABLE="/etc/nginx/sites-available"
 NGINX_SITES_ENABLED="/etc/nginx/sites-enabled"
 NGINX_VHOST_FILE="${NGINX_SITES_AVAILABLE}/${NGINX_DOMAIN}"
@@ -100,43 +99,49 @@ if [ ! -f "${NGINX_TEMPLATE}" ]; then
   curl -fsSL "https://raw.githubusercontent.com/zcqiand/saas-identity-platform-aspnetcore/refs/heads/master/deploy/nginx-vps.conf.example" -o "${NGINX_TEMPLATE}"
 fi
 
-if [ -e "${NGINX_VHOST_LINK}" ] || [ -e "${NGINX_VHOST_FILE}" ]; then
-  echo "→ nginx vhost ${NGINX_VHOST_FILE} already exists, skip bootstrap"
+# 渲染到临时文件 —— sed 同时覆盖 3 种 placeholder:
+#   Style A (lab-vue/react):      <domain>
+#   Style B/C (nextjs/sp/aspc):   lab.YOUR_DOMAIN / saas.YOUR_DOMAIN
+#   cert 路径: your-cert.{crt,cert} / <domain>.crt → 统一到 ${NGINX_CERT_BASENAME}.cert
+TMP_VHOST="$(mktemp -t vpstpl.XXXXXX)"
+sed \
+  -e "s|<domain>|${NGINX_DOMAIN}|g" \
+  -e "s|lab\.YOUR_DOMAIN|${NGINX_DOMAIN}|g" \
+  -e "s|saas\.YOUR_DOMAIN|${NGINX_DOMAIN}|g" \
+  -e "s|/etc/nginx/ssl/<domain>\.crt|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
+  -e "s|/etc/nginx/ssl/<domain>\.key|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.key|g" \
+  -e "s|/etc/nginx/ssl/your-cert\.crt|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
+  -e "s|/etc/nginx/ssl/your-cert\.cert|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
+  -e "s|/etc/nginx/ssl/your-cert\.key|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.key|g" \
+  "${NGINX_TEMPLATE}" > "${TMP_VHOST}"
+
+# diff 检测:已有 vhost 且内容相同就 skip,不同才重写 + reload
+if [ -e "${NGINX_VHOST_FILE}" ] && diff -q "${TMP_VHOST}" "${NGINX_VHOST_FILE}" >/dev/null 2>&1; then
+  echo "→ nginx vhost ${NGINX_VHOST_FILE} unchanged, skip"
+  rm -f "${TMP_VHOST}"
 else
-  echo "→ nginx vhost missing, bootstrapping ${NGINX_VHOST_FILE} (domain=${NGINX_DOMAIN} cert=${NGINX_CERT_BASENAME})"
-  # deploy 用户默认没有写 /etc/nginx/sites-available/ 的权限。`>` 重定向在 dash 下
-  # 失败时 -e 不传播 → 文件静默没生成 → CI 显示 success 但站点 404。修法：先
-  # 检测目录可写，否则用 sudo cp + sudo ln -sf 提权（admin 操作走 sudoers 白名单）
+  echo "→ rendering nginx vhost ${NGINX_VHOST_FILE} (domain=${NGINX_DOMAIN} cert=${NGINX_CERT_BASENAME})"
+  # 写入 sites-available (deploy 用户可能没写权限,需要 sudoers 配 nginx 白名单)
   if [ -w "${NGINX_SITES_AVAILABLE}" ]; then
-    umask 022
-    sed \
-      -e "s/saas.YOUR_DOMAIN/${NGINX_DOMAIN}/g" \
-      -e "s|/etc/nginx/ssl/your-cert.cert|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
-      -e "s|/etc/nginx/ssl/your-cert.key|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.key|g" \
-      "${NGINX_TEMPLATE}" > "${NGINX_VHOST_FILE}"
-    echo "→ wrote ${NGINX_VHOST_FILE} (direct, deploy user has write perms)"
+    cp "${TMP_VHOST}" "${NGINX_VHOST_FILE}"
   else
-    echo "→ ${NGINX_SITES_AVAILABLE} not writable by $(id -un); need sudo (ensure /etc/sudoers.d/deploy-nginx allows: deploy ALL=(ALL) NOPASSWD: /bin/cp /bin/ln)"
-    TMP_VHOST="$(mktemp)"
-    sed \
-      -e "s/saas.YOUR_DOMAIN/${NGINX_DOMAIN}/g" \
-      -e "s|/etc/nginx/ssl/your-cert.cert|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
-      -e "s|/etc/nginx/ssl/your-cert.key|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.key|g" \
-      "${NGINX_TEMPLATE}" > "${TMP_VHOST}"
     sudo cp "${TMP_VHOST}" "${NGINX_VHOST_FILE}" \
-      && echo "→ wrote ${NGINX_VHOST_FILE} (via sudo cp)" \
-      || { echo "→ ERROR: failed to write ${NGINX_VHOST_FILE}"; exit 1; }
-    rm -f "${TMP_VHOST}"
+      || { echo "ERROR: sudo cp ${NGINX_VHOST_FILE} failed"; rm -f "${TMP_VHOST}"; exit 1; }
   fi
+  # symlink sites-enabled
   if [ -w "${NGINX_SITES_ENABLED}" ]; then
     ln -sf "${NGINX_VHOST_FILE}" "${NGINX_VHOST_LINK}"
-    echo "→ linked ${NGINX_VHOST_LINK} (direct)"
   else
     sudo ln -sf "${NGINX_VHOST_FILE}" "${NGINX_VHOST_LINK}" \
-      && echo "→ linked ${NGINX_VHOST_LINK} (via sudo ln)" \
-      || { echo "→ ERROR: failed to link ${NGINX_VHOST_LINK}"; exit 1; }
+      || { echo "ERROR: sudo ln ${NGINX_VHOST_LINK} failed"; rm -f "${TMP_VHOST}"; exit 1; }
   fi
-  echo "→ nginx vhost created. To enable: sudo nginx -t && sudo systemctl reload nginx"
+  rm -f "${TMP_VHOST}"
+  # nginx config test + reload (CI 自动完成,不再依赖手工)
+  echo "→ nginx -t"
+  sudo nginx -t
+  echo "→ systemctl reload nginx"
+  sudo systemctl reload nginx
+  echo "✓ nginx reloaded"
 fi
 
 # v0.2.12 key 对齐迁移(2026-08-28): 老 env-file 逐 key append-if-missing 到
