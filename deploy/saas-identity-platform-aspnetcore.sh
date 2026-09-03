@@ -11,7 +11,8 @@
 # 与姊妹仓 saas-identity-platform-springboot.sh 的差异:
 #   - 数据库：PostgreSQL 远程, DATABASE_URL 从 aspnetcore.env 注入
 #     （EF Core / Npgsql 无 ./data 卷, 程序重启数据不丢）
-#   - 容器内是 ASP.NET Core 8 监听 :8080 → -p 127.0.0.1:8024:8080
+#   - 容器内 ASP.NET Core 8 监听 :5104（conventions §6）；host=container=5104
+#     （ADR-0018 单层 port 方案，docker run -p 127.0.0.1:5104:5104；saas 家族 X04 段）
 #   - 密钥走 ./aspnetcore.env (DATABASE_URL + JWT_SIGNING_KEY + flat JWT_* +
 #     SAAS_CORS_ALLOWED_ORIGINS, key 集合与仓内 .env.production 对齐),
 #     setup-vps.sh 不预生成（fail-fast 不便）,本脚本首启自举。
@@ -29,7 +30,6 @@ VERSION="${3:-latest}"
 IMAGE="${USERNAME}/saas-identity-platform-aspnetcore:${VERSION}"
 BASE="/home/deploy/saas-identity-platform-aspnetcore"
 CONTAINER_NAME="saas-identity-platform-aspnetcore"
-HOST_PORT=8024
 
 # nginx domain（deploy 脚本渲染 nginx vhost 时用）
 NGINX_DOMAIN="${NGINX_DOMAIN:-saas-aspnetcore.xiangru.uk}"
@@ -195,7 +195,7 @@ echo "→ docker run"
 docker run -d \
   --name "$CONTAINER_NAME" \
   --restart unless-stopped \
-  -p "127.0.0.1:${HOST_PORT}:5104" \
+  -p "127.0.0.1:5104:5104" \
   --env-file "$BASE/aspnetcore.env" \
   "$IMAGE"
 
@@ -211,8 +211,8 @@ docker ps --filter name="$CONTAINER_NAME"
 # 没有 Spring Boot 那么详细的 status JSON (UP/DOWN),单纯 200 即可。
 i=0
 while [ $i -lt 60 ]; do
-  if wget --tries=1 --timeout=3 -q "http://127.0.0.1:${HOST_PORT}/health" -O /dev/null 2>/dev/null; then
-    echo "→ /health 200 (host 127.0.0.1:${HOST_PORT}) after ${i}s"
+  if wget --tries=1 --timeout=3 -q "http://127.0.0.1:5104/health" -O /dev/null 2>/dev/null; then
+    echo "→ /health 200 (host 127.0.0.1:5104) after ${i}s"
     break
   fi
   # 容器实际死亡 (OOM / start-cmd failure / 立刻 crash) 提前终止循环, 立刻报失败。
@@ -232,7 +232,7 @@ if [ $i -ge 60 ]; then
 fi
 
 # 额外探针: /swagger 看 OpenAPI UI 在线（v0.1.5+ 接了 Swashbuckle）
-if wget --tries=1 --timeout=3 -q "http://127.0.0.1:${HOST_PORT}/swagger/v1/swagger.json" -O /dev/null 2>/dev/null; then
+if wget --tries=1 --timeout=3 -q "http://127.0.0.1:5104/swagger/v1/swagger.json" -O /dev/null 2>/dev/null; then
   echo "→ swagger /swagger/v1/swagger.json 200"
 else
   echo "→ WARNING: swagger 探针失败（v0.1.5 后应可用, 可能是 dev JwtBearer 配置阻挡）"

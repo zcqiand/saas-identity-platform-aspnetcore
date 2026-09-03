@@ -13,7 +13,8 @@
 # 这份配置的目的:
 #   - saas.YOUR_DOMAIN 的 HTTP 301 到 HTTPS
 #   - HTTPS 终结在 VPS（持 cert）
-#   - proxy_pass 到本机容器端口 8024（由 docker run -p 127.0.0.1:8024:8080 决定）
+#   - proxy_pass 到本机容器端口 5104（host=container；ADR-0018 单层 port 方案，
+#     由 docker run -p 127.0.0.1:5104:5104 决定；saas 家族 X04 段）
 #   - 容器内 ASP.NET Core 8 监听 :5104（Dockerfile: ENTRYPOINT ["dotnet", "..."]）
 #
 # 注意:不持有 default_server。同一台 VPS 上若 saas-nextjs/react/springboot 也跑 :80
@@ -44,9 +45,9 @@ server {
     add_header Strict-Transport-Security "max-age=31536000" always;
 
     location / {
-        # VPS 暴露端口（容器内 ASP.NET Core 监听 :5104）
-        # 改端口必须同步 deploy/saas-identity-platform-aspnetcore.sh 的 -p
-        proxy_pass http://127.0.0.1:8024;
+        # VPS 暴露端口（容器内 ASP.NET Core 监听 :5104，host=container=5104）
+        # 改端口必须同步 deploy/saas-identity-platform-aspnetcore.sh 的 -p 与 ASPNETCORE_URLS
+        proxy_pass http://127.0.0.1:5104;
 
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
