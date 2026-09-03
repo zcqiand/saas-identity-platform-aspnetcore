@@ -93,11 +93,11 @@ NGINX_VHOST_FILE="${NGINX_SITES_AVAILABLE}/${NGINX_DOMAIN}"
 NGINX_VHOST_LINK="${NGINX_SITES_ENABLED}/${NGINX_DOMAIN}"
 NGINX_TEMPLATE="${BASE}/nginx-vps.conf.example"
 
-# 拉模板（deploy/ 目录随仓库 deploy 脚本一起, 但首次拉时可能不存在, 补一下）
-if [ ! -f "${NGINX_TEMPLATE}" ]; then
-  echo "→ fetching nginx-vps.conf.example template"
-  curl -fsSL "https://raw.githubusercontent.com/zcqiand/saas-identity-platform-aspnetcore/refs/heads/master/deploy/nginx-vps.conf.example" -o "${NGINX_TEMPLATE}"
-fi
+# 拉模板:每次都从 master 拉最新 —— VPS 本地会留 7 月老模板(801x 端口时代),
+# fetch-if-missing 让它永不更新 → 渲染出 proxy_pass 8010 全家族 502
+# (2026-09-03 事故根因之二;set -eu 下 curl 失败即 fail-fast)
+echo "→ fetching nginx-vps.conf.example template (always fresh from master)"
+curl -fsSL "https://raw.githubusercontent.com/zcqiand/saas-identity-platform-aspnetcore/refs/heads/master/deploy/nginx-vps.conf.example" -o "${NGINX_TEMPLATE}"
 
 # 渲染到临时文件 —— sed 同时覆盖 3 种 placeholder:
 #   Style A (lab-vue/react):      <domain>
