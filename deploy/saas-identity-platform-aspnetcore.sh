@@ -104,15 +104,19 @@ fi
 #   Style B/C (nextjs/sp/aspc):   lab.YOUR_DOMAIN / saas.YOUR_DOMAIN
 #   cert 路径: your-cert.{crt,cert} / <domain>.crt → 统一到 ${NGINX_CERT_BASENAME}.cert
 TMP_VHOST="$(mktemp -t vpstpl.XXXXXX)"
+# cert 归一化规则必须排在 <domain>/YOUR_DOMAIN 通配之前:sed -e 按顺序执行,
+# 先替换 <domain> 会把 cert 路径里的占位符一并吃掉,后面的 cert 规则全部失配
+# (2026-09-03 VPS nginx -t "cannot load certificate <域名>.crt" 事故根因)
 sed \
-  -e "s|<domain>|${NGINX_DOMAIN}|g" \
-  -e "s|lab\.YOUR_DOMAIN|${NGINX_DOMAIN}|g" \
-  -e "s|saas\.YOUR_DOMAIN|${NGINX_DOMAIN}|g" \
   -e "s|/etc/nginx/ssl/<domain>\.crt|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
+  -e "s|/etc/nginx/ssl/<domain>\.cert|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
   -e "s|/etc/nginx/ssl/<domain>\.key|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.key|g" \
   -e "s|/etc/nginx/ssl/your-cert\.crt|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
   -e "s|/etc/nginx/ssl/your-cert\.cert|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.cert|g" \
   -e "s|/etc/nginx/ssl/your-cert\.key|/etc/nginx/ssl/${NGINX_CERT_BASENAME}.key|g" \
+  -e "s|<domain>|${NGINX_DOMAIN}|g" \
+  -e "s|lab\.YOUR_DOMAIN|${NGINX_DOMAIN}|g" \
+  -e "s|saas\.YOUR_DOMAIN|${NGINX_DOMAIN}|g" \
   "${NGINX_TEMPLATE}" > "${TMP_VHOST}"
 
 # diff 检测:已有 vhost 且内容相同就 skip,不同才重写 + reload
