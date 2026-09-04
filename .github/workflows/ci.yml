@@ -26,7 +26,9 @@ jobs:
       - name: L2+L3 build (warnings as errors)
         run: dotnet build tests/Saas.Identity.AspNetCore.Tests.csproj -p:TreatWarningsAsErrors=true
       - name: L4 test
-        run: dotnet test tests/Saas.Identity.AspNetCore.Tests.csproj
+        # RealDb 测试集（*PgTest）硬依赖内网共享 PG，CI runner 不可达 ——
+        # 按「CI=翻译性 / gate=真库（本机全量）」分层排除（lab-aspnetcore v0.2.27 同款）。
+        run: dotnet test tests/Saas.Identity.AspNetCore.Tests.csproj --filter "Category!=RealDb"
 
   deploy:
     runs-on: ubuntu-latest

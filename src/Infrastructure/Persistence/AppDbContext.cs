@@ -86,7 +86,10 @@ public class AppDbContext : DbContext
             e.Property(x => x.UserId).HasColumnName("user_id").HasColumnType("uuid").IsRequired();
             e.Property(x => x.TenantId).HasColumnName("tenant_id").HasColumnType("uuid").IsRequired();
             e.Property(x => x.RoleIds).HasColumnName("role_ids").HasColumnType("uuid[]").IsRequired();
-            e.Property(x => x.Status).HasColumnName("status").HasColumnType("membership_status").IsRequired();
+            e.Property(x => x.Status).HasColumnName("status").HasColumnType("membership_status")
+                .HasConversion(s => Enum.Parse<MembershipStatusPg>(s),
+                               pg => pg.ToString())
+                .IsRequired();
             e.Property(x => x.JoinedAt).HasColumnName("joined_at").HasColumnType("timestamptz").IsRequired();
             e.HasIndex(x => new { x.UserId, x.TenantId }).IsUnique().HasDatabaseName("memberships_user_tenant_unique");
         });

@@ -139,6 +139,7 @@ dataSourceBuilder.EnableDynamicJson();
 dataSourceBuilder.MapEnum<ApiKeyStatusPg>("api_key_status");
 dataSourceBuilder.MapEnum<AuditActionPg>("audit_action");
 dataSourceBuilder.MapEnum<UserStatusPg>("user_status");
+dataSourceBuilder.MapEnum<MembershipStatusPg>("membership_status");
 // M00.F01 tenant_status（V001）——2026-08-31 contract-test M96.F02.I30 同款 42804 修复
 dataSourceBuilder.MapEnum<TenantStatusPg>("tenant_status");
 // M07/M08（V005）——2026-09-01 contract-test I45/I51 同款 42804 修复：
