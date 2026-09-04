@@ -84,20 +84,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// CORS — 允许跨 origin 调本后端的白名单。默认给 dev：
-//   - saas-nextjs :5101（saas 全栈 Next.js API routes 调 saas 后端）
-//   - saas-react :5102（saas-react dev server，2026-09-02 端口分段）
-//   - lab-nextjs :5201（lab 全栈 Next.js API routes 调 saas 后端）
-//   - saas-vue :5103（saas-vue dev server，2026-09-02 端口分段 — vite.config.ts
-//     FALLBACK_DEV_PORT=5103 钉死）
+// CORS — 允许跨 origin 调本后端的白名单。dev 期 localhost 列表,
 // 生产用 SAAS_CORS_ALLOWED_ORIGINS env override（逗号分隔）改正式域名。
 // 与 springboot 端的 SecurityConfig.corsConfigurationSource() 对称 — 同一 env var。
+//
+// ADR-0019：缺失 throw，不允许 fallback 到 localhost dev 列表（生产误部署会让任何
+// localhost origin 调本后端 OAuth,等同于 OAuth CORS 失效）。
 builder.Services.AddCors(options =>
 {
-    var origins = builder.Configuration["SAAS_CORS_ALLOWED_ORIGINS"]
-        ?? "http://localhost:5101,http://localhost:5102,http://localhost:5103,http://localhost:5201";
+    var originsValue = builder.Configuration["SAAS_CORS_ALLOWED_ORIGINS"];
+    if (string.IsNullOrEmpty(originsValue))
+    {
+        throw new InvalidOperationException(
+            "SAAS_CORS_ALLOWED_ORIGINS env is required (ADR-0019 禁 localhost 兜底). "
+            + "Set comma-separated origins in .env.local (dev) or env (prod).");
+    }
+    var origins = originsValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     options.AddPolicy("NextDev", policy =>
-        policy.WithOrigins(origins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        policy.WithOrigins(origins)
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
