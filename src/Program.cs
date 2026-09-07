@@ -264,7 +264,22 @@ app.UseExceptionHandler(errorApp =>
             KeyNotFoundException => "NOT_FOUND",
             _ => "INTERNAL_ERROR",
         };
-        await ctx.Response.WriteAsJsonAsync(new { error = code, error_description = ex?.Message ?? "unknown" });
+        // M01.F04.I02 — 失败锁定走 shared LockedAccountResponse 契约：
+        // { code: "ACCOUNT_LOCKED", message, lockedUntil: ISO-8601, remainingAttempts? }。
+        // 其它错误保留旧 { error, error_description } 形状（pre-existing，非本次任务范围）。
+        if (ex is AccountLockedException lockEx)
+        {
+            await ctx.Response.WriteAsJsonAsync(new
+            {
+                code,
+                message = lockEx.Message,
+                lockedUntil = lockEx.UnlockAt.ToString("O"),
+            });
+        }
+        else
+        {
+            await ctx.Response.WriteAsJsonAsync(new { error = code, error_description = ex?.Message ?? "unknown" });
+        }
     });
 });
 app.MapControllers();
