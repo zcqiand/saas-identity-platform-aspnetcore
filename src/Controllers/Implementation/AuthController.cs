@@ -1,3 +1,6 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
+// alias to disambiguate from NSwag-generated DTO User
+using DbUser = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.SysUser;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
@@ -6,7 +9,6 @@ using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Services;
-using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
@@ -48,30 +50,39 @@ public class AuthController : AuthControllerBase
         _failedLogins.EnsureNotLocked(username);
 
         // M03.F01.I01 账号密码登录
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var user = await _db.SysUsers.FirstOrDefaultAsync(u => u.Username == username);
         if (user == null || string.IsNullOrEmpty(body.Password))
         {
             _failedLogins.RecordFailure(username);
             throw new UnauthorizedAccessException("invalid credentials");
         }
 
-        // Phase 5：dev seed password_hash 写成 "plain:{password}"；真实换 argon2
-        var ok = user.PasswordHash == $"plain:{body.Password}" || user.PasswordHash == body.Password;
+        // Phase 5：dev seed password 写成 "plain:{password}"；真实换 argon2
+        var ok = user.Password == $"plain:{body.Password}" || user.Password == body.Password;
         if (!ok)
         {
             _failedLogins.RecordFailure(username);
             throw new UnauthorizedAccessException("invalid credentials");
         }
-        if (user.Status == "suspended" || user.Status == "disabled")
+        // SysUser.Status 是 short（1=active，0/2=disabled/suspended）—— shared schema 演进
+        // 9/7 重组后 status 列从 enum 改为 smallint，具体语义由 shared/src/db/seed.ts 定。
+        if (user.Status != 1)
             throw new UnauthorizedAccessException("user disabled");
 
         // 成功 — 清失败计数 + 写 saas session cookie
         _failedLogins.ResetSuccess(user.Username);
 
+        // sys_user 是 global 自然人，TenantId 在 tenant_member 上（M01.F04 9/7 重组）；
+        // 选第一个 active membership 作为 currentTenantId。
+        var currentTenantId = (await _db.TenantMembers
+            .Where(tm => tm.UserId == user.Id && tm.Status == 1)
+            .Select(tm => tm.TenantId)
+            .FirstOrDefaultAsync());
+
         // M03.F01.I01 写端点副作用 — login_success（2026-09-02 contract-test M96 audit 覆盖对齐，
         // 形状对齐 nextjs/msw/springboot：actor=target=登录用户，metadata={username}）
         await _audit.WriteAsync(
-            user.TenantId.ToString(),
+            currentTenantId.ToString(),
             user.Id.ToString(),
             "login_success",
             targetUserId: null,
@@ -80,7 +91,7 @@ public class AuthController : AuthControllerBase
         var sid = _sessions.GenerateId();
         var session = new SaasSession(
             UserId: user.Id,
-            TenantId: user.TenantId,
+            TenantId: currentTenantId,
             CreatedAt: DateTime.UtcNow,
             ExpiresAt: DateTime.UtcNow.Add(_sessions.DefaultTtl));
         _sessions.Put(session with { Id = sid });
@@ -100,12 +111,12 @@ public class AuthController : AuthControllerBase
 
         return new LoginResponse
         {
-            AccessToken = _jwt.IssueAccessToken(user.Id, user.TenantId),
-            RefreshToken = $"refresh-{user.Id}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
+            AccessToken = _jwt.IssueAccessToken(user.Id, currentTenantId),
+            RefreshToken = $"refresh-{user.Id}-{((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds()}",
             TokenType = "Bearer",
             ExpiresIn = 3600,
             UserId = user.Id,
-            CurrentTenantId = user.TenantId,
+            CurrentTenantId = currentTenantId,
         };
     }
 
@@ -142,13 +153,17 @@ public class AuthController : AuthControllerBase
         // （Guid.Empty 也签 token）；现在必须验 user 存在才发，否则 401。
         var match = Refresh格式(body?.RefreshToken)
             ?? throw new ArgumentException("invalid refresh_token");
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == match.userId);
+        var user = await _db.SysUsers.FirstOrDefaultAsync(u => u.Id == match.userId);
         if (user is null)
             throw new ArgumentException("invalid refresh_token");
+        var refreshTenantId = (await _db.TenantMembers
+            .Where(tm => tm.UserId == user.Id && tm.Status == 1)
+            .Select(tm => tm.TenantId)
+            .FirstOrDefaultAsync());
         return new TokenResponse
         {
-            AccessToken = _jwt.IssueAccessToken(user.Id, user.TenantId),
-            RefreshToken = $"refresh-{user.Id}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
+            AccessToken = _jwt.IssueAccessToken(user.Id, refreshTenantId),
+            RefreshToken = $"refresh-{user.Id}-{((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds()}",
             TokenType = "Bearer",
             ExpiresIn = 3600,
             Scope = "",

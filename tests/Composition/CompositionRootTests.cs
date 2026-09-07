@@ -9,13 +9,9 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Services;
 using Xunit;
-using AppEntity = Saas.Identity.AspNetCore.Domain.Entities.App;
-using MenuEntity = Saas.Identity.AspNetCore.Domain.Entities.Menu;
-using UserEntity = Saas.Identity.AspNetCore.Domain.Entities.User;
 
 namespace Saas.Identity.AspNetCore.Tests.Composition;
 

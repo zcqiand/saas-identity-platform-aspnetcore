@@ -1,3 +1,4 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using System;
 using System.Linq;
 using System.Threading;

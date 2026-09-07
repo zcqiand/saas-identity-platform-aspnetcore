@@ -1,7 +1,7 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using System;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 
 namespace Saas.Identity.AspNetCore.Tests.Harness;

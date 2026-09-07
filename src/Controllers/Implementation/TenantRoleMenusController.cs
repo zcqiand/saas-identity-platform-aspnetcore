@@ -1,18 +1,16 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
-using DbGrant = Saas.Identity.AspNetCore.Domain.Entities.RoleMenuGrant;
 using Saas.Identity.AspNetCore.Security;
-
-// alias 避免与 NSwag-generated DTO `RoleMenuGrant` 冲突
-using RoleMenuGrantDto = Saas.Identity.AspNetCore.Controllers.Generated.RoleMenuGrant;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
-/// Concrete M09 角色菜单授权（tenant-scoped）。
+/// Concrete M00.F04 角色菜单授权（tenant-scoped）。
 /// v0.4.0：从 InMemoryStore 迁到 AppDbContext。
+/// v0.5.0：sys_role_menu 走 EF skip nav（scaffold config in AppDbContext.cs:351），
+/// 不再手写 junction entity DbGrant/RolesGrants（Domain/Entities 已废）。
 /// </summary>
 public class TenantRoleMenusController : TenantRoleMenusControllerBase
 {
@@ -25,72 +23,53 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         _db = db;
     }
 
-    private static RoleMenuGrantDto ToDto(DbGrant e) => new()
-    {
-        RoleId = e.RoleId,
-        TenantId = e.TenantId,
-        MenuIds = (e.MenuIds ?? new()).Select(g => g.ToString()).ToList(),
-        UpdatedAt = e.UpdatedAt,
-    };
-
-    public override async Task<RoleMenuGrantDto> MenusGet(string tenantId, string roleId)
+    public override async Task<RoleMenuGrant> MenusGet(string tenantId, string roleId)
     {
         _guard.VerifyPathTenant(tenantId);
-        var tid = Guid.Parse(tenantId);
         var id = Guid.Parse(roleId);
-        var row = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
-        if (row == null)
+        var role = await _db.SysRoles
+            .Include(r => r.Menus)
+            .FirstOrDefaultAsync(r => r.Id == id)
+            ?? throw new KeyNotFoundException($"role {roleId} not found");
+        return new RoleMenuGrant
         {
-            return new RoleMenuGrantDto
-            {
-                RoleId = id,
-                TenantId = tid,
-                MenuIds = new List<string>(),
-                UpdatedAt = DateTimeOffset.UtcNow,
-            };
-        }
-        return ToDto(row);
+            RoleId = id,
+            TenantId = Guid.Parse(tenantId),
+            MenuIds = role.Menus.Select(m => m.Id.ToString()).ToList(),
+            UpdatedAt = role.UpdatedAt,
+        };
     }
 
-    public override async Task<RoleMenuGrantDto> MenusPut(string tenantId, string roleId, SetRoleMenusRequest body)
+    public override async Task<RoleMenuGrant> MenusPut(string tenantId, string roleId, SetRoleMenusRequest body)
     {
         _guard.VerifyPathTenant(tenantId);
-        var tid = Guid.Parse(tenantId);
         var id = Guid.Parse(roleId);
-        // 校验 role 存在
-        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == id);
-        if (role == null)
-            throw new KeyNotFoundException($"role {roleId} not found");
+        var role = await _db.SysRoles
+            .Include(r => r.Menus)
+            .FirstOrDefaultAsync(r => r.Id == id)
+            ?? throw new KeyNotFoundException($"role {roleId} not found");
 
         var menuIds = (body.MenuIds ?? new List<string>())
             .Where(m => Guid.TryParse(m, out _))
             .Select(m => Guid.Parse(m))
-            .ToList();
+            .ToHashSet();
 
-        var existing = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
-        if (existing != null)
+        // 用 EF skip nav 重写整批 sys_role_menu：清空旧 nav，再加新的
+        // (AppDbContext HasMany.UsingEntity<SysRoleMenu> 自动维护 junction)
+        role.Menus.Clear();
+        if (menuIds.Count > 0)
         {
-            existing.MenuIds = menuIds;
-            existing.TenantId = tid;
-            existing.UpdatedAt = DateTimeOffset.UtcNow;
+            var newMenus = await _db.SysMenus.Where(m => menuIds.Contains(m.Id)).ToListAsync();
+            foreach (var m in newMenus) role.Menus.Add(m);
         }
-        else
-        {
-            _db.RoleMenuGrants.Add(new DbGrant
-            {
-                RoleId = id,
-                TenantId = tid,
-                MenuIds = menuIds,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            });
-        }
+        role.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return new RoleMenuGrantDto
+        return new RoleMenuGrant
         {
             RoleId = id,
-            TenantId = tid,
+            TenantId = Guid.Parse(tenantId),
             MenuIds = menuIds.Select(g => g.ToString()).ToList(),
-            UpdatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = role.UpdatedAt,
         };
     }
 
@@ -98,11 +77,12 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
-        var row = await _db.RoleMenuGrants.FirstOrDefaultAsync(g => g.RoleId == id);
-        if (row != null)
-        {
-            _db.RoleMenuGrants.Remove(row);
-            await _db.SaveChangesAsync();
-        }
+        var role = await _db.SysRoles
+            .Include(r => r.Menus)
+            .FirstOrDefaultAsync(r => r.Id == id);
+        if (role == null) return;
+        role.Menus.Clear();
+        role.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
     }
 }

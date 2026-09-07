@@ -1,3 +1,7 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
+using DbUser = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.SysUser;
+using DbMember = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.TenantMember;
+using DbRole = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.SysRole;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -5,20 +9,15 @@ using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Services;
-// alias to disambiguate from NSwag-generated DTO `User`
-using DbUser = Saas.Identity.AspNetCore.Domain.Entities.User;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
-/// Concrete M01.F01 用户 CRUD（tenant-scoped）+ M01.F02 角色分配/状态切换/邀请。
+/// Concrete M01.F01 用户 CRUD（tenant-scoped via TenantMember）+ M01.F02 角色分配。
 /// v0.4.0（M10.F04）：从 InMemoryStore 迁到 AppDbContext（DB-backed）。
-///
-/// 边界规则：
-/// - 每个 tenant-scoped 方法第一行调 _tenantGuard.VerifyPathTenant(tenantId)
-/// - DbContext 通过构造器注入（CLAUDE.md §2 禁止字段注入）
-/// - DTO ↔ Entity 转换在 Controller 内手写（本仓不引 AutoMapper）
-/// - InMemoryStore 保留作为 fixture 给单元测试用；运行时改走 DB
+/// v0.5.0：9/7 重组 — sys_user 是 global 自然人（无 TenantId / 无 RoleIds / 无 DisplayName），
+/// tenant-scoped 身份走 tenant_member 表（TenantId / Roles skip nav / MemberName）。
+/// 创建用户时同时建 SysUser + TenantMember 并绑定初始角色。
 /// </summary>
 public class TenantUsersController : TenantUsersControllerBase
 {
@@ -36,7 +35,6 @@ public class TenantUsersController : TenantUsersControllerBase
         _http = http;
     }
 
-    // 同 TenantApiKeysController.CallerUserId：JWT sub claim → actor（解析失败 null = 系统动作）
     private Guid? CallerUserId()
     {
         var sub = _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -49,56 +47,63 @@ public class TenantUsersController : TenantUsersControllerBase
     private static User ToDto(DbUser e) => new()
     {
         Id = e.Id,
-        TenantId = e.TenantId,
+        TenantId = Guid.Empty, // SysUser 无 TenantId（panorama §2.3 9/7 重组）；DTO 字段保留兼容占位
         Username = e.Username,
         Email = e.Email,
-        DisplayName = e.DisplayName,
+        DisplayName = e.Email, // SysUser 无 DisplayName；DTO 字段保留兼容占位
         Status = ToDtoStatus(e.Status),
-        RoleIds = e.RoleIds.Select(g => g.ToString()).ToList(),
+        RoleIds = new List<string>(), // SysUser 无 RoleIds（auth 走 TenantMember.Roles）
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
     };
 
-    private static UserStatus ToDtoStatus(string s) => s switch
+    private static UserStatus ToDtoStatus(short s) => s switch
     {
-        "active" => UserStatus.Active,
-        "invited" => UserStatus.Invited,
-        "suspended" => UserStatus.Suspended,
-        "disabled" => UserStatus.Disabled,
+        2 => UserStatus.Suspended,
+        3 => UserStatus.Disabled,
+        1 => UserStatus.Active,
         _ => UserStatus.Invited,
     };
 
-    private static string ToDbStatus(UserStatus s) => s switch
+    private static short ToDbStatus(UserStatus s) => s switch
     {
-        UserStatus.Active => "active",
-        UserStatus.Invited => "invited",
-        UserStatus.Suspended => "suspended",
-        UserStatus.Disabled => "disabled",
-        _ => "invited",
+        UserStatus.Active => 1,
+        UserStatus.Suspended => 2,
+        UserStatus.Disabled => 3,
+        _ => 1,
     };
 
     private static List<Guid> ParseRoleIds(IEnumerable<string>? ids)
         => ids == null ? new() : ids.Select(Guid.Parse).ToList();
+
+    /// <summary>查询某 tenant 下成员（join tenant_member）。</summary>
+    private async Task<List<DbMember>> QueryMembers(Guid tenantId, UserStatus? status, int p, int ps)
+    {
+        var q = _db.TenantMembers.Include(m => m.Roles).Where(m => m.TenantId == tenantId);
+        if (status.HasValue) q = q.Where(m => m.Status == ToDbStatus(status.Value));
+        return await q.OrderByDescending(m => m.CreatedAt).Skip(p * ps).Take(ps).ToListAsync();
+    }
 
     // === endpoints ===
 
     public override async Task<Response11> UsersGet(
         string tenantId, int? page, int? pageSize, UserStatus? status)
     {
-        // M01.F01.I01 用户列表（tenant-scoped）
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);
-        // 2026-08-30 contract-test：其他 3 后端 0-indexed（Spring Data PageRequest 约定），aspnetcore 改为 0-indexed 对齐
         var p = page ?? 0;
         var ps = pageSize ?? 20;
-        var q = _db.Users.Where(u => u.TenantId == tid);
-        if (status.HasValue) q = q.Where(u => u.Status == ToDbStatus(status.Value));
-        var items = await q.OrderByDescending(u => u.CreatedAt)
-            .Skip(p * ps).Take(ps).ToListAsync();
-        var total = await q.CountAsync();
+        var members = await QueryMembers(tid, status, p, ps);
+        var total = await _db.TenantMembers.Where(m => m.TenantId == tid).CountAsync();
+        // DTO 仍是 User 形状；TenantMemberView 在 SysUser 上叠 role + tenant context，
+        // 当前实现简化为按 SysUser 投影（role/display 字段缺占位）
+        var userIds = members.Select(m => m.UserId).Distinct().ToList();
+        var users = await _db.SysUsers.Where(u => userIds.Contains(u.Id)).ToListAsync();
+        var userById = users.ToDictionary(u => u.Id);
+        var items = members.Select(m => ToDto(userById[m.UserId])).ToList();
         return new Response11
         {
-            Items = items.Select(ToDto).ToList(),
+            Items = items,
             Page = p,
             PageSize = ps,
             Total = total,
@@ -107,117 +112,148 @@ public class TenantUsersController : TenantUsersControllerBase
 
     public override async Task<User> UsersPost(string tenantId, CreateUserRequest body)
     {
-        // M01.F01.I02 创建用户（CreateUserRequest 不含 status，初始为 Invited）
         _guard.VerifyPathTenant(tenantId);
-        var entity = new DbUser
+        var tid = Guid.Parse(tenantId);
+        // 1. 创建 SysUser（global 自然人）
+        var user = new DbUser
         {
             Id = Guid.NewGuid(),
-            TenantId = Guid.Parse(tenantId),
             Username = body.Username,
+            Password = body.Password != null ? $"plain:{body.Password}" : "",
             Email = body.Email,
-            DisplayName = body.DisplayName,
-            Status = "active",
-            RoleIds = ParseRoleIds(body.RoleIds),
-            // Phase 5：换 argon2.hash(body.Password)
-            PasswordHash = body.Password != null ? $"plain:{body.Password}" : null,
-            // 2026-09-01 contract-test M96.F02.I19：补 CreatedAt/UpdatedAt，
-            // 与 AdminTenantsController.TenantsPost (line 116-117) 对齐。
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            Status = 1, // active
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
-        _db.Users.Add(entity);
+        _db.SysUsers.Add(user);
+        // 2. 创建 TenantMember（tenant-scoped 身份）
+        var member = new DbMember
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tid,
+            UserId = user.Id,
+            Status = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+        // 3. 绑初始角色（如果 body 带 RoleIds）
+        var roleIds = ParseRoleIds(body.RoleIds);
+        if (roleIds.Count > 0)
+        {
+            member.Roles = await _db.SysRoles.Where(r => roleIds.Contains(r.Id)).ToListAsync();
+        }
+        _db.TenantMembers.Add(member);
         await _db.SaveChangesAsync();
-        // M01.F01.I02 写端点副作用 — user_created（2026-09-02 contract-test M96 audit 覆盖对齐，
-        // 形状对齐 nextjs/springboot：metadata={userId}；caller 为 null 时系统动作语义）
+
         await _audit.WriteAsync(
             tenantId,
             CallerUserId()?.ToString(),
             "user_created",
-            targetUserId: entity.Id.ToString(),
-            new Dictionary<string, object?> { ["userId"] = entity.Id.ToString() });
-        return ToDto(entity);
+            targetUserId: user.Id.ToString(),
+            new Dictionary<string, object?> { ["userId"] = user.Id.ToString() });
+        return ToDto(user);
     }
 
     public override async Task<User> Invitations(string tenantId, Body6 body)
     {
-        // M01.F02.I02 邀请用户
         _guard.VerifyPathTenant(tenantId);
-        var entity = new DbUser
+        var user = new DbUser
+        {
+            Id = Guid.NewGuid(),
+            Username = body.Email ?? Guid.NewGuid().ToString(),
+            Password = "",
+            Email = body.Email,
+            Status = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        };
+        _db.SysUsers.Add(user);
+        var member = new DbMember
         {
             Id = Guid.NewGuid(),
             TenantId = Guid.Parse(tenantId),
-            Username = body.Email,
-            Email = body.Email,
-            Status = "invited",
-            RoleIds = ParseRoleIds(body.RoleIds),
-            // 2026-09-01 contract-test M96.F02.I19：补 CreatedAt/UpdatedAt。
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            UserId = user.Id,
+            Status = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         };
-        _db.Users.Add(entity);
+        var roleIds = ParseRoleIds(body.RoleIds);
+        if (roleIds.Count > 0)
+        {
+            member.Roles = await _db.SysRoles.Where(r => roleIds.Contains(r.Id)).ToListAsync();
+        }
+        _db.TenantMembers.Add(member);
         await _db.SaveChangesAsync();
-        return ToDto(entity);
+        return ToDto(user);
     }
 
     public override async Task<User> UsersGet(string tenantId, string userId)
     {
-        // M01.F01.I03 用户详情
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found"); ;
+        var entity = await _db.SysUsers.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException("User not found");
         return ToDto(entity);
     }
 
     public override async Task<User> UsersPatch(string tenantId, string userId, UpdateUserRequest body)
     {
-        // M01.F01.I04 更新用户
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found"); ;
+        var entity = await _db.SysUsers.FirstOrDefaultAsync(u => u.Id == uid)
+            ?? throw new KeyNotFoundException("User not found");
         if (body.Email != null) entity.Email = body.Email;
-        if (body.DisplayName != null) entity.DisplayName = body.DisplayName;
         entity.Status = ToDbStatus(body.Status);
-        if (body.RoleIds != null) entity.RoleIds = ParseRoleIds(body.RoleIds);
+        entity.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return ToDto(entity);
     }
 
     public override async Task UsersDelete(string tenantId, string userId)
     {
-        // M01.F01.I05 删除用户
+        // 9/7 重组：删 tenant-scoped 身份不解 global account（删除 TenantMember 即可，
+        // SysUser 保留供其他 tenant 复用）。
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid);
-        if (entity != null)
+        var member = await _db.TenantMembers.FirstOrDefaultAsync(m => m.UserId == uid && m.TenantId == Guid.Parse(tenantId));
+        if (member != null)
         {
-            _db.Users.Remove(entity);
+            _db.TenantMembers.Remove(member);
             await _db.SaveChangesAsync();
         }
     }
 
     public override async Task<User> Roles(string tenantId, string userId, Body7 body)
     {
-        // M01.F01.I06 / M01.F02.I01 分配角色
+        // M01.F02.I01 分配角色 → 改写 tenant_member_role M:N（SysRole.Roles skip nav）
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found"); ;
-        entity.RoleIds = ParseRoleIds(body.RoleIds);
+        var member = await _db.TenantMembers
+            .Include(m => m.Roles)
+            .FirstOrDefaultAsync(m => m.UserId == uid && m.TenantId == Guid.Parse(tenantId))
+            ?? throw new KeyNotFoundException("User not found");
+        var roleIds = ParseRoleIds(body.RoleIds);
+        member.Roles.Clear();
+        if (roleIds.Count > 0)
+        {
+            var roles = await _db.SysRoles.Where(r => roleIds.Contains(r.Id)).ToListAsync();
+            foreach (var r in roles) member.Roles.Add(r);
+        }
         await _db.SaveChangesAsync();
-        return ToDto(entity);
+        var user = await _db.SysUsers.FirstAsync(u => u.Id == uid);
+        return ToDto(user);
     }
 
     public override async Task<User> Status(string tenantId, string userId, Body8 body)
     {
-        // M01.F02.I03 状态切换
+        // 9/7 重组：status 走 tenant_member.status（membership 维度），不动 sys_user.status
         _guard.VerifyPathTenant(tenantId);
         var uid = Guid.Parse(userId);
-        var entity = await _db.Users.FirstOrDefaultAsync(u => u.Id == uid)
-            ?? throw new KeyNotFoundException($"User not found"); ;
-        entity.Status = ToDbStatus(body.Status);
+        var member = await _db.TenantMembers.FirstOrDefaultAsync(m => m.UserId == uid && m.TenantId == Guid.Parse(tenantId))
+            ?? throw new KeyNotFoundException("User not found");
+        member.Status = ToDbStatus(body.Status);
         await _db.SaveChangesAsync();
-        return ToDto(entity);
+        var user = await _db.SysUsers.FirstAsync(u => u.Id == uid);
+        return ToDto(user);
     }
 }

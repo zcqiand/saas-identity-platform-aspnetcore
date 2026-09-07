@@ -1,3 +1,4 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,14 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Xunit;
-using UserEntity = Saas.Identity.AspNetCore.Domain.Entities.User;
-using TenantEntity = Saas.Identity.AspNetCore.Domain.Entities.Tenant;
-using MembershipEntity = Saas.Identity.AspNetCore.Domain.Entities.TenantMembership;
-using GrantEntity = Saas.Identity.AspNetCore.Domain.Entities.RoleMenuGrant;
 
 namespace Saas.Identity.AspNetCore.Tests.Harness;
 

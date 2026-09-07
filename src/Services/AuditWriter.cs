@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 
 namespace Saas.Identity.AspNetCore.Services;
@@ -7,9 +6,11 @@ namespace Saas.Identity.AspNetCore.Services;
 /// <summary>
 /// M06.F03.I01 审计写入助手 —— 写端点副作用。所有 insert 共用同一形状：
 /// { tenantId, actorUserId(从 sub claim), action, targetUserId, metadata={...} }。
-/// 不预置 id：EF Core @GeneratedValue 在 SaveChanges 时生成。
-/// 失败不抛：审计是 best-effort，写失败不能阻断主业务（参照 msw handlers-extra
-/// writeAudit 的 best-effort 语义）。日志由 host logger 兜底。
+/// 失败不抛：审计是 best-effort，写失败不能阻断主业务。
+///
+/// v0.5.0：M06 已废（audit_events / audit_retention_policies 表 DROP）—— 接口保留
+/// 让 callers（AuthController / AdminTenantsController 等）的依赖注入不破，
+/// 实现改为 no-op + 日志。后续如果 M06 重启，把 _db.AuditEvents.Add(...) 加回来。
 /// </summary>
 public interface IAuditWriter
 {
@@ -24,16 +25,14 @@ public interface IAuditWriter
 
 public sealed class AuditWriter : IAuditWriter
 {
-    private readonly AppDbContext _db;
     private readonly ILogger<AuditWriter> _log;
 
-    public AuditWriter(AppDbContext db, ILogger<AuditWriter> log)
+    public AuditWriter(ILogger<AuditWriter> log)
     {
-        _db = db;
         _log = log;
     }
 
-    public async Task WriteAsync(
+    public Task WriteAsync(
       string tenantId,
       string? actorUserId,
       string action,
@@ -41,24 +40,10 @@ public sealed class AuditWriter : IAuditWriter
       IDictionary<string, object?> metadata,
       CancellationToken ct = default)
     {
-        try
-        {
-            var entry = new AuditEvent
-            {
-                Id = Guid.NewGuid(),
-                TenantId = Guid.Parse(tenantId),
-                ActorUserId = actorUserId is null ? null : Guid.Parse(actorUserId),
-                Action = action,
-                TargetUserId = targetUserId is null ? null : Guid.Parse(targetUserId),
-                Metadata = new Dictionary<string, object?>(metadata),
-                OccurredAt = DateTimeOffset.UtcNow,
-            };
-            _db.AuditEvents.Add(entry);
-            await _db.SaveChangesAsync(ct);
-        }
-        catch (Exception ex)
-        {
-            _log.LogWarning(ex, "AuditWriter.WriteAsync failed (action={Action}, tenantId={TenantId})", action, tenantId);
-        }
+        // M06 已废：audit_events 表 DROP。best-effort 写日志即可，不阻断主业务。
+        _log.LogInformation(
+            "[audit:noop] tenantId={TenantId} actor={Actor} action={Action} target={Target} metadata={Metadata}",
+            tenantId, actorUserId ?? "-", action, targetUserId ?? "-", metadata);
+        return Task.CompletedTask;
     }
 }

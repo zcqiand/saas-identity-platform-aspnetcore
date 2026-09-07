@@ -1,25 +1,13 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 using Saas.Identity.AspNetCore.Controllers.Generated;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Xunit;
-using AppEntity = Saas.Identity.AspNetCore.Domain.Entities.App;
-using UserEntity = Saas.Identity.AspNetCore.Domain.Entities.User;
-using ApiKeyEntity = Saas.Identity.AspNetCore.Domain.Entities.ApiKey;
-using AuditEventEntity = Saas.Identity.AspNetCore.Domain.Entities.AuditEvent;
-using AuditRetentionPolicyEntity = Saas.Identity.AspNetCore.Domain.Entities.AuditRetentionPolicy;
-using MenuEntity = Saas.Identity.AspNetCore.Domain.Entities.Menu;
-using RoleMenuGrantEntity = Saas.Identity.AspNetCore.Domain.Entities.RoleMenuGrant;
-using PermissionEntity = Saas.Identity.AspNetCore.Domain.Entities.Permission;
-using RoleEntity = Saas.Identity.AspNetCore.Domain.Entities.Role;
-using RolePermissionEntity = Saas.Identity.AspNetCore.Domain.Entities.RolePermission;
-using TenantEntity = Saas.Identity.AspNetCore.Domain.Entities.Tenant;
-using TenantMembershipEntity = Saas.Identity.AspNetCore.Domain.Entities.TenantMembership;
 
 namespace Saas.Identity.AspNetCore.Tests.Controllers;
 

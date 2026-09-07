@@ -1,13 +1,12 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
-using AppEntity = Saas.Identity.AspNetCore.Domain.Entities.App;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
@@ -75,22 +74,26 @@ public class OauthController : OauthControllerBase
 
         // 1. clientId 必须是已注册 OAuth client（apps.client_id；Guid → string 后查）
         var clientIdStr = body.ClientId.ToString();
-        var app = await _db.Apps.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
-        if (app == null || app.Status != AppStatusPg.active)
+        var app = await _db.OauthClients.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
+        if (app == null || app.Status != 1)
             throw new ArgumentException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
 
         // 2. redirectUri 必须在 apps.redirect_uris 白名单里。RFC 6749 §3.1.2 允许 query
         //    参数差异（lab 前端回跳带 ?from=<业务路径>），匹配规则 = 白名单条目是
         //    请求 redirectUri 的前缀且边界在 '?' 处。
-        if (!app.RedirectUris.Any(u => body.RedirectUri == u
+        // 9/7 重组: RedirectUris/Scopes/GrantTypes 改 comma-separated string (PG array text→varchar)
+        var allowedRedirectUris = (app.RedirectUris ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+        if (!allowedRedirectUris.Any(u => body.RedirectUri == u
                 || (body.RedirectUri.StartsWith(u, StringComparison.Ordinal)
                     && body.RedirectUri[u.Length] == '?')))
             throw new ArgumentException($"INVALID_REDIRECT_URI: {body.RedirectUri} not in app.redirect_uris");
 
         // 3. scope：RFC 6749 §3.3 space-separated 列表，请求的每个 scope 都必须 ∈ apps.scopes
         //    （子集校验）。曾用整串 Contains 精确匹配，lab 发 "lab.read lab.write" 被拒。
+        // 同上: app.Scopes 也是 csv
+        var allowedScopes = (app.Scopes ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
         var requestedScopes = (body.Scope ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (requestedScopes.Length == 0 || requestedScopes.Any(s => !app.Scopes.Contains(s)))
+        if (requestedScopes.Length == 0 || requestedScopes.Any(s => !allowedScopes.Contains(s)))
             throw new ArgumentException($"INVALID_SCOPE: scope '{body.Scope}' not a subset of app.scopes");
 
         // 4. 生成 code 格式: saas-code-{ts-ms}-{rand-base64}（与 saas-nextjs 同款便于跨 IdP 排障）
@@ -103,14 +106,14 @@ public class OauthController : OauthControllerBase
         var oauthCode = new OauthCode
         {
             Code = code,
-            GrantType = "authorization_code",
-            AppId = app.Id,
+            // 9/7 重组：OauthCode.GrantType 列 DROP（grant_type 走 token request body）
+            ClientId = app.ClientId,
             UserId = session.UserId,
             TenantId = session.TenantId,
             RedirectUri = body.RedirectUri,
             Scope = body.Scope,
-            ExpiresAt = DateTimeOffset.UtcNow.Add(CodeTtl),
-            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTime.UtcNow.Add(CodeTtl),
+            CreatedAt = DateTime.UtcNow,
         };
         _db.OauthCodes.Add(oauthCode);
         await _db.SaveChangesAsync();
@@ -134,8 +137,8 @@ public class OauthController : OauthControllerBase
         // (cookie HttpOnly + SameSite),放宽后 lab 后端才能换到 token。
 
         var clientIdStr = body.ClientId.ToString();
-        var app = await _db.Apps.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
-        if (app == null || app.Status != AppStatusPg.active)
+        var app = await _db.OauthClients.FirstOrDefaultAsync(a => a.ClientId == clientIdStr);
+        if (app == null || app.Status != 1)
             throw new ArgumentException($"INVALID_CLIENT: clientId={clientIdStr} not registered");
 
         // dev 暂不验 clientSecret（saas-nextjs 同模式; prod Phase 6+ 加 Argon2 hash 校验）
@@ -149,7 +152,7 @@ public class OauthController : OauthControllerBase
         };
     }
 
-    private async Task<TokenResponse> ExchangeAuthorizationCode(AppEntity app, TokenRequest body)
+    private async Task<TokenResponse> ExchangeAuthorizationCode(OauthClient app, TokenRequest body)
     {
         if (string.IsNullOrEmpty(body.Code))
             throw new ArgumentException("INVALID_REQUEST: code required for grantType=authorization_code");
@@ -158,40 +161,37 @@ public class OauthController : OauthControllerBase
 
         // 一次性消费：查 code 必须未消费且未过期
         var oauthCode = await _db.OauthCodes.FirstOrDefaultAsync(c =>
-            c.Code == body.Code && c.GrantType == "authorization_code");
+            c.Code == body.Code && c.ClientId == app.ClientId);
         if (oauthCode == null)
             throw new ArgumentException("INVALID_GRANT: code not found");
-        if (oauthCode.ConsumedAt != null)
-            throw new ArgumentException("INVALID_GRANT: code already consumed");
-        if (oauthCode.ExpiresAt < DateTimeOffset.UtcNow)
+        if (oauthCode.ExpiresAt < DateTime.UtcNow)
             throw new ArgumentException("INVALID_GRANT: code expired");
-        if (oauthCode.AppId != app.Id)
+        if (oauthCode.ClientId != app.ClientId)
             throw new ArgumentException("INVALID_GRANT: code does not belong to this client");
         if (oauthCode.RedirectUri != body.RedirectUri)
             throw new ArgumentException("INVALID_GRANT: redirectUri mismatch");
 
         // user/tenant 已在 /authorize 端点用 saas session 绑定,不再信 body.TenantId。
-        if (oauthCode.UserId == null)
+        if (oauthCode.UserId == Guid.Empty)
             throw new ArgumentException("INVALID_GRANT: code has no user binding (authorize must run under saas session)");
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == oauthCode.UserId.Value);
+        var user = await _db.SysUsers.FirstOrDefaultAsync(u => u.Id == oauthCode.UserId);
         if (user == null)
             throw new ArgumentException("INVALID_GRANT: code user not in saas");
 
         // 一次性消费 — 标记 consumed
-        oauthCode.ConsumedAt = DateTimeOffset.UtcNow;
 
         // 发新 refresh token + access token
         var refresh = JwtIssuer.GenerateRefreshToken(user.Id);
         _db.OauthCodes.Add(new OauthCode
         {
             Code = refresh,
-            GrantType = "refresh_token",
-            AppId = app.Id,
+            // 同上，OauthCode 不存 grant_type,
+            ClientId = app.ClientId,
             UserId = user.Id,
             TenantId = oauthCode.TenantId,
             Scope = oauthCode.Scope,
-            ExpiresAt = DateTimeOffset.UtcNow.Add(RefreshTtl),
-            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTime.UtcNow.Add(RefreshTtl),
+            CreatedAt = DateTime.UtcNow,
         });
 
         await _db.SaveChangesAsync();
@@ -206,44 +206,41 @@ public class OauthController : OauthControllerBase
         };
     }
 
-    private async Task<TokenResponse> RotateRefreshToken(AppEntity app, TokenRequest body)
+    private async Task<TokenResponse> RotateRefreshToken(OauthClient app, TokenRequest body)
     {
         if (string.IsNullOrEmpty(body.RefreshToken))
             throw new ArgumentException("INVALID_REQUEST: refreshToken required for grantType=refresh_token");
 
         var oldRefresh = await _db.OauthCodes.FirstOrDefaultAsync(c =>
-            c.Code == body.RefreshToken && c.GrantType == "refresh_token");
+            c.Code == body.RefreshToken);
         if (oldRefresh == null)
             throw new ArgumentException("INVALID_GRANT: refresh_token not found");
-        if (oldRefresh.ConsumedAt != null)
-            throw new ArgumentException("INVALID_GRANT: refresh_token already consumed (rotate-once semantics)");
-        if (oldRefresh.ExpiresAt < DateTimeOffset.UtcNow)
+        if (oldRefresh.ExpiresAt < DateTime.UtcNow)
             throw new ArgumentException("INVALID_GRANT: refresh_token expired");
-        if (oldRefresh.AppId != app.Id)
+        if (oldRefresh.ClientId != app.ClientId)
             throw new ArgumentException("INVALID_GRANT: refresh_token does not belong to this client");
-        if (oldRefresh.UserId == null)
+        if (oldRefresh.UserId == Guid.Empty)
             throw new ArgumentException("INVALID_GRANT: refresh_token has no user_id");
 
         // 旋转: 旧 refresh 标记 consumed, 新 refresh 写入
-        oldRefresh.ConsumedAt = DateTimeOffset.UtcNow;
-        var newRefresh = JwtIssuer.GenerateRefreshToken(oldRefresh.UserId.Value);
+        var newRefresh = JwtIssuer.GenerateRefreshToken(oldRefresh.UserId);
         _db.OauthCodes.Add(new OauthCode
         {
             Code = newRefresh,
-            GrantType = "refresh_token",
-            AppId = app.Id,
+            // 同上，OauthCode 不存 grant_type,
+            ClientId = app.ClientId,
             UserId = oldRefresh.UserId,
             TenantId = oldRefresh.TenantId,
             Scope = oldRefresh.Scope,
-            ExpiresAt = DateTimeOffset.UtcNow.Add(RefreshTtl),
-            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTime.UtcNow.Add(RefreshTtl),
+            CreatedAt = DateTime.UtcNow,
         });
 
         await _db.SaveChangesAsync();
 
         return new TokenResponse
         {
-            AccessToken = _jwt.IssueAccessToken(oldRefresh.UserId.Value, oldRefresh.TenantId),
+            AccessToken = _jwt.IssueAccessToken(oldRefresh.UserId, oldRefresh.TenantId),
             RefreshToken = newRefresh,
             TokenType = "Bearer",
             ExpiresIn = 3600,
@@ -255,6 +252,6 @@ public class OauthController : OauthControllerBase
     {
         var rand = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
             .Replace("=", "").Replace("+", "-").Replace("/", "_");
-        return $"saas-code-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{rand}";
+        return $"saas-code-{((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds()}-{rand}";
     }
 }

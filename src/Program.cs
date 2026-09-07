@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Services;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
@@ -133,31 +133,22 @@ var pgConn = builder.Configuration["DATABASE_URL"]
     ?? builder.Configuration.GetConnectionString("Postgres");
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(pgConn);
 dataSourceBuilder.EnableDynamicJson();
-// M05.F01 / M06 PG native enum 映射（V004 api_key_status / V006 audit_action）——
-// 不绑 MapEnum 则 Npgsql 把字符串当 text 发，PG 报 42804 column is of type enum。
-// EF Core 端写 string（`DbApiKey.Status = "active"`），读写双向 Npgsql 都做 enum↔string。
-dataSourceBuilder.MapEnum<ApiKeyStatusPg>("api_key_status");
-dataSourceBuilder.MapEnum<AuditActionPg>("audit_action");
-dataSourceBuilder.MapEnum<UserStatusPg>("user_status");
-dataSourceBuilder.MapEnum<MembershipStatusPg>("membership_status");
-// M00.F01 tenant_status（V001）——2026-08-31 contract-test M96.F02.I30 同款 42804 修复
-dataSourceBuilder.MapEnum<TenantStatusPg>("tenant_status");
-// M07/M08（V005）——2026-09-01 contract-test I45/I51 同款 42804 修复：
-// app_status / menu_status / menu_type / oauth_grant_type（含 enum 数组 grant_types）
-dataSourceBuilder.MapEnum<AppStatusPg>("app_status");
-dataSourceBuilder.MapEnum<MenuStatusPg>("menu_status");
-dataSourceBuilder.MapEnum<MenuTypePg>("menu_type");
-dataSourceBuilder.MapEnum<OAuthGrantTypePg>("oauth_grant_type");
+// v0.5.0：所有 PG native enum 已废（api_key_status / audit_action / user_status /
+// membership_status / tenant_status / app_status / menu_status / menu_type /
+// oauth_grant_type），对应表已 DROP 或 status 列改 smallint（9/7 重组）。
+// Scaffold DbContext 自动按 smallint 读写，无需 MapEnum。
+// 若后续需要重新引入 PG native enum，对应 entity 也需 Domain/Entities/*.cs 复活
+// —— 目前 Generated/* 都是 smallint 映射。
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddSingleton(dataSource);
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseNpgsql(dataSource, npg => npg.MigrationsHistoryTable("__ef_migrations_history")));
+    o.UseNpgsql(dataSource));
 
 // v0.2.0 NSwag-generated Controllers + 11 concrete implementations
 // Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
 // concrete 实现 在 src/Controllers/Implementation/<Tag>Controller.cs（手写业务）
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppsControllerBase).Assembly)
+    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppMenusControllerBase).Assembly)
     // 2026-08-30：合同测试发现 aspnetcore enum 序列化为 PascalCase（"Active"），
     // OpenAPI/TypeSpec 与 msw/nextjs/springboot 都期望小写（"active"）。
     //
@@ -204,18 +195,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddScoped<AdminAppsController>();
+// 9/7 重组：AdminAppsController / TenantApiKeysController / TenantAuditController 已废
+// （对应 admin_apps / api_keys / audit_events 表 DROP，路径不再生成）。DI 注册一并移除。
 builder.Services.AddScoped<AdminAppMenusController>();
 builder.Services.AddScoped<AdminTenantsController>();
 builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<MeController>();
 builder.Services.AddScoped<OauthController>();
-builder.Services.AddScoped<TenantApiKeysController>();
-builder.Services.AddScoped<TenantAuditController>();
 builder.Services.AddScoped<TenantRolesController>();
 builder.Services.AddScoped<TenantRoleMenusController>();
-// M06.F03.I01 审计写入助手 —— 所有写端点副作用发 audit_events。
-// Scoped：与 EF DbContext 同生命周期，单请求内可共享事务上下文。
 builder.Services.AddScoped<IAuditWriter, AuditWriter>();
 builder.Services.AddScoped<TenantUsersController>();
 

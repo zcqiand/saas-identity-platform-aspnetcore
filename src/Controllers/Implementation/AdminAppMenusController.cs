@@ -1,8 +1,8 @@
+using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
+using DbMenu = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.SysMenu;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
-using Saas.Identity.AspNetCore.Domain.Entities;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
-using DbMenu = Saas.Identity.AspNetCore.Domain.Entities.Menu;
 // alias 避免与 NSwag-generated DTO `Menu` 冲突
 using ApiMenu = Saas.Identity.AspNetCore.Controllers.Generated.Menu;
 
@@ -23,43 +23,46 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     private static ApiMenu ToDto(DbMenu e) => new()
     {
         Id = e.Id,
-        AppId = e.AppId,
-        ParentId = e.ParentId ?? Guid.Empty,
-        Code = e.Code,
-        Name = e.Name,
+        AppId = Guid.Parse(e.ClientId),
+        ParentId = e.ParentId,
+        Code = e.Path ?? "",
+        Name = e.Title,
         Path = e.Path,
         Icon = e.Icon,
         Type = ToDtoType(e.Type),
         SortOrder = e.SortOrder,
         Status = ToDtoStatus(e.Status),
         CreatedAt = e.CreatedAt,
-        UpdatedAt = e.UpdatedAt,
+        UpdatedAt = e.CreatedAt,
     };
 
-    private static MenuType ToDtoType(MenuTypePg s) => s switch
+    // SysMenu.type / status 现在是 short（PG native enum → smallint，9/7 重组后），
+    // 具体枚举值与 shared/src/db/seed.ts 对齐（约定：group=1 / page=2 / action=3,
+    // active=1 / disabled=0）。DTO 端用 NSwag 生成的 MenuType / MenuStatus enum。
+    private static MenuType ToDtoType(short s) => s switch
     {
-        MenuTypePg.@group => MenuType.Group,
-        MenuTypePg.page => MenuType.Page,
+        1 => MenuType.Group,
+        2 => MenuType.Page,
         _ => MenuType.Action,
     };
 
-    private static MenuTypePg ToDbType(MenuType t) => t switch
+    private static short ToDbType(MenuType t) => t switch
     {
-        MenuType.Group => MenuTypePg.@group,
-        MenuType.Page => MenuTypePg.page,
-        _ => MenuTypePg.action,
+        MenuType.Group => 1,
+        MenuType.Page => 2,
+        _ => 3,
     };
 
-    private static MenuStatus ToDtoStatus(MenuStatusPg s) => s switch
+    private static MenuStatus ToDtoStatus(short s) => s switch
     {
-        MenuStatusPg.active => MenuStatus.Active,
+        1 => MenuStatus.Active,
         _ => MenuStatus.Disabled,
     };
 
-    private static MenuStatusPg ToDbStatus(MenuStatus s) => s switch
+    private static short ToDbStatus(MenuStatus s) => s switch
     {
-        MenuStatus.Active => MenuStatusPg.active,
-        _ => MenuStatusPg.disabled,
+        MenuStatus.Active => 1,
+        _ => 0,
     };
 
     // === endpoints ===
@@ -67,7 +70,7 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     public override async Task<ICollection<ApiMenu>> MenusGet(string appId)
     {
         var aid = await ResolveAppIdAsync(appId);
-        var rows = await _db.Menus.Where(m => m.AppId == aid).ToListAsync();
+        var rows = await _db.SysMenus.Where(m => m.ClientId == aid.ToString().ToString()).ToListAsync();
         return rows.Select(ToDto).ToList();
     }
 
@@ -77,24 +80,20 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
         var e = new DbMenu
         {
             Id = Guid.NewGuid(),
-            AppId = aid,
-            // 2026-09-01 contract-test I51：NSwag 生成的 ParentId 是 non-nullable Guid，
-            // 未传时为 Guid.Empty → 插 parent_id 撞 menus_parent_fk（23503）。Empty → null（顶级）。
-            ParentId = body.ParentId == Guid.Empty ? null : body.ParentId,
-            Code = body.Code,
-            Name = body.Name,
+            ClientId = aid.ToString(), // 9/7 重组：AppId (Guid) → ClientId (string)
+            // Scaffold SysMenu.ParentId 是 Guid（非 nullable，DB 默认 00000000-...）
+            // Guid.Empty 表示顶级菜单
+            ParentId = body.ParentId,
+            Title = body.Name, // 9/7 重组：menu.name → menu.title
             Path = body.Path,
             Icon = body.Icon,
             Type = ToDbType(body.Type),
             SortOrder = body.SortOrder,
             Status = ToDbStatus(body.Status),
-            // 2026-09-01 contract-test M96.F02.I51：显式写时间戳——实体 DateTimeOffset
-            // 默认 0001-01-01 超 timestamptz 范围，EF save 抛 INTERNAL_ERROR 500
-            // （同 AdminAppsController.AppsPost / AdminTenantsController.TenantsPost 修法）
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            // Scaffold SysMenu.CreatedAt 是 DateTime（PG timestamptz 映射）
+            CreatedAt = DateTime.UtcNow,
         };
-        _db.Menus.Add(e);
+        _db.SysMenus.Add(e);
         await _db.SaveChangesAsync();
         return ToDto(e);
     }
@@ -103,7 +102,7 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     {
         var id = Guid.Parse(menuId);
         // 2026-09-01 contract-test I52：不存在 id → 404（FirstAsync 抛 → 500）
-        var e = await _db.Menus.FirstOrDefaultAsync(m => m.Id == id)
+        var e = await _db.SysMenus.FirstOrDefaultAsync(m => m.Id == id)
             ?? throw new KeyNotFoundException($"Menu {menuId} not found");
         return ToDto(e);
     }
@@ -111,9 +110,9 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     public override async Task<ApiMenu> MenusPatch(string appId, string menuId, UpdateMenuRequest body)
     {
         var id = Guid.Parse(menuId);
-        var e = await _db.Menus.FirstOrDefaultAsync(m => m.Id == id)
+        var e = await _db.SysMenus.FirstOrDefaultAsync(m => m.Id == id)
             ?? throw new KeyNotFoundException($"Menu {menuId} not found");
-        if (body.Name != null) e.Name = body.Name;
+        if (body.Name != null) e.Title = body.Name;
         if (body.Path != null) e.Path = body.Path;
         if (body.Icon != null) e.Icon = body.Icon;
         if (body.ParentId != null && Guid.TryParse(body.ParentId, out var pid)) e.ParentId = pid;
@@ -127,10 +126,10 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     public override async Task MenusDelete(string appId, string menuId)
     {
         var id = Guid.Parse(menuId);
-        var e = await _db.Menus.FirstOrDefaultAsync(m => m.Id == id);
+        var e = await _db.SysMenus.FirstOrDefaultAsync(m => m.Id == id);
         if (e != null)
         {
-            _db.Menus.Remove(e);
+            _db.SysMenus.Remove(e);
             await _db.SaveChangesAsync();
         }
     }
@@ -138,9 +137,10 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     public override async Task<ApiMenu> Parent(string appId, string menuId, Body body)
     {
         var id = Guid.Parse(menuId);
-        var e = await _db.Menus.FirstOrDefaultAsync(m => m.Id == id)
+        var e = await _db.SysMenus.FirstOrDefaultAsync(m => m.Id == id)
             ?? throw new KeyNotFoundException($"Menu {menuId} not found");
-        e.ParentId = string.IsNullOrEmpty(body.ParentId) ? null : Guid.Parse(body.ParentId);
+        // ParentId 是 non-nullable Guid；空字符串 → Guid.Empty（顶级菜单）
+        e.ParentId = string.IsNullOrEmpty(body.ParentId) ? Guid.Empty : Guid.Parse(body.ParentId);
         await _db.SaveChangesAsync();
         return ToDto(e);
     }
@@ -153,18 +153,18 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
         for (var i = 0; i < body.OrderedMenuIds.Count; i++)
         {
             var mid = Guid.Parse(body.OrderedMenuIds[i]);
-            var row = await _db.Menus.FirstOrDefaultAsync(m => m.Id == mid && m.AppId == aid);
+            var row = await _db.SysMenus.FirstOrDefaultAsync(m => m.Id == mid && m.ClientId == aid.ToString().ToString());
             if (row != null)
             {
                 row.SortOrder = i;
-                row.UpdatedAt = DateTimeOffset.UtcNow;
+                // SysMenu 无 UpdatedAt 列（9/7 重组）；sortOrder 改了 CreatedAt 也行（DTO 兼容）;
             }
         }
         await _db.SaveChangesAsync();
-        var rows = await _db.Menus
-            .Where(m => m.AppId == aid)
+        var rows = await _db.SysMenus
+            .Where(m => m.ClientId == aid.ToString())
             .OrderBy(m => m.SortOrder)
-            .ThenBy(m => m.Code)
+            .ThenBy(m => m.Title)
             .ToListAsync();
         return rows.Select(ToDto).ToList();
     }
@@ -177,10 +177,10 @@ public class AdminAppMenusController : AdminAppMenusControllerBase
     {
         if (Guid.TryParse(appIdOrCode, out var gid))
         {
-            var existsById = await _db.Apps.AnyAsync(a => a.Id == gid);
+            var existsById = await _db.OauthClients.AnyAsync(a => a.Id == gid);
             if (existsById) return gid;
         }
-        var byCode = await _db.Apps.FirstOrDefaultAsync(a => a.Code == appIdOrCode)
+        var byCode = await _db.OauthClients.FirstOrDefaultAsync(a => a.ClientId == appIdOrCode)
             ?? throw new KeyNotFoundException($"app '{appIdOrCode}' not found");
         return byCode.Id;
     }
