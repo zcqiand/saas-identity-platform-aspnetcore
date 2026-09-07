@@ -6,6 +6,11 @@
 # - aspnetcore 仓不手写 DbContext / entity；本脚本跑 EF Core scaffold 从真库重生
 # - 输出：src/Infrastructure/Persistence/Generated/AppDbContext.cs + src/Models/Generated/Entity/*.cs
 # - 手写 DbContext 业务逻辑（SaveChanges override、partial 类等）通过 partial class 叠加
+# - 手写 partial 在 src/Infrastructure/Persistence/AppDbContext.cs（不在 Generated/），不会被本脚本动
+#
+# DB-First 不变量：DB 真值是唯一真源，仓 entity 必须 1:1 镜像。scaffold 的产物应当
+# 在 commit 前与 DB 完全一致——orphan entity（DB 已 DROP 但仓还残留的 .cs）必须
+# 删掉，不能靠 scaffold --force 覆盖同名（它只覆盖，不删孤儿）。
 #
 # 用法：
 #   bash scripts/scaffold-dbcontext.sh                       # default saas_dev @ 100.79.128.25
@@ -17,8 +22,8 @@
 # - appsettings.Development.json 或 env DATABASE_URL 提供连接
 #
 # 退出码：
-#   0 — scaffold OK
-#   1 — dotnet ef 失败 / 产物与 git HEAD drift
+#   0 — scaffold OK（有变更属正常，下一步 git add/commit）
+#   1 — dotnet ef 失败 / PG 连不上
 
 set -euo pipefail
 
@@ -28,6 +33,7 @@ DB_PROJECT="src/Saas.Identity.AspNetCore.csproj"
 # dotnet ef 的 --output-dir / --context-dir 是相对于 csproj 的；
 # csproj 在 src/，所以目标相对路径是 Infrastructure/Persistence/Generated
 OUTPUT_DIR="Infrastructure/Persistence/Generated"
+GENERATED_DIR="src/${OUTPUT_DIR}"
 
 # 默认连接（与 scripts/lib/db-env.sh 同套）
 PG_HOST="${PG_HOST:-100.79.128.25}"
@@ -38,7 +44,18 @@ PG_PASSWORD="${PG_PASSWORD:-}"
 
 CONNECTION="Host=${PG_HOST};Port=${PG_PORT};Database=${PG_DATABASE};Username=${PG_USER};Password=${PG_PASSWORD}"
 
-echo "[scaffold-dbcontext] step 1/2 — dotnet ef dbcontext scaffold"
+# step 1/3 — 清孤儿 entity（DB-First 不变量：DB 没有的表，仓里也不该有 .cs）
+# AppDbContext.cs 保留——scaffold 会 --force 覆盖它；手写 partial 在 sibling
+# src/Infrastructure/Persistence/AppDbContext.cs（不在 Generated/），不会被本步动。
+if [ -d "$GENERATED_DIR" ]; then
+  echo "[scaffold-dbcontext] step 1/3 — 清孤儿 entity（保留 AppDbContext.cs）"
+  find "$GENERATED_DIR" -maxdepth 1 -type f -name "*.cs" ! -name "AppDbContext.cs" -print -delete
+else
+  mkdir -p "$GENERATED_DIR"
+  echo "[scaffold-dbcontext] step 1/3 — 创建 ${GENERATED_DIR}/"
+fi
+
+echo "[scaffold-dbcontext] step 2/3 — dotnet ef dbcontext scaffold"
 dotnet ef dbcontext scaffold \
     "$CONNECTION" \
     Npgsql.EntityFrameworkCore.PostgreSQL \
@@ -48,13 +65,10 @@ dotnet ef dbcontext scaffold \
     --context-dir "$OUTPUT_DIR" \
     --force
 
-echo "[scaffold-dbcontext] step 2/2 — git diff src/${OUTPUT_DIR}/"
-if ! git diff --exit-code --quiet "src/${OUTPUT_DIR}/" 2>/dev/null; then
-  echo "[scaffold-dbcontext] FATAL: scaffold 产物与 git HEAD 不一致" >&2
-  echo "[scaffold-dbcontext]        处理：确认 DB 是最新（shared 已 db:migrate），" >&2
-  echo "[scaffold-dbcontext]        然后 git add src/${OUTPUT_DIR}/ && git commit" >&2
-  exit 1
+echo "[scaffold-dbcontext] step 3/3 — git diff src/${OUTPUT_DIR}/（DB-First 真源对照）"
+if git diff --exit-code --quiet "src/${OUTPUT_DIR}/" 2>/dev/null; then
+  echo "[scaffold-dbcontext] OK  无 diff（DB 与仓 entity 完全一致）"
+else
+  echo "[scaffold-dbcontext] OK  有 diff — git add src/${OUTPUT_DIR}/ && git commit 落仓"
+  git diff --stat "src/${OUTPUT_DIR}/" || true
 fi
-
-echo "[scaffold-dbcontext] OK"
-echo "[scaffold-dbcontext]    AppDbContext + entity 已与 DB 同步；DB-First sync 绿"
