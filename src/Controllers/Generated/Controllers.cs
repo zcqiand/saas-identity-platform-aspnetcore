@@ -25,36 +25,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Saas.Identity.AspNetCore.Controllers.Generated
 {
     using System = global::System;
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class AdminAppsControllerBase : ControllerBase
-    {
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps")]
-        public abstract System.Threading.Tasks.Task<Response> AppsGet([Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps")]
-        public abstract System.Threading.Tasks.Task<App> AppsPost([Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateAppRequest body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}")]
-        public abstract System.Threading.Tasks.Task<App> AppsGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}")]
-        public abstract System.Threading.Tasks.Task<App> AppsPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateAppRequest body);
-
-        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}")]
-        public abstract System.Threading.Tasks.Task AppsDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/status")]
-        public abstract System.Threading.Tasks.Task<App> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body2 body);
-
-    }
-
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public abstract class AdminAppMenusControllerBase : ControllerBase
     {
@@ -176,57 +146,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public abstract System.Threading.Tasks.Task<TokenResponse> Token([Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] TokenRequest body);
 
     }
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class TenantApiKeysControllerBase : ControllerBase
-    {
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys")]
-        public abstract System.Threading.Tasks.Task<Response4> ApiKeysGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys")]
-        public abstract System.Threading.Tasks.Task<CreateApiKeyResponse> ApiKeysPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateApiKeyRequest body);
-
-        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}")]
-        public abstract System.Threading.Tasks.Task ApiKeysDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}/revoke")]
-        public abstract System.Threading.Tasks.Task<ApiKey> Revoke([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}/rotate")]
-        public abstract System.Threading.Tasks.Task<CreateApiKeyResponse> Rotate([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class TenantAuditControllerBase : ControllerBase
-    {
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events")]
-        public abstract System.Threading.Tasks.Task<Response5> AuditEvents([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize, [Microsoft.AspNetCore.Mvc.FromQuery] string actorUserId, [Microsoft.AspNetCore.Mvc.FromQuery] AuditAction? action, [Microsoft.AspNetCore.Mvc.FromQuery] System.DateTimeOffset? from, [Microsoft.AspNetCore.Mvc.FromQuery] System.DateTimeOffset? to);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/by-user/{userId}")]
-        public abstract System.Threading.Tasks.Task<Response6> ByUser([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/export")]
-        public abstract System.Threading.Tasks.Task<Response7> Export([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body3 body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/retention")]
-        public abstract System.Threading.Tasks.Task<Response8> RetentionGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/retention")]
-        public abstract System.Threading.Tasks.Task<Response9> RetentionPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body4 body);
-
-    }
-
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public abstract class TenantRolesControllerBase : ControllerBase
     {
