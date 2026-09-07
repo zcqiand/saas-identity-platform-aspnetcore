@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "approved": true,
+  "base_sha": "b694d2a66141d824",
+  "summary": "saas-aspnetcore 对齐修复：M06.F03（审计写入助手）",
+  "changes": [
+    {
+      "id": "M06.F03",
+      "action": "新增",
+      "name": "审计写入助手（写端点副作用）",
+      "reason": "BASE 已声明契约面；5 仓全缺，触发缺 BASE 契约面 ID"
+    }
+  ],
+  "sync_files": []
+}

@@ -3,15 +3,13 @@
   "project": "saas-identity-platform-aspnetcore",
   "functions": {
     "modules": 9,
-    "features": 20,
+    "features": 21,
     "items": 58
   },
-  "warnings_total": 3,
+  "warnings_total": 1,
   "warnings": {
     "已上线但无测试引用": [
-      "M05.F01.I05",
-      "M09.F02.I02",
-      "M09.F03.I04"
+      "M09.F02.I02"
     ]
   },
   "unreachable_shipped": [],
@@ -23,7 +21,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-tenants.test.ts:1024 (path)"
+      ],
       "entry": []
     },
     "M00.F01.I02": {
@@ -33,7 +33,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-tenants.test.ts:1024 (path)"
+      ],
       "entry": []
     },
     "M00.F01.I03": {
@@ -76,7 +78,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\me.test.ts:612 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\me.test.ts:755 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\path.test.ts:1066 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\path.test.ts:1111 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I02": {
@@ -86,7 +93,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\me-tenants.test.ts:19 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\me-tenants.test.ts:525 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I03": {
@@ -96,7 +106,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\me-switch.test.ts:2204 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\me-switch.test.ts:729 (path)"
+      ],
       "entry": []
     },
     "M01.F01.I01": {
@@ -107,7 +120,11 @@
       "flows": [],
       "designs": [],
       "tests": [
-        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.ListUsers_returnsPagedResult"
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.ListUsers_returnsPagedResult",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:2491 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:957 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-write-2.test.ts:1237 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-write.test.ts:985 (path)"
       ],
       "entry": []
     },
@@ -123,7 +140,12 @@
         "docs\\design\\design-function-map.md"
       ],
       "tests": [
-        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.CreateUser_returnsUser"
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.CreateUser_returnsUser",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:2491 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:957 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-write-2.test.ts:1237 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-write.test.ts:53 (annot)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-write.test.ts:985 (path)"
       ],
       "entry": []
     },
@@ -134,7 +156,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:3661 (path)"
+      ],
       "entry": []
     },
     "M01.F01.I04": {
@@ -144,7 +168,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:3661 (path)"
+      ],
       "entry": []
     },
     "M01.F01.I05": {
@@ -155,7 +181,8 @@
       "flows": [],
       "designs": [],
       "tests": [
-        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.DeleteUser_isNoOp"
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.DeleteUser_isNoOp",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-users-read.test.ts:3661 (path)"
       ],
       "entry": []
     },
@@ -206,7 +233,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:1078 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1167 (path)"
+      ],
       "entry": []
     },
     "M02.F01.I02": {
@@ -216,7 +246,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:1078 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1167 (path)"
+      ],
       "entry": []
     },
     "M02.F01.I03": {
@@ -226,7 +259,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:2381 (path)"
+      ],
       "entry": []
     },
     "M02.F01.I04": {
@@ -236,7 +271,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:2381 (path)"
+      ],
       "entry": []
     },
     "M02.F01.I05": {
@@ -246,7 +283,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:2381 (path)"
+      ],
       "entry": []
     },
     "M02.F02.I01": {
@@ -266,7 +305,11 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1221 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1537 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:2331 (path)"
+      ],
       "entry": []
     },
     "M03.F01.I02": {
@@ -286,7 +329,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:6226 (path)"
+      ],
       "entry": []
     },
     "M03.F02.I04": {
@@ -296,7 +341,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:4255 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:5439 (path)"
+      ],
       "entry": []
     },
     "M03.F03.I05": {
@@ -306,7 +354,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:3307 (path)"
+      ],
       "entry": []
     },
     "M03.F03.I06": {
@@ -326,7 +376,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-apps-write.test.ts:888 (path)"
+      ],
       "entry": []
     },
     "M04.F01.I02": {
@@ -336,7 +388,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-apps-write.test.ts:888 (path)"
+      ],
       "entry": []
     },
     "M04.F01.I03": {
@@ -394,7 +448,9 @@
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_happyPath_returnsCode",
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidClient_throwsUnauthorized",
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidRedirectUri_throws",
-        "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidScope_throws"
+        "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidScope_throws",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:1738 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:2639 (path)"
       ],
       "entry": []
     },
@@ -412,7 +468,11 @@
       "tests": [
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_alreadyConsumedCode_throws",
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_authorizationCode_happyPath",
-        "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_redirectUriMismatch_throws"
+        "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_redirectUriMismatch_throws",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:3423 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:4655 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:5703 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:6653 (path)"
       ],
       "entry": []
     },
@@ -429,7 +489,12 @@
       ],
       "tests": [
         "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshTokenReuse_throws",
-        "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshToken_happyPath"
+        "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshToken_happyPath",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:3423 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:4655 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:5146 (annot)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:5703 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:6653 (path)"
       ],
       "entry": []
     },
@@ -440,7 +505,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-delete.test.ts:966 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-read.test.ts:536 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-write.test.ts:1160 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-misc-write.test.ts:1091 (path)"
+      ],
       "entry": []
     },
     "M05.F01.I02": {
@@ -450,7 +520,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-delete.test.ts:966 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-read.test.ts:536 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-write.test.ts:1160 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-misc-write.test.ts:1091 (path)"
+      ],
       "entry": []
     },
     "M05.F01.I03": {
@@ -484,7 +559,9 @@
       "designs": [
         "docs\\design\\design-function-map.md"
       ],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-api-keys-delete.test.ts:62 (annot)"
+      ],
       "entry": []
     },
     "M06.F01.I01": {
@@ -494,7 +571,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-audit-read.test.ts:2683 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-audit-read.test.ts:4010 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-audit-read.test.ts:910 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-misc-write.test.ts:1190 (path)"
+      ],
       "entry": []
     },
     "M06.F01.I02": {
@@ -504,7 +586,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-audit-read.test.ts:5139 (path)"
+      ],
       "entry": []
     },
     "M06.F01.I03": {
@@ -534,7 +618,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-app-menus-write.test.ts:1054 (path)"
+      ],
       "entry": []
     },
     "M08.F01.I02": {
@@ -544,7 +630,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-app-menus-write.test.ts:1054 (path)"
+      ],
       "entry": []
     },
     "M08.F01.I03": {
@@ -604,7 +692,11 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-role-menus-write.test.ts:1223 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:3698 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1271 (path)"
+      ],
       "entry": []
     },
     "M09.F02.I02": {
@@ -628,7 +720,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-role-menus-write.test.ts:1223 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:3698 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1271 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:513 (annot)"
+      ],
       "entry": []
     },
     "M09.F03.I04": {
@@ -642,7 +739,10 @@
       "designs": [
         "docs\\design\\design-function-map.md"
       ],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\me.test.ts:1845 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\me.test.ts:2074 (path)"
+      ],
       "entry": []
     }
   }
