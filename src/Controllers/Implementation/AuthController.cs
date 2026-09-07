@@ -6,6 +6,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
+// disambiguate DTO vs entity
+using DtoSysUser = Saas.Identity.AspNetCore.Controllers.Generated.SysUser;
+using DtoTenantMember = Saas.Identity.AspNetCore.Controllers.Generated.TenantMember;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Services;
@@ -111,12 +114,36 @@ public class AuthController : AuthControllerBase
 
         return new LoginResponse
         {
+            // v0.5.0 NSwag 重 emit：LoginResponse 重构为 { user: SysUser, availableTenants,
+            // accessToken, refreshToken, tokenType, expiresIn }；UserId/CurrentTenantId 取消。
+            User = new DtoSysUser
+            {
+                Id = user.Id,
+                Username = user.Username,
+                                Email = user.Email,
+                Mobile = user.Mobile,
+                Status = (SysUserStatus)user.Status,
+                FailedAttempts = user.FailedAttempts,
+                LockedUntil = user.LockedUntil != null ? new DateTimeOffset(DateTime.SpecifyKind(user.LockedUntil.Value, DateTimeKind.Utc)) : default,
+                CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc)),
+                UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(user.UpdatedAt, DateTimeKind.Utc)),
+            },
+            AvailableTenants = new List<DtoTenantMember>
+            {
+                new DtoTenantMember
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = currentTenantId,
+                    UserId = user.Id,
+                    Status = TenantMemberStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                }
+            },
             AccessToken = _jwt.IssueAccessToken(user.Id, currentTenantId),
             RefreshToken = $"refresh-{user.Id}-{((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds()}",
             TokenType = "Bearer",
             ExpiresIn = 3600,
-            UserId = user.Id,
-            CurrentTenantId = currentTenantId,
         };
     }
 

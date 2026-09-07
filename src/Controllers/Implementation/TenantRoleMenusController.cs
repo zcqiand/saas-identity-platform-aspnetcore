@@ -1,16 +1,18 @@
 using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
+using DbRole = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.SysRole;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
+// alias to disambiguate DTO SysRoleMenu from entity (no entity equivalent — pure DTO)
+using ApiRoleMenu = Saas.Identity.AspNetCore.Controllers.Generated.SysRoleMenu;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
 /// Concrete M00.F04 角色菜单授权（tenant-scoped）。
-/// v0.4.0：从 InMemoryStore 迁到 AppDbContext。
-/// v0.5.0：sys_role_menu 走 EF skip nav（scaffold config in AppDbContext.cs:351），
-/// 不再手写 junction entity DbGrant/RolesGrants（Domain/Entities 已废）。
+/// v0.5.0 NSwag 重 emit：RoleMenuGrant DTO → SysRoleMenu（直接反映 sys_role_menu 表）；
+/// 端点全部加 clientId 必填 query；EF skip nav（SysRole.Menus）保留不变。
 /// </summary>
 public class TenantRoleMenusController : TenantRoleMenusControllerBase
 {
@@ -23,7 +25,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         _db = db;
     }
 
-    public override async Task<RoleMenuGrant> MenusGet(string tenantId, string roleId)
+    public override async Task<ICollection<ApiRoleMenu>> MenusGet(string tenantId, string roleId, string clientId)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
@@ -31,16 +33,14 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
             .Include(r => r.Menus)
             .FirstOrDefaultAsync(r => r.Id == id)
             ?? throw new KeyNotFoundException($"role {roleId} not found");
-        return new RoleMenuGrant
+        return role.Menus.Select(m => new ApiRoleMenu
         {
-            RoleId = id,
-            TenantId = Guid.Parse(tenantId),
-            MenuIds = role.Menus.Select(m => m.Id.ToString()).ToList(),
-            UpdatedAt = role.UpdatedAt,
-        };
+            RoleId = role.Id,
+            MenuId = m.Id,
+        }).ToList();
     }
 
-    public override async Task<RoleMenuGrant> MenusPut(string tenantId, string roleId, SetRoleMenusRequest body)
+    public override async Task<ICollection<ApiRoleMenu>> MenusPut(string tenantId, string roleId, string clientId, SetSysRoleMenusRequest body)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
@@ -54,8 +54,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
             .Select(m => Guid.Parse(m))
             .ToHashSet();
 
-        // 用 EF skip nav 重写整批 sys_role_menu：清空旧 nav，再加新的
-        // (AppDbContext HasMany.UsingEntity<SysRoleMenu> 自动维护 junction)
+        // EF skip nav：清空旧 nav，再加新的（AppDbContext HasMany.UsingEntity 自动维护 junction）
         role.Menus.Clear();
         if (menuIds.Count > 0)
         {
@@ -64,16 +63,14 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         }
         role.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return new RoleMenuGrant
+        return role.Menus.Select(m => new ApiRoleMenu
         {
-            RoleId = id,
-            TenantId = Guid.Parse(tenantId),
-            MenuIds = menuIds.Select(g => g.ToString()).ToList(),
-            UpdatedAt = role.UpdatedAt,
-        };
+            RoleId = role.Id,
+            MenuId = m.Id,
+        }).ToList();
     }
 
-    public override async Task MenusDelete(string tenantId, string roleId)
+    public override async Task MenusDelete(string tenantId, string roleId, string clientId)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);

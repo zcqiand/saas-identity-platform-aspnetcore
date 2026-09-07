@@ -148,7 +148,7 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 // Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
 // concrete 实现 在 src/Controllers/Implementation/<Tag>Controller.cs（手写业务）
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.AdminAppMenusControllerBase).Assembly)
+    .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.ClientMenusControllerBase).Assembly)
     // 2026-08-30：合同测试发现 aspnetcore enum 序列化为 PascalCase（"Active"），
     // OpenAPI/TypeSpec 与 msw/nextjs/springboot 都期望小写（"active"）。
     //
@@ -197,7 +197,8 @@ builder.Services.AddSwaggerGen(c =>
 
 // 9/7 重组：AdminAppsController / TenantApiKeysController / TenantAuditController 已废
 // （对应 admin_apps / api_keys / audit_events 表 DROP，路径不再生成）。DI 注册一并移除。
-builder.Services.AddScoped<AdminAppMenusController>();
+builder.Services.AddScoped<ClientMenusController>();
+builder.Services.AddScoped<ClientsController>();
 builder.Services.AddScoped<AdminTenantsController>();
 builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<MeController>();
@@ -205,7 +206,7 @@ builder.Services.AddScoped<OauthController>();
 builder.Services.AddScoped<TenantRolesController>();
 builder.Services.AddScoped<TenantRoleMenusController>();
 builder.Services.AddScoped<IAuditWriter, AuditWriter>();
-builder.Services.AddScoped<TenantUsersController>();
+builder.Services.AddScoped<TenantMembersController>();
 
 var app = builder.Build();
 
