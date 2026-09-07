@@ -27,64 +27,31 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class AdminAppsControllerBase : ControllerBase
+    public abstract class AdminClientsControllerBase : ControllerBase
     {
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps")]
-        public abstract System.Threading.Tasks.Task<Response> AppsGet([Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients")]
+        public abstract System.Threading.Tasks.Task<Response> ClientsGet([Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps")]
-        public abstract System.Threading.Tasks.Task<App> AppsPost([Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateAppRequest body);
+        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients")]
+        public abstract System.Threading.Tasks.Task<OAuthClient> ClientsPost([Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateOAuthClientRequest body);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}")]
-        public abstract System.Threading.Tasks.Task<App> AppsGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId);
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients/{clientId}")]
+        public abstract System.Threading.Tasks.Task<OAuthClient> ClientsGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}")]
-        public abstract System.Threading.Tasks.Task<App> AppsPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateAppRequest body);
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients/{clientId}")]
+        public abstract System.Threading.Tasks.Task<OAuthClient> ClientsPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateOAuthClientRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}")]
-        public abstract System.Threading.Tasks.Task AppsDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId);
+        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients/{clientId}")]
+        public abstract System.Threading.Tasks.Task ClientsDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/status")]
-        public abstract System.Threading.Tasks.Task<App> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body2 body);
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class AdminAppMenusControllerBase : ControllerBase
-    {
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Menu>> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus")]
-        public abstract System.Threading.Tasks.Task<Menu> MenusPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateMenuRequest body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus/{menuId}")]
-        public abstract System.Threading.Tasks.Task<Menu> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus/{menuId}")]
-        public abstract System.Threading.Tasks.Task<Menu> MenusPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateMenuRequest body);
-
-        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus/{menuId}")]
-        public abstract System.Threading.Tasks.Task MenusDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus/{menuId}/parent")]
-        public abstract System.Threading.Tasks.Task<Menu> Parent([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/apps/{appId}/menus/{menuId}/reorder")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Menu>> Reorder([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string appId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] ReorderMenuRequest body);
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients/{clientId}/status")]
+        public abstract System.Threading.Tasks.Task<OAuthClient> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body body);
 
     }
 
@@ -114,15 +81,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class AppsControllerBase : ControllerBase
-    {
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/apps/{code}")]
-        public abstract System.Threading.Tasks.Task<AppPublicInfo> Apps([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string code);
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public abstract class AuthControllerBase : ControllerBase
     {
         /// <returns>The request has succeeded.</returns>
@@ -144,6 +102,48 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public abstract class ClientsControllerBase : ControllerBase
+    {
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}")]
+        public abstract System.Threading.Tasks.Task<OAuthClientPublicInfo> Clients([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public abstract class ClientMenusControllerBase : ControllerBase
+    {
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus")]
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SysMenu>> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus")]
+        public abstract System.Threading.Tasks.Task<SysMenu> MenusPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateSysMenuRequest body);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus/{menuId}")]
+        public abstract System.Threading.Tasks.Task<SysMenu> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus/{menuId}")]
+        public abstract System.Threading.Tasks.Task<SysMenu> MenusPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateSysMenuRequest body);
+
+        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus/{menuId}")]
+        public abstract System.Threading.Tasks.Task MenusDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus/{menuId}/parent")]
+        public abstract System.Threading.Tasks.Task<SysMenu> Parent([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body2 body);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/clients/{clientId}/menus/{menuId}/reorder")]
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SysMenu>> Reorder([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string menuId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] ReorderSysMenuRequest body);
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public abstract class MeControllerBase : ControllerBase
     {
         /// <returns>The request has succeeded.</returns>
@@ -152,15 +152,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/me/menus")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<EffectiveMenuNode>>> Menus();
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<EffectiveMenuNode>>> Menus([Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/me/tenants")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TenantMembership>> Tenants();
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TenantMember>> Tenants([Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/me/tenants/{tenantId}/switch")]
-        public abstract System.Threading.Tasks.Task<SwitchTenantResponse> Switch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId);
+        public abstract System.Threading.Tasks.Task<SwitchTenantResponse> Switch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
     }
 
@@ -178,52 +178,60 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class TenantApiKeysControllerBase : ControllerBase
+    public abstract class TenantApplicationsControllerBase : ControllerBase
     {
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys")]
-        public abstract System.Threading.Tasks.Task<Response4> ApiKeysGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/applications")]
+        public abstract System.Threading.Tasks.Task<Response4> ApplicationsGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys")]
-        public abstract System.Threading.Tasks.Task<CreateApiKeyResponse> ApiKeysPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateApiKeyRequest body);
+        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/applications")]
+        public abstract System.Threading.Tasks.Task<TenantApplication> ApplicationsPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SubscribeTenantApplicationRequest body);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/applications/{clientId}")]
+        public abstract System.Threading.Tasks.Task<TenantApplication> ApplicationsPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateTenantApplicationRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}")]
-        public abstract System.Threading.Tasks.Task ApiKeysDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}/revoke")]
-        public abstract System.Threading.Tasks.Task<ApiKey> Revoke([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/api-keys/{keyId}/rotate")]
-        public abstract System.Threading.Tasks.Task<CreateApiKeyResponse> Rotate([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string keyId);
+        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/applications/{clientId}")]
+        public abstract System.Threading.Tasks.Task ApplicationsDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class TenantAuditControllerBase : ControllerBase
+    public abstract class TenantMembersControllerBase : ControllerBase
     {
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events")]
-        public abstract System.Threading.Tasks.Task<Response5> AuditEvents([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize, [Microsoft.AspNetCore.Mvc.FromQuery] string actorUserId, [Microsoft.AspNetCore.Mvc.FromQuery] AuditAction? action, [Microsoft.AspNetCore.Mvc.FromQuery] System.DateTimeOffset? from, [Microsoft.AspNetCore.Mvc.FromQuery] System.DateTimeOffset? to);
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members")]
+        public abstract System.Threading.Tasks.Task<Response5> MembersGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize, [Microsoft.AspNetCore.Mvc.FromQuery] TenantMemberStatus? status);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/by-user/{userId}")]
-        public abstract System.Threading.Tasks.Task<Response6> ByUser([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
+        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members")]
+        public abstract System.Threading.Tasks.Task<TenantMemberView> MembersPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateSysUserRequest body);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/export")]
-        public abstract System.Threading.Tasks.Task<Response7> Export([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body3 body);
+        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/invitations")]
+        public abstract System.Threading.Tasks.Task<TenantMemberView> Invitations([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body3 body);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/retention")]
-        public abstract System.Threading.Tasks.Task<Response8> RetentionGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId);
+        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}")]
+        public abstract System.Threading.Tasks.Task<TenantMemberView> MembersGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId);
 
         /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/audit-events/retention")]
-        public abstract System.Threading.Tasks.Task<Response9> RetentionPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body4 body);
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}")]
+        public abstract System.Threading.Tasks.Task<TenantMemberView> MembersPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateSysUserRequest body);
+
+        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}")]
+        public abstract System.Threading.Tasks.Task MembersDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}/roles")]
+        public abstract System.Threading.Tasks.Task<TenantMemberView> Roles([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetTenantMemberRolesRequest body);
+
+        /// <returns>The request has succeeded.</returns>
+        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}/status")]
+        public abstract System.Threading.Tasks.Task<TenantMemberView> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body4 body);
 
     }
 
@@ -232,27 +240,23 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles")]
-        public abstract System.Threading.Tasks.Task<Response10> RolesGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
+        public abstract System.Threading.Tasks.Task<Response6> RolesGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles")]
-        public abstract System.Threading.Tasks.Task<Role> RolesPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateRoleRequest body);
+        public abstract System.Threading.Tasks.Task<SysRole> RolesPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateSysRoleRequest body);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}")]
-        public abstract System.Threading.Tasks.Task<Role> RolesGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId);
+        public abstract System.Threading.Tasks.Task<SysRole> RolesGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}")]
-        public abstract System.Threading.Tasks.Task<Role> RolesPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateRoleRequest body);
+        public abstract System.Threading.Tasks.Task<SysRole> RolesPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateSysRoleRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
         [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}")]
         public abstract System.Threading.Tasks.Task RolesDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/permissions")]
-        public abstract System.Threading.Tasks.Task<Role> Permissions([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body5 body);
 
     }
 
@@ -261,332 +265,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId);
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SysRoleMenu>> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetRoleMenusRequest body);
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SysRoleMenu>> MenusPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetSysRoleMenusRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
         [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task MenusDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId);
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public abstract class TenantUsersControllerBase : ControllerBase
-    {
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users")]
-        public abstract System.Threading.Tasks.Task<Response11> UsersGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize, [Microsoft.AspNetCore.Mvc.FromQuery] UserStatus? status);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users")]
-        public abstract System.Threading.Tasks.Task<User> UsersPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateUserRequest body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users/invitations")]
-        public abstract System.Threading.Tasks.Task<User> Invitations([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body6 body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users/{userId}")]
-        public abstract System.Threading.Tasks.Task<User> UsersGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users/{userId}")]
-        public abstract System.Threading.Tasks.Task<User> UsersPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateUserRequest body);
-
-        /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users/{userId}")]
-        public abstract System.Threading.Tasks.Task UsersDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users/{userId}/roles")]
-        public abstract System.Threading.Tasks.Task<User> Roles([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body7 body);
-
-        /// <returns>The request has succeeded.</returns>
-        [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/users/{userId}/status")]
-        public abstract System.Threading.Tasks.Task<User> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body8 body);
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ApiKey
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("prefix")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(16, MinimumLength = 8)]
-        public string Prefix { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApiKeyStatus>))]
-        public ApiKeyStatus Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> Scopes { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset CreatedAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
-
-        [System.Text.Json.Serialization.JsonPropertyName("lastUsedAt")]
-        public System.DateTimeOffset LastUsedAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
-
-        [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
-        public System.DateTimeOffset ExpiresAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
-
-        [System.Text.Json.Serialization.JsonPropertyName("revokedAt")]
-        public System.DateTimeOffset RevokedAt { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum ApiKeyStatus
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"active")]
-        Active = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"revoked")]
-        Revoked = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"expired")]
-        Expired = 2,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class App
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("icon")]
-        public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
-        public int SortOrder { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppStatus>))]
-        public AppStatus Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
-        public string ClientId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("clientSecret")]
-        public string ClientSecret { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> RedirectUris { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> Scopes { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<OAuthGrantType> GrantTypes { get; set; } = new System.Collections.Generic.List<OAuthGrantType>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("isFirstParty")]
-        public bool IsFirstParty { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset CreatedAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset UpdatedAt { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class AppPublicInfo
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("icon")]
-        public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppStatus>))]
-        public AppStatus Status { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum AppStatus
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"active")]
-        Active = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
-        Disabled = 1,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum AuditAction
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"user_created")]
-        User_created = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"user_updated")]
-        User_updated = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"user_deleted")]
-        User_deleted = 2,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"role_assigned")]
-        Role_assigned = 3,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"role_revoked")]
-        Role_revoked = 4,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"login_success")]
-        Login_success = 5,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"login_failed")]
-        Login_failed = 6,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"oauth_token_issued")]
-        Oauth_token_issued = 7,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"api_key_created")]
-        Api_key_created = 8,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"api_key_revoked")]
-        Api_key_revoked = 9,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class AuditEvent
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("actorUserId")]
-        public System.Guid ActorUserId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("action")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AuditAction>))]
-        public AuditAction Action { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("targetUserId")]
-        public System.Guid TargetUserId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public System.Collections.Generic.IDictionary<string, object> Metadata { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("occurredAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset OccurredAt { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+        public abstract System.Threading.Tasks.Task MenusDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
     }
 
@@ -596,11 +283,11 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid ClientId { get; set; }
+        public string ClientId { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("redirectUri")]
         [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(2048, MinimumLength = 1)]
+        [System.ComponentModel.DataAnnotations.StringLength(500, MinimumLength = 1)]
         public string RedirectUri { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("responseType")]
@@ -609,17 +296,12 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public AuthorizeCodeRequestResponseType ResponseType { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("scope")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Scope { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("state")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string State { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -632,105 +314,40 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateApiKeyRequest
+    public partial class CreateOAuthClientRequest
     {
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        public System.Collections.Generic.List<string> Scopes { get; set; }
-
-        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
-
-        [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
-        public System.DateTimeOffset ExpiresAt { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateApiKeyResponse
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("apiKey")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public ApiKey ApiKey { get; set; } = new ApiKey();
-
-        [System.Text.Json.Serialization.JsonPropertyName("secret")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(256, MinimumLength = 16)]
-        public string Secret { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateAppRequest
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("icon")]
-        public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
-        public int SortOrder { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppStatus>))]
-        public AppStatus Status { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string ClientId { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("clientName")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientName { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("clientSecret")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string ClientSecret { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string GrantTypes { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> RedirectUris { get; set; } = new System.Collections.Generic.List<string>();
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string RedirectUris { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        public System.Collections.Generic.List<string> Scopes { get; set; }
+        public string Scopes { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
-        public System.Collections.Generic.List<OAuthGrantType> GrantTypes { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("accessTokenValidity")]
+        public int AccessTokenValidity { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("isFirstParty")]
-        public bool IsFirstParty { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("refreshTokenValidity")]
+        public int RefreshTokenValidity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("autoApprove")]
+        public bool AutoApprove { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -744,7 +361,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateMenuRequest
+    public partial class CreateSysMenuRequest
     {
 
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
@@ -752,32 +369,29 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
         public System.Guid ParentId { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("title")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string Title { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
-        public string Name { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysMenuType>))]
+        public SysMenuType Type { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("path")]
         public string Path { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("component")]
+        public string Component { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("perms")]
+        public string Perms { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("icon")]
         public string Icon { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuType>))]
-        public MenuType Type { get; set; }
-
         [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
         public int SortOrder { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuStatus>))]
-        public MenuStatus Status { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -791,24 +405,58 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateRoleRequest
+    public partial class CreateSysRoleRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("roleCode")]
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
-        public string Code { get; set; }
+        public string RoleCode { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        [System.Text.Json.Serialization.JsonPropertyName("roleName")]
         [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 1)]
-        public string Name { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string RoleName { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("permissionIds")]
-        public System.Collections.Generic.List<string> PermissionIds { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("isPreset")]
+        public bool IsPreset { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CreateSysUserRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("username")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string Username { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("password")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string Password { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string Email { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("mobile")]
+        public string Mobile { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -825,52 +473,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     public partial class CreateTenantRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        [System.Text.Json.Serialization.JsonPropertyName("tenantKey")]
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
+        public string TenantKey { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
         [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
+        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
         public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("settings")]
-        public TenantSettings Settings { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateUserRequest
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("username")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
-        public string Username { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("email")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Email { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("displayName")]
-        public string DisplayName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("password")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Password { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
-        public System.Collections.Generic.List<string> RoleIds { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -887,23 +498,19 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     public partial class CurrentUser
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("email")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Email { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("displayName")]
-        public string DisplayName { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("user")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public SysUser User { get; set; } = new SysUser();
 
         [System.Text.Json.Serialization.JsonPropertyName("memberships")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<TenantMembership> Memberships { get; set; } = new System.Collections.Generic.List<TenantMembership>();
+        public System.Collections.Generic.List<TenantMember> Memberships { get; set; } = new System.Collections.Generic.List<TenantMember>();
 
         [System.Text.Json.Serialization.JsonPropertyName("currentTenantId")]
         public System.Guid CurrentTenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -924,33 +531,36 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid Id { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("appId")]
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid AppId { get; set; }
+        public string ClientId { get; set; }
 
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid ParentId { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        [System.Text.Json.Serialization.JsonPropertyName("title")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Code { get; set; }
+        public string Title { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Name { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysMenuType>))]
+        public SysMenuType Type { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("path")]
         public string Path { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("component")]
+        public string Component { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("perms")]
+        public string Perms { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("icon")]
         public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuType>))]
-        public MenuType Type { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
         public int SortOrder { get; set; }
@@ -997,6 +607,36 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class LockedAccountResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string Code { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string Message { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("lockedUntil")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset LockedUntil { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("remainingAttempts")]
+        public int RemainingAttempts { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class LoginRequest
     {
 
@@ -1010,8 +650,9 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 1)]
         public string Password { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("tenantCode")]
-        public System.Guid TenantCode { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1028,28 +669,29 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     public partial class LoginResponse
     {
 
+        [System.Text.Json.Serialization.JsonPropertyName("user")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public SysUser User { get; set; } = new SysUser();
+
+        [System.Text.Json.Serialization.JsonPropertyName("availableTenants")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.List<TenantMember> AvailableTenants { get; set; } = new System.Collections.Generic.List<TenantMember>();
+
         [System.Text.Json.Serialization.JsonPropertyName("accessToken")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string AccessToken { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string RefreshToken { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("tokenType")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string TokenType { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("expiresIn")]
         public int ExpiresIn { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid UserId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("currentTenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid CurrentTenantId { get; set; }
+        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1063,65 +705,43 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum MembershipStatus
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"active")]
-        Active = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"invited")]
-        Invited = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"removed")]
-        Removed = 2,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Menu
+    public partial class OAuthClient
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid Id { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("appId")]
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid AppId { get; set; }
+        public string ClientId { get; set; }
 
-        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
-
-        [System.Text.Json.Serialization.JsonPropertyName("parentId")]
-        public System.Guid ParentId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("path")]
-        public string Path { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("icon")]
-        public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonPropertyName("clientName")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuType>))]
-        public MenuType Type { get; set; }
+        public string ClientName { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
-        public int SortOrder { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string GrantTypes { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string RedirectUris { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("scopes")]
+        public string Scopes { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("accessTokenValidity")]
+        public int AccessTokenValidity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("refreshTokenValidity")]
+        public int RefreshTokenValidity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("autoApprove")]
+        public bool AutoApprove { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuStatus>))]
-        public MenuStatus Status { get; set; }
+        public int Status { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
@@ -1143,47 +763,28 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum MenuStatus
+    public partial class OAuthClientPublicInfo
     {
 
-        [System.Runtime.Serialization.EnumMember(Value = @"active")]
-        Active = 0,
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
 
-        [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
-        Disabled = 1,
+        [System.Text.Json.Serialization.JsonPropertyName("clientName")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientName { get; set; }
 
-    }
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
 
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum MenuType
-    {
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
-        [System.Runtime.Serialization.EnumMember(Value = @"group")]
-        Group = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"page")]
-        Page = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"action")]
-        Action = 2,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum OAuthGrantType
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"authorization_code")]
-        Authorization_code = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"refresh_token")]
-        Refresh_token = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"client_credentials")]
-        Client_credentials = 2,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"password")]
-        Password = 3,
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -1201,7 +802,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid ClientId { get; set; }
+        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1215,7 +816,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ReorderMenuRequest
+    public partial class ReorderSysMenuRequest
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("orderedMenuIds")]
@@ -1234,41 +835,12 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Role
+    public partial class SetSysRoleMenusRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        [System.Text.Json.Serialization.JsonPropertyName("menuIds")]
         [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
-        public string Code { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 1)]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("permissionIds")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> PermissionIds { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset CreatedAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset UpdatedAt { get; set; }
+        public System.Collections.Generic.List<string> MenuIds { get; set; } = new System.Collections.Generic.List<string>();
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1282,24 +854,12 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class RoleMenuGrant
+    public partial class SetTenantMemberRolesRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("roleId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid RoleId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("menuIds")]
+        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> MenuIds { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset UpdatedAt { get; set; }
+        public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1313,12 +873,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class SetRoleMenusRequest
+    public partial class SubscribeTenantApplicationRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("menuIds")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> MenuIds { get; set; } = new System.Collections.Generic.List<string>();
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("expireTime")]
+        public System.DateTimeOffset ExpireTime { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1340,6 +903,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public string AccessToken { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string RefreshToken { get; set; }
 
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
@@ -1351,6 +915,10 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1364,30 +932,114 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Tenant
+    public partial class SysMenu
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid Id { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(255, MinimumLength = 2)]
-        public string Name { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
+        [System.Text.Json.Serialization.JsonPropertyName("parentId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid ParentId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("title")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string Title { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysMenuType>))]
+        public SysMenuType Type { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("path")]
+        public string Path { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("component")]
+        public string Component { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("perms")]
+        public string Perms { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("icon")]
+        public string Icon { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
+        public int SortOrder { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantStatus>))]
-        public TenantStatus Status { get; set; }
+        public int Status { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("settings")]
-        public TenantSettings Settings { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum SysMenuType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"directory")]
+        Directory = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"menu")]
+        Menu = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"button")]
+        Button = 2,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SysRole
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("roleCode")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string RoleCode { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("roleName")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string RoleName { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("description")]
+        public string Description { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("isPreset")]
+        public bool IsPreset { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
@@ -1409,33 +1061,16 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class TenantMembership
+    public partial class SysRoleMenu
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.Text.Json.Serialization.JsonPropertyName("roleId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
+        public System.Guid RoleId { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        [System.Text.Json.Serialization.JsonPropertyName("menuId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid UserId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MembershipStatus>))]
-        public MembershipStatus Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("joinedAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset JoinedAt { get; set; }
+        public System.Guid MenuId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1449,17 +1084,218 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class TenantSettings
+    public partial class SysUser
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("themeColor")]
-        public string ThemeColor { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("locale")]
-        public string Locale { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("username")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string Username { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("maxUsers")]
-        public int MaxUsers { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string Email { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("mobile")]
+        public string Mobile { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysUserStatus>))]
+        public SysUserStatus Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("failedAttempts")]
+        public int FailedAttempts { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("lockedUntil")]
+        public System.DateTimeOffset LockedUntil { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset UpdatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum SysUserStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"active")]
+        Active = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
+        Disabled = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Tenant
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantKey")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
+        public string TenantKey { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
+        public string Name { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantStatus>))]
+        public TenantStatus Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset UpdatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TenantApplication
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("expireTime")]
+        public System.DateTimeOffset ExpireTime { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TenantMember
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid UserId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("memberName")]
+        public string MemberName { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("isOwner")]
+        public bool IsOwner { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantMemberStatus>))]
+        public TenantMemberStatus Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset UpdatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum TenantMemberStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"active")]
+        Active = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
+        Disabled = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TenantMemberView
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("member")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public TenantMember Member { get; set; } = new TenantMember();
+
+        [System.Text.Json.Serialization.JsonPropertyName("user")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public SysUser User { get; set; } = new SysUser();
+
+        [System.Text.Json.Serialization.JsonPropertyName("roles")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.List<string> Roles { get; set; } = new System.Collections.Generic.List<string>();
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1482,9 +1318,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Runtime.Serialization.EnumMember(Value = @"suspended")]
         Suspended = 1,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"archived")]
-        Archived = 2,
-
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -1504,14 +1337,10 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid ClientId { get; set; }
+        public string ClientId { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("clientSecret")]
         public string ClientSecret { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("redirectUri")]
         public string RedirectUri { get; set; }
@@ -1536,6 +1365,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public string AccessToken { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string RefreshToken { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("tokenType")]
@@ -1546,9 +1376,20 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public int ExpiresIn { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("scope")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Scope { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string UserId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public string ClientId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -1561,37 +1402,32 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class UpdateAppRequest
+    public partial class UpdateOAuthClientRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("icon")]
-        public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
-        public int SortOrder { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppStatus>))]
-        public AppStatus Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
-        public System.Collections.Generic.List<string> RedirectUris { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        public System.Collections.Generic.List<string> Scopes { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("clientName")]
+        public string ClientName { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
-        public System.Collections.Generic.List<OAuthGrantType> GrantTypes { get; set; }
+        public string GrantTypes { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("isFirstParty")]
-        public bool IsFirstParty { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
+        public string RedirectUris { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("scopes")]
+        public string Scopes { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("accessTokenValidity")]
+        public int AccessTokenValidity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("refreshTokenValidity")]
+        public int RefreshTokenValidity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("autoApprove")]
+        public bool AutoApprove { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1605,33 +1441,38 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class UpdateMenuRequest
+    public partial class UpdateSysMenuRequest
     {
 
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
-        public string ParentId { get; set; }
+        public System.Guid ParentId { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("title")]
+        public string Title { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysMenuType>))]
+        public SysMenuType Type { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("path")]
         public string Path { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("component")]
+        public string Component { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("perms")]
+        public string Perms { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("icon")]
         public string Icon { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuType>))]
-        public MenuType Type { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
         public int SortOrder { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MenuStatus>))]
-        public MenuStatus Status { get; set; }
+        public int Status { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1645,17 +1486,64 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class UpdateRoleRequest
+    public partial class UpdateSysRoleRequest
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("roleName")]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string RoleName { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("permissionIds")]
-        public System.Collections.Generic.List<string> PermissionIds { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UpdateSysUserRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string Email { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("mobile")]
+        public string Mobile { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysUserStatus>))]
+        public SysUserStatus Status { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UpdateTenantApplicationRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("expireTime")]
+        public System.DateTimeOffset ExpireTime { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1673,19 +1561,13 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
+        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
         public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string Code { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantStatus>))]
         public TenantStatus Status { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("settings")]
-        public TenantSettings Settings { get; set; }
-
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -1694,109 +1576,29 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class UpdateUserRequest
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("displayName")]
-        public string DisplayName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("email")]
-        public string Email { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserStatus>))]
-        public UserStatus Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
-        public System.Collections.Generic.List<string> RoleIds { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class User
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid Id { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("username")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
-        public string Username { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("email")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Email { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("displayName")]
-        public string DisplayName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserStatus>))]
-        public UserStatus Status { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset CreatedAt { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset UpdatedAt { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum UserStatus
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"active")]
-        Active = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"invited")]
-        Invited = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"suspended")]
-        Suspended = 2,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
-        Disabled = 3,
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Body
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int Status { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Body2
     {
 
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
@@ -1816,41 +1618,14 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Body2
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppStatus>))]
-        public AppStatus Status { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Body3
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("from")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset From { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string Email { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("to")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.DateTimeOffset To { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("format")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Body3Format>))]
-        public Body3Format Format { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("mobile")]
+        public string Mobile { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1867,88 +1642,10 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     public partial class Body4
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("retentionDays")]
-        public int RetentionDays { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Body5
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("permissionIds")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> PermissionIds { get; set; } = new System.Collections.Generic.List<string>();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Body6
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("email")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Email { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
-        public System.Collections.Generic.List<string> RoleIds { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Body7
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Body8
-    {
-
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserStatus>))]
-        public UserStatus Status { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantMemberStatus>))]
+        public TenantMemberStatus Status { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1967,7 +1664,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("items")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<App> Items { get; set; } = new System.Collections.Generic.List<App>();
+        public System.Collections.Generic.List<OAuthClient> Items { get; set; } = new System.Collections.Generic.List<OAuthClient>();
 
         [System.Text.Json.Serialization.JsonPropertyName("page")]
         public int Page { get; set; }
@@ -2046,7 +1743,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("items")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<ApiKey> Items { get; set; } = new System.Collections.Generic.List<ApiKey>();
+        public System.Collections.Generic.List<TenantApplication> Items { get; set; } = new System.Collections.Generic.List<TenantApplication>();
 
         [System.Text.Json.Serialization.JsonPropertyName("page")]
         public int Page { get; set; }
@@ -2074,7 +1771,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("items")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<AuditEvent> Items { get; set; } = new System.Collections.Generic.List<AuditEvent>();
+        public System.Collections.Generic.List<TenantMemberView> Items { get; set; } = new System.Collections.Generic.List<TenantMemberView>();
 
         [System.Text.Json.Serialization.JsonPropertyName("page")]
         public int Page { get; set; }
@@ -2102,118 +1799,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("items")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<AuditEvent> Items { get; set; } = new System.Collections.Generic.List<AuditEvent>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("page")]
-        public int Page { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
-        public int PageSize { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("total")]
-        public long Total { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response7
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("downloadUrl")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string DownloadUrl { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response8
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("retentionDays")]
-        public int RetentionDays { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response9
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("retentionDays")]
-        public int RetentionDays { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response10
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("items")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<Role> Items { get; set; } = new System.Collections.Generic.List<Role>();
-
-        [System.Text.Json.Serialization.JsonPropertyName("page")]
-        public int Page { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
-        public int PageSize { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("total")]
-        public long Total { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response11
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("items")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<User> Items { get; set; } = new System.Collections.Generic.List<User>();
+        public System.Collections.Generic.List<SysRole> Items { get; set; } = new System.Collections.Generic.List<SysRole>();
 
         [System.Text.Json.Serialization.JsonPropertyName("page")]
         public int Page { get; set; }
@@ -2253,18 +1839,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Runtime.Serialization.EnumMember(Value = @"refresh_token")]
         Refresh_token = 1,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum Body3Format
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"csv")]
-        Csv = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"json")]
-        Json = 1,
 
     }
 
