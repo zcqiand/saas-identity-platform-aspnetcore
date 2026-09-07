@@ -9,7 +9,13 @@
     "L1": { "name": "格式", "cmd": ["dotnet", "format", "src/Saas.Identity.AspNetCore.csproj", "--verify-no-changes", "--include", "src/**"], "fix": "dotnet format" },
     "L2": { "name": "静态检查", "cmd": ["dotnet", "build", "src/Saas.Identity.AspNetCore.csproj", "/p:TreatWarningsAsErrors=true"], "fix": "逐条修复 warning" },
     "L3": { "name": "编译", "cmd": ["dotnet", "build", "src/Saas.Identity.AspNetCore.csproj", "--no-restore"], "fix": "先让它编译过" },
-    "L4": { "name": "测试", "cmd": ["dotnet", "test", "tests/Saas.Identity.AspNetCore.Tests.csproj", "--no-build"], "fix": "先让测试变绿" }
+    "L4": { "name": "测试", "cmd": ["dotnet", "test", "tests/Saas.Identity.AspNetCore.Tests.csproj", "--no-build"], "fix": "先让测试变绿" },
+    "L4.db.scaffold": {
+      "name": "DB schema scaffold drift",
+      "cmd": ["bash", "scripts/scaffold-dbcontext.sh"],
+      "fix": "DB 与 DbContext 不一致：确认 shared 已 db:migrate，然后 bash scripts/scaffold-dbcontext.sh && git add src/Infrastructure/Persistence/Generated/ && git commit",
+      "skip_env": "CI_DB_SCAFFOLD_SKIP=1"
+    }
   },
   "trace_cmd": ["python", "scripts/gen-trace.py"],
   "trace_env": { "TRACE_MAP": "1" }

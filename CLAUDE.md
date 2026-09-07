@@ -7,6 +7,7 @@
 
 SaaS 多租户多应用身份平台的 C# 后端。NSwag 读 shared OpenAPI 生成 abstract Controllers + DTO；
 手写 partial 实现类承接业务逻辑；JwtBearer + tenant_id claim 校验。
+DB 层（**DB-First，ADR-0025**）：DbContext + entity 由 `scripts/scaffold-dbcontext.sh` 跑 `dotnet ef dbcontext scaffold` 从真库重生。
 
 ## 2. 铁律
 
@@ -19,18 +20,20 @@ SaaS 多租户多应用身份平台的 C# 后端。NSwag 读 shared OpenAPI 生�
 - 禁止手写 fetch/HttpClient（直接实现 abstract 方法）
 - 禁止把 shared 列为依赖（NSwag 直接读相对路径）
 - 禁止删 `src/Controllers/Implementation/` 的 concrete 类；禁止直接编辑 NSwag 产物
-- 禁止删 `src/Controllers/Implementation/` 的 concrete 类；禁止直接编辑 NSwag 产物
+- 禁止手写 DbContext / entity（scaffold 替，ADR-0025 D7）；手写 `SaveChanges` override、partial 方法等业务逻辑通过 partial class 叠加在 `Generated.AppDbContext`
+- **禁止** EF Core Migrations / `dotnet ef migrations add` / `Migrations/*.cs`（schema 由 shared 仓统一管）
 
 ## 3. 技术栈与版本（钉死于 version-lock.json）
 
-ASP.NET Core 8 + xUnit + JwtBearer + NSwag codegen。明细见 `version-lock.json`。
+ASP.NET Core 8 + EF Core（**DB-First via dotnet ef dbcontext scaffold**） + xUnit + JwtBearer + NSwag codegen。明细见 `version-lock.json`。
 
 门禁命令见 `.harness/stack.json`。**不要改它来让门变松。**
 
 ## 4. 验收
 
 - suite 根目录跑 `python scripts/gate.py -p saas-identity-platform-aspnetcore`
-- 改了 shared → `bash scripts/gen-shared.sh` 再跑门禁
+- 改了 shared API → `bash scripts/gen-shared.sh` 再跑门禁
+- DB schema 漂移：先确认 shared 已 `db:migrate`，再 `bash scripts/scaffold-dbcontext.sh && git add src/Infrastructure/Persistence/Generated/ && git commit`
 
 ## 5. 指向别处
 
