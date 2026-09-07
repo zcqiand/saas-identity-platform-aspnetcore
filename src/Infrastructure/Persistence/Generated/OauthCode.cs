@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
+namespace Saas.Identity.AspNetCore.src.Infrastructure.Persistence.Generated;
 
 public partial class OauthCode
 {
@@ -9,9 +9,11 @@ public partial class OauthCode
 
     public string Code { get; set; } = null!;
 
-    public string ClientId { get; set; } = null!;
+    public string GrantType { get; set; } = null!;
 
-    public Guid UserId { get; set; }
+    public Guid AppId { get; set; }
+
+    public Guid? UserId { get; set; }
 
     public Guid TenantId { get; set; }
 
@@ -19,17 +21,11 @@ public partial class OauthCode
 
     public string? Scope { get; set; }
 
-    public string? CodeChallenge { get; set; }
-
-    public string? CodeChallengeMethod { get; set; }
-
     public DateTime ExpiresAt { get; set; }
+
+    public DateTime? ConsumedAt { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
-    public virtual OauthClient Client { get; set; } = null!;
-
-    public virtual Tenant Tenant { get; set; } = null!;
-
-    public virtual SysUser User { get; set; } = null!;
+    public virtual App App { get; set; } = null!;
 }
