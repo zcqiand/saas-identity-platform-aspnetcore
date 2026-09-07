@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace Saas.Identity.AspNetCore.src.Infrastructure.Persistence.Generated;
+namespace Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 
 public partial class AppDbContext : DbContext
 {
@@ -16,31 +15,25 @@ public partial class AppDbContext : DbContext
     {
     }
 
-    public virtual DbSet<ApiKey> ApiKeys { get; set; }
+    public virtual DbSet<OauthAccessToken> OauthAccessTokens { get; set; }
 
-    public virtual DbSet<App> Apps { get; set; }
-
-    public virtual DbSet<AuditEvent> AuditEvents { get; set; }
-
-    public virtual DbSet<AuditRetentionPolicy> AuditRetentionPolicies { get; set; }
-
-    public virtual DbSet<Menu> Menus { get; set; }
+    public virtual DbSet<OauthClient> OauthClients { get; set; }
 
     public virtual DbSet<OauthCode> OauthCodes { get; set; }
 
-    public virtual DbSet<Permission> Permissions { get; set; }
+    public virtual DbSet<OauthRefreshToken> OauthRefreshTokens { get; set; }
 
-    public virtual DbSet<Role> Roles { get; set; }
+    public virtual DbSet<SysMenu> SysMenus { get; set; }
 
-    public virtual DbSet<RoleMenuGrant> RoleMenuGrants { get; set; }
+    public virtual DbSet<SysRole> SysRoles { get; set; }
 
-    public virtual DbSet<RolePermission> RolePermissions { get; set; }
+    public virtual DbSet<SysUser> SysUsers { get; set; }
 
     public virtual DbSet<Tenant> Tenants { get; set; }
 
-    public virtual DbSet<TenantMembership> TenantMemberships { get; set; }
+    public virtual DbSet<TenantApplication> TenantApplications { get; set; }
 
-    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<TenantMember> TenantMembers { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -48,458 +41,343 @@ public partial class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder
-            .HasPostgresEnum("api_key_status", new[] { "active", "revoked", "expired" })
-            .HasPostgresEnum("app_status", new[] { "active", "disabled" })
-            .HasPostgresEnum("audit_action", new[] { "user_created", "user_updated", "user_deleted", "role_assigned", "role_revoked", "login_success", "login_failed", "oauth_token_issued", "api_key_created", "api_key_revoked" })
-            .HasPostgresEnum("membership_status", new[] { "active", "invited", "removed" })
-            .HasPostgresEnum("menu_status", new[] { "active", "disabled" })
-            .HasPostgresEnum("menu_type", new[] { "group", "page", "action" })
-            .HasPostgresEnum("oauth_grant_type", new[] { "authorization_code", "refresh_token", "client_credentials", "password" })
-            .HasPostgresEnum("tenant_status", new[] { "active", "suspended", "archived" })
-            .HasPostgresEnum("user_status", new[] { "active", "invited", "suspended", "disabled" })
-            .HasPostgresExtension("uuid-ossp");
+        modelBuilder.HasPostgresExtension("uuid-ossp");
 
-        modelBuilder.Entity<ApiKey>(entity =>
+        modelBuilder.Entity<OauthAccessToken>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("api_keys_pkey");
+            entity.HasKey(e => e.Id).HasName("oauth_access_token_pkey");
 
-            entity.ToTable("api_keys");
+            entity.ToTable("oauth_access_token");
 
-            entity.HasIndex(e => new { e.TenantId, e.Prefix }, "api_keys_tenant_prefix_unique").IsUnique();
+            entity.HasIndex(e => e.ExpiresAt, "idx_access_token_expires");
 
-            entity.HasIndex(e => e.ExpiresAt, "idx_api_keys_expires_at");
+            entity.HasIndex(e => new { e.UserId, e.TenantId }, "idx_access_token_user_tenant");
 
-            entity.HasIndex(e => e.Prefix, "idx_api_keys_prefix_global");
-
-            entity.HasIndex(e => e.TenantId, "idx_api_keys_tenant_id");
+            entity.HasIndex(e => e.TokenId, "uk_access_token_id").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
+            entity.Property(e => e.AccessToken).HasColumnName("access_token");
+            entity.Property(e => e.ClientId)
+                .HasMaxLength(64)
+                .HasColumnName("client_id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("created_at");
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-            entity.Property(e => e.LastUsedAt).HasColumnName("last_used_at");
-            entity.Property(e => e.Name)
-                .HasMaxLength(128)
-                .HasColumnName("name");
-            entity.Property(e => e.Prefix)
-                .HasMaxLength(16)
-                .HasColumnName("prefix");
-            entity.Property(e => e.RevokedAt).HasColumnName("revoked_at");
-            entity.Property(e => e.Scopes)
-                .HasDefaultValueSql("ARRAY[]::text[]")
-                .HasColumnName("scopes");
-            entity.Property(e => e.SecretHash)
+            entity.Property(e => e.Revoked)
+                .HasDefaultValue(false)
+                .HasColumnName("revoked");
+            entity.Property(e => e.Scope)
                 .HasMaxLength(255)
-                .HasColumnName("secret_hash");
+                .HasColumnName("scope");
             entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+            entity.Property(e => e.TokenId)
+                .HasMaxLength(128)
+                .HasColumnName("token_id");
+            entity.Property(e => e.TokenType)
+                .HasMaxLength(32)
+                .HasDefaultValueSql("'Bearer'::character varying")
+                .HasColumnName("token_type");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
 
-            entity.HasOne(d => d.Tenant).WithMany(p => p.ApiKeys)
+            entity.HasOne(d => d.Client).WithMany(p => p.OauthAccessTokens)
+                .HasPrincipalKey(p => p.ClientId)
+                .HasForeignKey(d => d.ClientId)
+                .HasConstraintName("oauth_access_token_client_id_oauth_client_client_id_fk");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.OauthAccessTokens)
                 .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("api_keys_tenant_id_tenants_id_fk");
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("oauth_access_token_tenant_id_tenant_id_fk");
+
+            entity.HasOne(d => d.User).WithMany(p => p.OauthAccessTokens)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("oauth_access_token_user_id_sys_user_id_fk");
         });
 
-        modelBuilder.Entity<App>(entity =>
+        modelBuilder.Entity<OauthClient>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("apps_pkey");
+            entity.HasKey(e => e.Id).HasName("oauth_client_pkey");
 
-            entity.ToTable("apps");
+            entity.ToTable("oauth_client");
 
-            entity.HasIndex(e => e.ClientId, "apps_client_id_unique").IsUnique();
+            entity.HasIndex(e => e.ClientId, "uk_oauth_client_id").IsUnique();
 
-            entity.HasIndex(e => e.Code, "apps_code_unique").IsUnique();
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasColumnName("id");
+            entity.Property(e => e.AccessTokenValidity)
+                .HasDefaultValue(7200)
+                .HasColumnName("access_token_validity");
+            entity.Property(e => e.AutoApprove)
+                .HasDefaultValue(false)
+                .HasColumnName("auto_approve");
+            entity.Property(e => e.ClientId)
+                .HasMaxLength(64)
+                .HasColumnName("client_id");
+            entity.Property(e => e.ClientName)
+                .HasMaxLength(128)
+                .HasColumnName("client_name");
+            entity.Property(e => e.ClientSecret)
+                .HasMaxLength(255)
+                .HasColumnName("client_secret");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.GrantTypes)
+                .HasMaxLength(255)
+                .HasColumnName("grant_types");
+            entity.Property(e => e.RedirectUris).HasColumnName("redirect_uris");
+            entity.Property(e => e.RefreshTokenValidity)
+                .HasDefaultValue(2592000)
+                .HasColumnName("refresh_token_validity");
+            entity.Property(e => e.Scopes)
+                .HasMaxLength(255)
+                .HasColumnName("scopes");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<OauthCode>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("oauth_code_pkey");
+
+            entity.ToTable("oauth_code");
+
+            entity.HasIndex(e => new { e.ClientId, e.UserId, e.TenantId }, "idx_oauth_code_client_user_tenant");
+
+            entity.HasIndex(e => e.ExpiresAt, "idx_oauth_code_expires");
+
+            entity.HasIndex(e => e.Code, "uk_oauth_code").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
             entity.Property(e => e.ClientId)
-                .HasMaxLength(128)
+                .HasMaxLength(64)
                 .HasColumnName("client_id");
-            entity.Property(e => e.ClientSecretHash)
-                .HasMaxLength(255)
-                .HasColumnName("client_secret_hash");
             entity.Property(e => e.Code)
-                .HasMaxLength(64)
+                .HasMaxLength(128)
                 .HasColumnName("code");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Icon)
-                .HasMaxLength(64)
-                .HasColumnName("icon");
-            entity.Property(e => e.IsFirstParty)
-                .HasDefaultValue(false)
-                .HasColumnName("is_first_party");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.RedirectUris)
-                .HasDefaultValueSql("ARRAY[]::text[]")
-                .HasColumnName("redirect_uris");
-            entity.Property(e => e.Scopes)
-                .HasDefaultValueSql("ARRAY[]::text[]")
-                .HasColumnName("scopes");
-            entity.Property(e => e.SortOrder)
-                .HasDefaultValue(0)
-                .HasColumnName("sort_order");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("updated_at");
-        });
-
-        modelBuilder.Entity<AuditEvent>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("audit_events_pkey");
-
-            entity.ToTable("audit_events");
-
-            entity.HasIndex(e => e.ActorUserId, "idx_audit_events_actor");
-
-            entity.HasIndex(e => e.Metadata, "idx_audit_events_metadata_gin").HasMethod("gin");
-
-            entity.HasIndex(e => e.TargetUserId, "idx_audit_events_target");
-
-            entity.HasIndex(e => new { e.TenantId, e.OccurredAt }, "idx_audit_events_tenant_occurred")
-                .IsDescending(false, true)
-                .HasNullSortOrder(new[] { NullSortOrder.NullsLast, NullSortOrder.NullsLast });
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
-                .HasColumnName("id");
-            entity.Property(e => e.ActorUserId).HasColumnName("actor_user_id");
-            entity.Property(e => e.Metadata)
-                .HasDefaultValueSql("'{}'::jsonb")
-                .HasColumnType("jsonb")
-                .HasColumnName("metadata");
-            entity.Property(e => e.OccurredAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("occurred_at");
-            entity.Property(e => e.TargetUserId).HasColumnName("target_user_id");
-            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
-
-            entity.HasOne(d => d.ActorUser).WithMany(p => p.AuditEventActorUsers)
-                .HasForeignKey(d => d.ActorUserId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("audit_events_actor_user_id_users_id_fk");
-
-            entity.HasOne(d => d.TargetUser).WithMany(p => p.AuditEventTargetUsers)
-                .HasForeignKey(d => d.TargetUserId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("audit_events_target_user_id_users_id_fk");
-
-            entity.HasOne(d => d.Tenant).WithMany(p => p.AuditEvents)
-                .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("audit_events_tenant_id_tenants_id_fk");
-        });
-
-        modelBuilder.Entity<AuditRetentionPolicy>(entity =>
-        {
-            entity.HasKey(e => e.TenantId).HasName("audit_retention_policies_pkey");
-
-            entity.ToTable("audit_retention_policies");
-
-            entity.Property(e => e.TenantId)
-                .ValueGeneratedNever()
-                .HasColumnName("tenant_id");
-            entity.Property(e => e.RetentionDays)
-                .HasDefaultValue(90)
-                .HasColumnName("retention_days");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Tenant).WithOne(p => p.AuditRetentionPolicy)
-                .HasForeignKey<AuditRetentionPolicy>(d => d.TenantId)
-                .HasConstraintName("audit_retention_policies_tenant_id_tenants_id_fk");
-        });
-
-        modelBuilder.Entity<Menu>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("menus_pkey");
-
-            entity.ToTable("menus");
-
-            entity.HasIndex(e => e.AppId, "idx_menus_app_id");
-
-            entity.HasIndex(e => e.ParentId, "idx_menus_parent_id");
-
-            entity.HasIndex(e => new { e.AppId, e.Code }, "menus_app_code_unique").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
-                .HasColumnName("id");
-            entity.Property(e => e.AppId).HasColumnName("app_id");
-            entity.Property(e => e.Code)
-                .HasMaxLength(64)
-                .HasColumnName("code");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Icon)
-                .HasMaxLength(64)
-                .HasColumnName("icon");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.ParentId).HasColumnName("parent_id");
-            entity.Property(e => e.Path)
-                .HasMaxLength(512)
-                .HasColumnName("path");
-            entity.Property(e => e.SortOrder)
-                .HasDefaultValue(0)
-                .HasColumnName("sort_order");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.App).WithMany(p => p.Menus)
-                .HasForeignKey(d => d.AppId)
-                .HasConstraintName("menus_app_id_apps_id_fk");
-
-            entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
-                .HasForeignKey(d => d.ParentId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("menus_parent_id_menus_id_fk");
-        });
-
-        modelBuilder.Entity<OauthCode>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("oauth_codes_pkey");
-
-            entity.ToTable("oauth_codes");
-
-            entity.HasIndex(e => e.AppId, "idx_oauth_codes_app_id");
-
-            entity.HasIndex(e => e.ExpiresAt, "idx_oauth_codes_expires_at");
-
-            entity.HasIndex(e => e.UserId, "idx_oauth_codes_user_id");
-
-            entity.HasIndex(e => e.Code, "oauth_codes_code_unique").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
-                .HasColumnName("id");
-            entity.Property(e => e.AppId).HasColumnName("app_id");
-            entity.Property(e => e.Code)
-                .HasMaxLength(255)
-                .HasColumnName("code");
-            entity.Property(e => e.ConsumedAt).HasColumnName("consumed_at");
+            entity.Property(e => e.CodeChallenge)
+                .HasMaxLength(128)
+                .HasColumnName("code_challenge");
+            entity.Property(e => e.CodeChallengeMethod)
+                .HasMaxLength(16)
+                .HasColumnName("code_challenge_method");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("created_at");
             entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
-            entity.Property(e => e.GrantType)
-                .HasMaxLength(32)
-                .HasDefaultValueSql("'authorization_code'::character varying")
-                .HasColumnName("grant_type");
             entity.Property(e => e.RedirectUri)
-                .HasMaxLength(2048)
+                .HasMaxLength(500)
                 .HasColumnName("redirect_uri");
             entity.Property(e => e.Scope)
-                .HasMaxLength(512)
+                .HasMaxLength(255)
                 .HasColumnName("scope");
             entity.Property(e => e.TenantId).HasColumnName("tenant_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
-            entity.HasOne(d => d.App).WithMany(p => p.OauthCodes)
-                .HasForeignKey(d => d.AppId)
-                .HasConstraintName("oauth_codes_app_id_apps_id_fk");
+            entity.HasOne(d => d.Client).WithMany(p => p.OauthCodes)
+                .HasPrincipalKey(p => p.ClientId)
+                .HasForeignKey(d => d.ClientId)
+                .HasConstraintName("oauth_code_client_id_oauth_client_client_id_fk");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.OauthCodes)
+                .HasForeignKey(d => d.TenantId)
+                .HasConstraintName("oauth_code_tenant_id_tenant_id_fk");
+
+            entity.HasOne(d => d.User).WithMany(p => p.OauthCodes)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("oauth_code_user_id_sys_user_id_fk");
         });
 
-        modelBuilder.Entity<Permission>(entity =>
+        modelBuilder.Entity<OauthRefreshToken>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("permissions_pkey");
+            entity.HasKey(e => e.Id).HasName("oauth_refresh_token_pkey");
 
-            entity.ToTable("permissions");
+            entity.ToTable("oauth_refresh_token");
 
-            entity.HasIndex(e => e.Code, "permissions_code_unique").IsUnique();
+            entity.HasIndex(e => e.AccessTokenId, "idx_refresh_token_access_id");
+
+            entity.HasIndex(e => new { e.UserId, e.TenantId }, "idx_refresh_token_user_tenant");
+
+            entity.HasIndex(e => e.RefreshToken, "uk_refresh_token").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("uuid_generate_v4()")
                 .HasColumnName("id");
-            entity.Property(e => e.Code)
+            entity.Property(e => e.AccessTokenId).HasColumnName("access_token_id");
+            entity.Property(e => e.ClientId)
+                .HasMaxLength(64)
+                .HasColumnName("client_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+            entity.Property(e => e.RefreshToken)
                 .HasMaxLength(128)
-                .HasColumnName("code");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-        });
-
-        modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("roles_pkey");
-
-            entity.ToTable("roles");
-
-            entity.HasIndex(e => e.Code, "idx_roles_code_global");
-
-            entity.HasIndex(e => e.TenantId, "idx_roles_tenant_id");
-
-            entity.HasIndex(e => new { e.TenantId, e.Code }, "roles_tenant_code_unique").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
-                .HasColumnName("id");
-            entity.Property(e => e.Code)
-                .HasMaxLength(64)
-                .HasColumnName("code");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Description).HasColumnName("description");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Tenant).WithMany(p => p.Roles)
-                .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("roles_tenant_id_tenants_id_fk");
-        });
-
-        modelBuilder.Entity<RoleMenuGrant>(entity =>
-        {
-            entity.HasKey(e => e.RoleId).HasName("role_menu_grants_pkey");
-
-            entity.ToTable("role_menu_grants");
-
-            entity.HasIndex(e => e.MenuIds, "idx_role_menu_grants_menu_ids_gin").HasMethod("gin");
-
-            entity.HasIndex(e => e.TenantId, "idx_role_menu_grants_tenant_id");
-
-            entity.Property(e => e.RoleId)
-                .ValueGeneratedNever()
-                .HasColumnName("role_id");
-            entity.Property(e => e.MenuIds)
-                .HasDefaultValueSql("ARRAY[]::uuid[]")
-                .HasColumnName("menu_ids");
-            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Role).WithOne(p => p.RoleMenuGrant)
-                .HasForeignKey<RoleMenuGrant>(d => d.RoleId)
-                .HasConstraintName("role_menu_grants_role_id_roles_id_fk");
-
-            entity.HasOne(d => d.Tenant).WithMany(p => p.RoleMenuGrants)
-                .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("role_menu_grants_tenant_id_tenants_id_fk");
-        });
-
-        modelBuilder.Entity<RolePermission>(entity =>
-        {
-            entity.HasKey(e => new { e.RoleId, e.PermissionId }).HasName("role_permissions_role_id_permission_id_pk");
-
-            entity.ToTable("role_permissions");
-
-            entity.HasIndex(e => e.PermissionId, "idx_role_permissions_permission_id");
-
-            entity.HasIndex(e => e.RoleId, "idx_role_permissions_role_id");
-
-            entity.Property(e => e.RoleId).HasColumnName("role_id");
-            entity.Property(e => e.PermissionId).HasColumnName("permission_id");
-            entity.Property(e => e.GrantedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("granted_at");
-
-            entity.HasOne(d => d.Permission).WithMany(p => p.RolePermissions)
-                .HasForeignKey(d => d.PermissionId)
-                .HasConstraintName("role_permissions_permission_id_permissions_id_fk");
-
-            entity.HasOne(d => d.Role).WithMany(p => p.RolePermissions)
-                .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("role_permissions_role_id_roles_id_fk");
-        });
-
-        modelBuilder.Entity<Tenant>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("tenants_pkey");
-
-            entity.ToTable("tenants");
-
-            entity.HasIndex(e => e.Code, "tenants_code_unique").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
-                .HasColumnName("id");
-            entity.Property(e => e.Code)
-                .HasMaxLength(64)
-                .HasColumnName("code");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
-            entity.Property(e => e.Settings)
-                .HasDefaultValueSql("'{}'::jsonb")
-                .HasColumnType("jsonb")
-                .HasColumnName("settings");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("updated_at");
-        });
-
-        modelBuilder.Entity<TenantMembership>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("tenant_memberships_pkey");
-
-            entity.ToTable("tenant_memberships");
-
-            entity.HasIndex(e => e.RoleIds, "idx_memberships_role_ids_gin").HasMethod("gin");
-
-            entity.HasIndex(e => e.TenantId, "idx_memberships_tenant_id");
-
-            entity.HasIndex(e => e.UserId, "idx_memberships_user_id");
-
-            entity.HasIndex(e => new { e.UserId, e.TenantId }, "memberships_user_tenant_unique").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasDefaultValueSql("uuid_generate_v4()")
-                .HasColumnName("id");
-            entity.Property(e => e.JoinedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnName("joined_at");
-            entity.Property(e => e.RoleIds)
-                .HasDefaultValueSql("ARRAY[]::uuid[]")
-                .HasColumnName("role_ids");
+                .HasColumnName("refresh_token");
+            entity.Property(e => e.Revoked)
+                .HasDefaultValue(false)
+                .HasColumnName("revoked");
             entity.Property(e => e.TenantId).HasColumnName("tenant_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
-            entity.HasOne(d => d.Tenant).WithMany(p => p.TenantMemberships)
-                .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("tenant_memberships_tenant_id_tenants_id_fk");
+            entity.HasOne(d => d.AccessToken).WithMany(p => p.OauthRefreshTokens)
+                .HasForeignKey(d => d.AccessTokenId)
+                .HasConstraintName("oauth_refresh_token_access_token_id_oauth_access_token_id_fk");
 
-            entity.HasOne(d => d.User).WithMany(p => p.TenantMemberships)
+            entity.HasOne(d => d.Client).WithMany(p => p.OauthRefreshTokens)
+                .HasPrincipalKey(p => p.ClientId)
+                .HasForeignKey(d => d.ClientId)
+                .HasConstraintName("oauth_refresh_token_client_id_oauth_client_client_id_fk");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.OauthRefreshTokens)
+                .HasForeignKey(d => d.TenantId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("oauth_refresh_token_tenant_id_tenant_id_fk");
+
+            entity.HasOne(d => d.User).WithMany(p => p.OauthRefreshTokens)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("tenant_memberships_user_id_users_id_fk");
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("oauth_refresh_token_user_id_sys_user_id_fk");
         });
 
-        modelBuilder.Entity<User>(entity =>
+        modelBuilder.Entity<SysMenu>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("users_pkey");
+            entity.HasKey(e => e.Id).HasName("sys_menu_pkey");
 
-            entity.ToTable("users");
+            entity.ToTable("sys_menu");
 
-            entity.HasIndex(e => e.Email, "idx_users_email_global");
+            entity.HasIndex(e => new { e.ClientId, e.ParentId }, "idx_sys_menu_client_parent");
 
-            entity.HasIndex(e => e.TenantId, "idx_users_tenant_id");
+            entity.HasIndex(e => new { e.ClientId, e.Type }, "idx_sys_menu_client_type");
 
-            entity.HasIndex(e => new { e.TenantId, e.Email }, "users_tenant_email_unique").IsUnique();
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasColumnName("id");
+            entity.Property(e => e.ClientId)
+                .HasMaxLength(64)
+                .HasColumnName("client_id");
+            entity.Property(e => e.Component)
+                .HasMaxLength(255)
+                .HasColumnName("component");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Icon)
+                .HasMaxLength(128)
+                .HasColumnName("icon");
+            entity.Property(e => e.ParentId).HasColumnName("parent_id");
+            entity.Property(e => e.Path)
+                .HasMaxLength(255)
+                .HasColumnName("path");
+            entity.Property(e => e.Perms)
+                .HasMaxLength(128)
+                .HasColumnName("perms");
+            entity.Property(e => e.SortOrder)
+                .HasDefaultValue(0)
+                .HasColumnName("sort_order");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
+            entity.Property(e => e.Title)
+                .HasMaxLength(64)
+                .HasColumnName("title");
+            entity.Property(e => e.Type).HasColumnName("type");
 
-            entity.HasIndex(e => new { e.TenantId, e.Username }, "users_tenant_username_unique").IsUnique();
+            entity.HasOne(d => d.Client).WithMany(p => p.SysMenus)
+                .HasPrincipalKey(p => p.ClientId)
+                .HasForeignKey(d => d.ClientId)
+                .HasConstraintName("sys_menu_client_id_oauth_client_client_id_fk");
+        });
+
+        modelBuilder.Entity<SysRole>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("sys_role_pkey");
+
+            entity.ToTable("sys_role");
+
+            entity.HasIndex(e => new { e.TenantId, e.ClientId }, "idx_sys_role_tenant_client");
+
+            entity.HasIndex(e => new { e.TenantId, e.ClientId, e.RoleCode }, "uk_tenant_client_role_code").IsUnique();
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasColumnName("id");
+            entity.Property(e => e.ClientId)
+                .HasMaxLength(64)
+                .HasColumnName("client_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Description)
+                .HasMaxLength(255)
+                .HasColumnName("description");
+            entity.Property(e => e.IsPreset)
+                .HasDefaultValue(false)
+                .HasColumnName("is_preset");
+            entity.Property(e => e.RoleCode)
+                .HasMaxLength(64)
+                .HasColumnName("role_code");
+            entity.Property(e => e.RoleName)
+                .HasMaxLength(64)
+                .HasColumnName("role_name");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Client).WithMany(p => p.SysRoles)
+                .HasPrincipalKey(p => p.ClientId)
+                .HasForeignKey(d => d.ClientId)
+                .HasConstraintName("sys_role_client_id_oauth_client_client_id_fk");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.SysRoles)
+                .HasForeignKey(d => d.TenantId)
+                .HasConstraintName("sys_role_tenant_id_tenant_id_fk");
+
+            entity.HasMany(d => d.Menus).WithMany(p => p.Roles)
+                .UsingEntity<Dictionary<string, object>>(
+                    "SysRoleMenu",
+                    r => r.HasOne<SysMenu>().WithMany()
+                        .HasForeignKey("MenuId")
+                        .HasConstraintName("sys_role_menu_menu_id_sys_menu_id_fk"),
+                    l => l.HasOne<SysRole>().WithMany()
+                        .HasForeignKey("RoleId")
+                        .HasConstraintName("sys_role_menu_role_id_sys_role_id_fk"),
+                    j =>
+                    {
+                        j.HasKey("RoleId", "MenuId").HasName("sys_role_menu_role_id_menu_id_pk");
+                        j.ToTable("sys_role_menu");
+                        j.HasIndex(new[] { "MenuId" }, "idx_sys_role_menu_menu_id");
+                        j.IndexerProperty<Guid>("RoleId").HasColumnName("role_id");
+                        j.IndexerProperty<Guid>("MenuId").HasColumnName("menu_id");
+                    });
+        });
+
+        modelBuilder.Entity<SysUser>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("sys_user_pkey");
+
+            entity.ToTable("sys_user");
+
+            entity.HasIndex(e => e.Email, "uk_sys_user_email").IsUnique();
+
+            entity.HasIndex(e => e.Mobile, "uk_sys_user_mobile").IsUnique();
+
+            entity.HasIndex(e => e.Username, "uk_sys_user_username").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("uuid_generate_v4()")
@@ -507,29 +385,151 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("created_at");
-            entity.Property(e => e.DisplayName)
-                .HasMaxLength(255)
-                .HasColumnName("display_name");
             entity.Property(e => e.Email)
-                .HasMaxLength(255)
+                .HasMaxLength(128)
                 .HasColumnName("email");
-            entity.Property(e => e.PasswordHash)
+            entity.Property(e => e.FailedAttempts)
+                .HasDefaultValue(0)
+                .HasColumnName("failed_attempts");
+            entity.Property(e => e.LockedUntil).HasColumnName("locked_until");
+            entity.Property(e => e.Mobile)
+                .HasMaxLength(32)
+                .HasColumnName("mobile");
+            entity.Property(e => e.Password)
                 .HasMaxLength(255)
-                .HasColumnName("password_hash");
-            entity.Property(e => e.RoleIds)
-                .HasDefaultValueSql("ARRAY[]::uuid[]")
-                .HasColumnName("role_ids");
-            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+                .HasColumnName("password");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("updated_at");
             entity.Property(e => e.Username)
                 .HasMaxLength(64)
                 .HasColumnName("username");
+        });
 
-            entity.HasOne(d => d.Tenant).WithMany(p => p.Users)
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("tenant_pkey");
+
+            entity.ToTable("tenant");
+
+            entity.HasIndex(e => e.TenantKey, "uk_tenant_key").IsUnique();
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Name)
+                .HasMaxLength(128)
+                .HasColumnName("name");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
+            entity.Property(e => e.TenantKey)
+                .HasMaxLength(64)
+                .HasColumnName("tenant_key");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<TenantApplication>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("tenant_application_pkey");
+
+            entity.ToTable("tenant_application");
+
+            entity.HasIndex(e => e.ClientId, "idx_tenant_application_client_id");
+
+            entity.HasIndex(e => new { e.TenantId, e.ClientId }, "uk_tenant_client").IsUnique();
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasColumnName("id");
+            entity.Property(e => e.ClientId)
+                .HasMaxLength(64)
+                .HasColumnName("client_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.ExpireTime).HasColumnName("expire_time");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+
+            entity.HasOne(d => d.Client).WithMany(p => p.TenantApplications)
+                .HasPrincipalKey(p => p.ClientId)
+                .HasForeignKey(d => d.ClientId)
+                .HasConstraintName("tenant_application_client_id_oauth_client_client_id_fk");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.TenantApplications)
                 .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("users_tenant_id_tenants_id_fk");
+                .HasConstraintName("tenant_application_tenant_id_tenant_id_fk");
+        });
+
+        modelBuilder.Entity<TenantMember>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("tenant_member_pkey");
+
+            entity.ToTable("tenant_member");
+
+            entity.HasIndex(e => e.TenantId, "idx_tenant_member_tenant_id");
+
+            entity.HasIndex(e => e.UserId, "idx_tenant_member_user_id");
+
+            entity.HasIndex(e => new { e.TenantId, e.UserId }, "uk_tenant_user").IsUnique();
+
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("uuid_generate_v4()")
+                .HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("created_at");
+            entity.Property(e => e.IsOwner)
+                .HasDefaultValue(false)
+                .HasColumnName("is_owner");
+            entity.Property(e => e.MemberName)
+                .HasMaxLength(64)
+                .HasColumnName("member_name");
+            entity.Property(e => e.Status)
+                .HasDefaultValue((short)1)
+                .HasColumnName("status");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.TenantMembers)
+                .HasForeignKey(d => d.TenantId)
+                .HasConstraintName("tenant_member_tenant_id_tenant_id_fk");
+
+            entity.HasOne(d => d.User).WithMany(p => p.TenantMembers)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("tenant_member_user_id_sys_user_id_fk");
+
+            entity.HasMany(d => d.Roles).WithMany(p => p.Members)
+                .UsingEntity<Dictionary<string, object>>(
+                    "TenantMemberRole",
+                    r => r.HasOne<SysRole>().WithMany()
+                        .HasForeignKey("RoleId")
+                        .HasConstraintName("tenant_member_role_role_id_sys_role_id_fk"),
+                    l => l.HasOne<TenantMember>().WithMany()
+                        .HasForeignKey("MemberId")
+                        .HasConstraintName("tenant_member_role_member_id_tenant_member_id_fk"),
+                    j =>
+                    {
+                        j.HasKey("MemberId", "RoleId").HasName("tenant_member_role_member_id_role_id_pk");
+                        j.ToTable("tenant_member_role");
+                        j.HasIndex(new[] { "RoleId" }, "idx_tenant_member_role_role_id");
+                        j.IndexerProperty<Guid>("MemberId").HasColumnName("member_id");
+                        j.IndexerProperty<Guid>("RoleId").HasColumnName("role_id");
+                    });
         });
 
         OnModelCreatingPartial(modelBuilder);

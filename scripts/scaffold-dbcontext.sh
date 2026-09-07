@@ -44,12 +44,14 @@ PG_PASSWORD="${PG_PASSWORD:-}"
 
 CONNECTION="Host=${PG_HOST};Port=${PG_PORT};Database=${PG_DATABASE};Username=${PG_USER};Password=${PG_PASSWORD}"
 
-# step 1/3 — 清孤儿 entity（DB-First 不变量：DB 没有的表，仓里也不该有 .cs）
-# AppDbContext.cs 保留——scaffold 会 --force 覆盖它；手写 partial 在 sibling
+# step 1/3 — 清空 Generated/（DB-First 不变量：DB 是唯一真源，仓 entity 必须 1:1 镜像）
+# 全清含 AppDbContext.cs——scaffold 从 DB 重新生成。手写 partial 在 sibling
 # src/Infrastructure/Persistence/AppDbContext.cs（不在 Generated/），不会被本步动。
+# 关键：scaffold 必须先全清才能跑——AppDbContext.cs 保留会触发 build 失败（它
+# 引用刚被删的 entity 类型），scaffold 无法 --force 覆盖。鸡生蛋问题。
 if [ -d "$GENERATED_DIR" ]; then
-  echo "[scaffold-dbcontext] step 1/3 — 清孤儿 entity（保留 AppDbContext.cs）"
-  find "$GENERATED_DIR" -maxdepth 1 -type f -name "*.cs" ! -name "AppDbContext.cs" -print -delete
+  echo "[scaffold-dbcontext] step 1/3 — 清空 Generated/（含 AppDbContext.cs）"
+  find "$GENERATED_DIR" -maxdepth 1 -type f -name "*.cs" -print -delete
 else
   mkdir -p "$GENERATED_DIR"
   echo "[scaffold-dbcontext] step 1/3 — 创建 ${GENERATED_DIR}/"
