@@ -25,7 +25,9 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 DB_PROJECT="src/Saas.Identity.AspNetCore.csproj"
-OUTPUT_DIR="src/Infrastructure/Persistence/Generated"
+# dotnet ef 的 --output-dir / --context-dir 是相对于 csproj 的；
+# csproj 在 src/，所以目标相对路径是 Infrastructure/Persistence/Generated
+OUTPUT_DIR="Infrastructure/Persistence/Generated"
 
 # 默认连接（与 scripts/lib/db-env.sh 同套）
 PG_HOST="${PG_HOST:-100.79.128.25}"
@@ -46,11 +48,11 @@ dotnet ef dbcontext scaffold \
     --context-dir "$OUTPUT_DIR" \
     --force
 
-echo "[scaffold-dbcontext] step 2/2 — git diff ${OUTPUT_DIR}/"
-if ! git diff --exit-code --quiet "$OUTPUT_DIR/" 2>/dev/null; then
+echo "[scaffold-dbcontext] step 2/2 — git diff src/${OUTPUT_DIR}/"
+if ! git diff --exit-code --quiet "src/${OUTPUT_DIR}/" 2>/dev/null; then
   echo "[scaffold-dbcontext] FATAL: scaffold 产物与 git HEAD 不一致" >&2
   echo "[scaffold-dbcontext]        处理：确认 DB 是最新（shared 已 db:migrate），" >&2
-  echo "[scaffold-dbcontext]        然后 git add ${OUTPUT_DIR}/ && git commit" >&2
+  echo "[scaffold-dbcontext]        然后 git add src/${OUTPUT_DIR}/ && git commit" >&2
   exit 1
 fi
 
