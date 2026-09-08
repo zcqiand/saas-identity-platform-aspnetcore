@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 namespace Saas.Identity.AspNetCore.Security;
 
 /// <summary>
-/// M03.F01.I01 — saas session cookie 中间件。
+/// M01.F04.I03 — saas session cookie 中间件。
 ///
 /// 解析 Cookie `saasSession=<sid>`（HttpOnly + SameSite=Lax + Secure 由调用方在
 /// AuthController.Login 写 Set-Cookie 时设），从 SaasSessionStore 读 session，

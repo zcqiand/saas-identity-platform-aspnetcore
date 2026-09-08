@@ -232,7 +232,7 @@ public class MeControllerTests
 
     [Fact]
     [Trait("Fn", "M09.F03.I01")]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Flow_meMenus_withRealLoginSession()
     {
         // 真 AuthController.Login 写 cookie -> middleware 注入 -> MeController.Menus 返回菜单

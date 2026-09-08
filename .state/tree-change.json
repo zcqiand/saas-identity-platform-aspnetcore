@@ -1,15 +1,776 @@
 {
   "schema": 1,
   "approved": true,
-  "base_sha": "b694d2a66141d824",
-  "summary": "saas-aspnetcore 对齐修复：M06.F03（审计写入助手）",
+  "base_sha": "7cad666545e4416e",
+  "summary": "saas-aspnetcore 对齐 shared 9/7 重构：删老结构（M02/M03/M05/M06/M08/M09 全段 + M00.F02 老 I/M01.F01-I02 老 I/M04.F02.I06/M04.F03.I07-9）+ 补 BASE 新 F 段（M00.F03-F05/M01.F03-F04/M04.F02-F04）+ 现有 I 级字段对齐 ADR-0024",
   "changes": [
     {
-      "id": "M06.F03",
+      "id": "M00.F01.I01",
+      "action": "变更",
+      "name": "租户列表",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024 字段对齐：name 去括号/补全；type 改 接口；desc 补 BASE 描述"
+    },
+    {
+      "id": "M00.F01.I02",
+      "action": "变更",
+      "name": "创建租户",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：type 接口/delivery 前端+后端；desc 补 BASE 描述"
+    },
+    {
+      "id": "M00.F01.I03",
+      "action": "变更",
+      "name": "租户详情",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：type 接口/delivery 前端+后端；desc 补 BASE 描述"
+    },
+    {
+      "id": "M00.F01.I04",
+      "action": "变更",
+      "name": "更新租户",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：type 接口/delivery 前端+后端；desc 补 BASE 描述"
+    },
+    {
+      "id": "M00.F01.I05",
+      "action": "变更",
+      "name": "删除租户",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：type 接口/delivery 前端+后端；desc 补 BASE 描述"
+    },
+    {
+      "id": "M00.F02",
+      "action": "变更",
+      "name": "租户成员",
+      "reason": "9/7 重组：段名 '当前用户跨租户切换' → '租户成员'（与 BASE M00.F02 对齐）"
+    },
+    {
+      "id": "M00.F02.I01",
+      "action": "变更",
+      "name": "成员列表",
+      "delivery": "前端+后端",
+      "reason": "9/7：whoami 迁到 M01.F01.I01；I01 改为 BASE 成员列表"
+    },
+    {
+      "id": "M00.F02.I02",
+      "action": "变更",
+      "name": "创建成员",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 视角的创建成员"
+    },
+    {
+      "id": "M00.F02.I03",
+      "action": "变更",
+      "name": "成员详情",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 视角的成员详情"
+    },
+    {
+      "id": "M00.F02.I04",
       "action": "新增",
-      "name": "审计写入助手（写端点副作用）",
-      "reason": "BASE 已声明契约面；5 仓全缺，触发缺 BASE 契约面 ID"
+      "name": "更新成员",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 新增 I04 更新成员"
+    },
+    {
+      "id": "M00.F02.I05",
+      "action": "新增",
+      "name": "删除成员",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 新增 I05 删除成员"
+    },
+    {
+      "id": "M00.F02.I06",
+      "action": "新增",
+      "name": "邀请成员",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 新增 I06 邀请成员"
+    },
+    {
+      "id": "M00.F02.I08",
+      "action": "新增",
+      "name": "状态切换",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 新增 I08 状态切换（I07 邀请接受仍是规划）"
+    },
+    {
+      "id": "M00.F03",
+      "action": "新增",
+      "name": "租户角色",
+      "reason": "9/7：BASE 新增 F03 段（旧 M02.F01 已迁此）"
+    },
+    {
+      "id": "M00.F03.I01",
+      "action": "新增",
+      "name": "角色列表",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 角色列表"
+    },
+    {
+      "id": "M00.F03.I02",
+      "action": "新增",
+      "name": "创建角色",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 创建角色"
+    },
+    {
+      "id": "M00.F03.I03",
+      "action": "新增",
+      "name": "角色详情",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 角色详情"
+    },
+    {
+      "id": "M00.F03.I04",
+      "action": "新增",
+      "name": "更新角色",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 更新角色"
+    },
+    {
+      "id": "M00.F03.I05",
+      "action": "新增",
+      "name": "删除角色",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 删除角色"
+    },
+    {
+      "id": "M00.F04",
+      "action": "新增",
+      "name": "角色权限",
+      "reason": "9/7：BASE 新增 F04 段（角色权限 + 角色菜单授权 admin 入口）"
+    },
+    {
+      "id": "M00.F04.I01",
+      "action": "新增",
+      "name": "权限矩阵绑定",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 权限矩阵绑定"
+    },
+    {
+      "id": "M00.F04.I02",
+      "action": "新增",
+      "name": "角色已授权菜单查询",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 角色已授权菜单查询"
+    },
+    {
+      "id": "M00.F04.I03",
+      "action": "新增",
+      "name": "整批设置角色菜单",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 整批设置角色菜单"
+    },
+    {
+      "id": "M00.F04.I04",
+      "action": "新增",
+      "name": "清空角色菜单",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 清空角色菜单"
+    },
+    {
+      "id": "M00.F05",
+      "action": "新增",
+      "name": "租户应用",
+      "reason": "9/7：BASE 新增 F05 段（旧 M04.F04 已迁此）"
+    },
+    {
+      "id": "M00.F05.I01",
+      "action": "新增",
+      "name": "列出租户应用",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 列出租户应用"
+    },
+    {
+      "id": "M00.F05.I02",
+      "action": "新增",
+      "name": "订阅应用",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 订阅应用"
+    },
+    {
+      "id": "M00.F05.I03",
+      "action": "新增",
+      "name": "更新应用订阅",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 更新应用订阅"
+    },
+    {
+      "id": "M00.F05.I04",
+      "action": "新增",
+      "name": "移除应用订阅",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 移除应用订阅"
+    },
+    {
+      "id": "M01.F01",
+      "action": "变更",
+      "name": "用户维护",
+      "reason": "9/7：段名 '用户 CRUD（tenant-scoped）' → '用户维护'（当前用户 whoami 视角）"
+    },
+    {
+      "id": "M01.F01.I01",
+      "action": "变更",
+      "name": "当前用户 whoami",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE M01.F01.I01 是 whoami；原 '用户列表' 迁到 M00.F02.I01"
+    },
+    {
+      "id": "M01.F01.I02",
+      "action": "废弃",
+      "reason": "9/7：原 '邀请/创建用户' 迁到 M00.F02.I02 创建成员 / M00.F02.I06 邀请成员"
+    },
+    {
+      "id": "M01.F01.I03",
+      "action": "废弃",
+      "reason": "9/7：原 '用户详情' 迁到 M00.F02.I03 成员详情"
+    },
+    {
+      "id": "M01.F01.I04",
+      "action": "废弃",
+      "reason": "9/7：原 '更新用户' 迁到 M00.F02.I04 更新成员"
+    },
+    {
+      "id": "M01.F01.I05",
+      "action": "废弃",
+      "reason": "9/7：原 '删除用户' 迁到 M00.F02.I05 删除成员"
+    },
+    {
+      "id": "M01.F01.I06",
+      "action": "废弃",
+      "reason": "9/7：原 '分配角色（用户列表入口）' 迁到 M01.F02.I01 分配角色"
+    },
+    {
+      "id": "M01.F02",
+      "action": "变更",
+      "name": "角色成员",
+      "reason": "9/7：段名 '用户角色分配与状态切换' → '角色成员'（member→role binding 视角）"
+    },
+    {
+      "id": "M01.F02.I01",
+      "action": "变更",
+      "name": "分配角色",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 分配角色（member→role binding）"
+    },
+    {
+      "id": "M01.F02.I02",
+      "action": "废弃",
+      "reason": "9/7：原 '邀请用户' 迁到 M00.F02.I06 邀请成员"
+    },
+    {
+      "id": "M01.F02.I03",
+      "action": "废弃",
+      "reason": "9/7：原 '状态切换' 迁到 M00.F02.I08 状态切换"
+    },
+    {
+      "id": "M01.F03",
+      "action": "新增",
+      "name": "租户成员",
+      "reason": "9/7：BASE 新增 F03 段（当前用户的跨租户成员关系）"
+    },
+    {
+      "id": "M01.F03.I01",
+      "action": "新增",
+      "name": "列出我的租户成员关系",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 列出租户成员关系"
+    },
+    {
+      "id": "M01.F03.I02",
+      "action": "新增",
+      "name": "切换当前租户",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 切换当前租户"
+    },
+    {
+      "id": "M01.F04",
+      "action": "新增",
+      "name": "SSO 登录",
+      "reason": "9/7：BASE 新增 F04 段（旧 M03 全段已迁此）"
+    },
+    {
+      "id": "M01.F04.I01",
+      "action": "新增",
+      "name": "密码登录 API",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE 密码登录 API（前端不直连）"
+    },
+    {
+      "id": "M01.F04.I02",
+      "action": "新增",
+      "name": "失败锁定",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE 失败锁定（sys_user.failed_attempts 5 次/15 min）"
+    },
+    {
+      "id": "M01.F04.I03",
+      "action": "新增",
+      "name": "密码登录 UI",
+      "delivery": "仅前端",
+      "reason": "9/7：BASE 密码登录 UI（aspnetcore 跳过端端）"
+    },
+    {
+      "id": "M01.F04.I04",
+      "action": "新增",
+      "name": "OIDC Code 换取",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE OIDC Code 换 token"
+    },
+    {
+      "id": "M01.F04.I05",
+      "action": "新增",
+      "name": "refresh token",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE refresh token"
+    },
+    {
+      "id": "M01.F04.I06",
+      "action": "新增",
+      "name": "登出（本地清理）",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 本地登出（清 session cookie）"
+    },
+    {
+      "id": "M01.F04.I07",
+      "action": "新增",
+      "name": "登出（全局 SSO）",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 全局 SSO 登出（待 ADR 决策）"
+    },
+    {
+      "id": "M04.F01",
+      "action": "变更",
+      "name": "应用维护",
+      "reason": "9/7：段名 '应用 CRUD（平台 admin）' → '应用维护'（与 BASE M04.F01 对齐）"
+    },
+    {
+      "id": "M04.F01.I01",
+      "action": "变更",
+      "name": "OAuth 应用列表",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：name 加 'OAuth' 前缀；type 接口"
+    },
+    {
+      "id": "M04.F01.I02",
+      "action": "变更",
+      "name": "创建 OAuth 应用",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：name/type 对齐"
+    },
+    {
+      "id": "M04.F01.I03",
+      "action": "变更",
+      "name": "OAuth 应用详情",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：name/type 对齐"
+    },
+    {
+      "id": "M04.F01.I04",
+      "action": "变更",
+      "name": "更新 OAuth 应用",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：name/type 对齐"
+    },
+    {
+      "id": "M04.F01.I05",
+      "action": "变更",
+      "name": "删除 OAuth 应用",
+      "delivery": "前端+后端",
+      "reason": "ADR-0024：name/type 对齐"
+    },
+    {
+      "id": "M04.F01.I06",
+      "action": "新增",
+      "name": "公共 client 元数据",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 新增 I06（旧 M04.F05 已合并此）"
+    },
+    {
+      "id": "M04.F02",
+      "action": "变更",
+      "name": "应用启用/停用",
+      "reason": "9/7：保留段名；I 级重编号 I06 → I01"
+    },
+    {
+      "id": "M04.F02.I06",
+      "action": "废弃",
+      "reason": "9/7：BASE 重编号为 M04.F02.I01（status 字段切换）"
+    },
+    {
+      "id": "M04.F02.I01",
+      "action": "新增",
+      "name": "启用/停用应用",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 新 ID（替代原 I06）"
+    },
+    {
+      "id": "M04.F03",
+      "action": "变更",
+      "name": "身份认证",
+      "reason": "9/7：段名 'OAuth 授权码签发与令牌交换/刷新' → '身份认证'（与 BASE M04.F03 对齐）"
+    },
+    {
+      "id": "M04.F03.I07",
+      "action": "废弃",
+      "reason": "9/7：BASE 重编号为 M04.F03.I01 授权码签发"
+    },
+    {
+      "id": "M04.F03.I08",
+      "action": "废弃",
+      "reason": "9/7：BASE 重编号为 M04.F03.I02 令牌交换"
+    },
+    {
+      "id": "M04.F03.I09",
+      "action": "废弃",
+      "reason": "9/7：BASE 重编号为 M04.F03.I03 令牌刷新"
+    },
+    {
+      "id": "M04.F03.I01",
+      "action": "新增",
+      "name": "授权码签发",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE 授权码签发"
+    },
+    {
+      "id": "M04.F03.I02",
+      "action": "新增",
+      "name": "令牌交换",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE 令牌交换"
+    },
+    {
+      "id": "M04.F03.I03",
+      "action": "新增",
+      "name": "令牌刷新",
+      "delivery": "仅后端",
+      "reason": "9/7：BASE 令牌刷新"
+    },
+    {
+      "id": "M04.F04",
+      "action": "新增",
+      "name": "菜单管理",
+      "reason": "9/7：BASE 新增 F04 段（旧 M08 全段 + M09 部分已迁此）"
+    },
+    {
+      "id": "M04.F04.I01",
+      "action": "新增",
+      "name": "菜单列表",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 菜单列表（旧 M08.F01.I01）"
+    },
+    {
+      "id": "M04.F04.I02",
+      "action": "新增",
+      "name": "创建菜单",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 创建菜单"
+    },
+    {
+      "id": "M04.F04.I03",
+      "action": "新增",
+      "name": "菜单详情",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 菜单详情"
+    },
+    {
+      "id": "M04.F04.I04",
+      "action": "新增",
+      "name": "更新菜单",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 更新菜单"
+    },
+    {
+      "id": "M04.F04.I05",
+      "action": "新增",
+      "name": "删除菜单",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 删除菜单"
+    },
+    {
+      "id": "M04.F04.I06",
+      "action": "新增",
+      "name": "同级排序",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 同级排序（旧 M08.F02.I06）"
+    },
+    {
+      "id": "M04.F04.I07",
+      "action": "新增",
+      "name": "切换父级",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 切换父级（旧 M08.F02.I07）"
+    },
+    {
+      "id": "M04.F04.I08",
+      "action": "新增",
+      "name": "当前用户有效菜单",
+      "delivery": "前端+后端",
+      "reason": "9/7：BASE 当前用户有效菜单（旧 M09.F03.I04 合并）"
+    },
+    {
+      "id": "M02",
+      "action": "废弃",
+      "reason": "9/7：整模块已迁 M00.F03 租户角色 + M00.F04 角色权限（BASE §0.x 迁移表）"
+    },
+    {
+      "id": "M02.F01",
+      "action": "废弃",
+      "reason": "9/7：旧 M02.F01 角色 CRUD 已迁 M00.F03"
+    },
+    {
+      "id": "M02.F01.I01",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F03.I01 角色列表"
+    },
+    {
+      "id": "M02.F01.I02",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F03.I02 创建角色"
+    },
+    {
+      "id": "M02.F01.I03",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F03.I03 角色详情"
+    },
+    {
+      "id": "M02.F01.I04",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F03.I04 更新角色"
+    },
+    {
+      "id": "M02.F01.I05",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F03.I05 删除角色"
+    },
+    {
+      "id": "M02.F02",
+      "action": "废弃",
+      "reason": "9/7：旧 M02.F02 权限矩阵已迁 M00.F04"
+    },
+    {
+      "id": "M02.F02.I01",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F04.I01 权限矩阵绑定"
+    },
+    {
+      "id": "M03",
+      "action": "废弃",
+      "reason": "9/7：整模块已迁 M01.F04 SSO 登录（BASE §0.x 迁移表）"
+    },
+    {
+      "id": "M03.F01",
+      "action": "废弃",
+      "reason": "9/7：旧 M03.F01 已迁 M01.F04.I01-I03"
+    },
+    {
+      "id": "M03.F01.I01",
+      "action": "废弃",
+      "reason": "9/7：→ M01.F04.I01 密码登录 API"
+    },
+    {
+      "id": "M03.F01.I02",
+      "action": "废弃",
+      "reason": "9/7：→ M01.F04.I02 失败锁定"
+    },
+    {
+      "id": "M03.F02",
+      "action": "废弃",
+      "reason": "9/7：旧 M03.F02 OIDC 已迁 M01.F04.I04-I05"
+    },
+    {
+      "id": "M03.F02.I03",
+      "action": "废弃",
+      "reason": "9/7：→ M01.F04.I04 OIDC Code 换取"
+    },
+    {
+      "id": "M03.F02.I04",
+      "action": "废弃",
+      "reason": "9/7：→ M01.F04.I05 refresh token"
+    },
+    {
+      "id": "M03.F03",
+      "action": "废弃",
+      "reason": "9/7：旧 M03.F03 登出已迁 M01.F04.I06-I07"
+    },
+    {
+      "id": "M03.F03.I05",
+      "action": "废弃",
+      "reason": "9/7：→ M01.F04.I06 本地登出"
+    },
+    {
+      "id": "M03.F03.I06",
+      "action": "废弃",
+      "reason": "9/7：→ M01.F04.I07 全局 SSO 登出"
+    },
+    {
+      "id": "M05",
+      "action": "废弃",
+      "reason": "9/7：整模块已废弃（目标 DDL 不再含 api_keys）"
+    },
+    {
+      "id": "M05.F01",
+      "action": "废弃",
+      "reason": "9/7：API Key 生命周期段已废弃"
+    },
+    {
+      "id": "M05.F01.I01",
+      "action": "废弃",
+      "reason": "9/7：API Key 列表已废弃"
+    },
+    {
+      "id": "M05.F01.I02",
+      "action": "废弃",
+      "reason": "9/7：API Key 创建已废弃"
+    },
+    {
+      "id": "M05.F01.I03",
+      "action": "废弃",
+      "reason": "9/7：API Key 吊销已废弃"
+    },
+    {
+      "id": "M05.F01.I04",
+      "action": "废弃",
+      "reason": "9/7：API Key 轮换已废弃"
+    },
+    {
+      "id": "M05.F01.I05",
+      "action": "废弃",
+      "reason": "9/7：API Key 物理删除已废弃（之前 commit 误增）"
+    },
+    {
+      "id": "M06",
+      "action": "废弃",
+      "reason": "9/7：整模块已废弃（目标 DDL 不再含 audit_events）"
+    },
+    {
+      "id": "M06.F01",
+      "action": "废弃",
+      "reason": "9/7：审计事件查询段已废弃"
+    },
+    {
+      "id": "M06.F01.I01",
+      "action": "废弃",
+      "reason": "9/7：审计事件列表已废弃"
+    },
+    {
+      "id": "M06.F01.I02",
+      "action": "废弃",
+      "reason": "9/7：按用户查审计事件已废弃"
+    },
+    {
+      "id": "M06.F01.I03",
+      "action": "废弃",
+      "reason": "9/7：导出审计事件已废弃"
+    },
+    {
+      "id": "M06.F02",
+      "action": "废弃",
+      "reason": "9/7：审计留存策略段已废弃"
+    },
+    {
+      "id": "M06.F02.I04",
+      "action": "废弃",
+      "reason": "9/7：留存策略设置已废弃"
+    },
+    {
+      "id": "M06.F03",
+      "action": "废弃",
+      "reason": "9/7：审计写入助手已废弃（之前 commit 误增）"
+    },
+    {
+      "id": "M08",
+      "action": "废弃",
+      "reason": "9/7：整模块已迁 M04.F04 菜单管理（BASE §0.x 迁移表）"
+    },
+    {
+      "id": "M08.F01",
+      "action": "废弃",
+      "reason": "9/7：旧 M08.F01 菜单 CRUD 已迁 M04.F04.I01-I05"
+    },
+    {
+      "id": "M08.F01.I01",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I01 菜单列表"
+    },
+    {
+      "id": "M08.F01.I02",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I02 创建菜单"
+    },
+    {
+      "id": "M08.F01.I03",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I03 菜单详情"
+    },
+    {
+      "id": "M08.F01.I04",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I04 更新菜单"
+    },
+    {
+      "id": "M08.F01.I05",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I05 删除菜单"
+    },
+    {
+      "id": "M08.F02",
+      "action": "废弃",
+      "reason": "9/7：旧 M08.F02 菜单结构已迁 M04.F04.I06-I07"
+    },
+    {
+      "id": "M08.F02.I06",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I06 同级排序"
+    },
+    {
+      "id": "M08.F02.I07",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I07 切换父级"
+    },
+    {
+      "id": "M09",
+      "action": "废弃",
+      "reason": "9/7：整模块已迁 M00.F04 角色权限 + M04.F04.I08（BASE §0.x 迁移表）"
+    },
+    {
+      "id": "M09.F01",
+      "action": "废弃",
+      "reason": "9/7：旧 M09.F01 角色菜单授权查询已迁 M00.F04.I02"
+    },
+    {
+      "id": "M09.F01.I01",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F04.I02 角色已授权菜单查询"
+    },
+    {
+      "id": "M09.F02",
+      "action": "废弃",
+      "reason": "9/7：旧 M09.F02 角色菜单授权设置已迁 M00.F04.I03-I04"
+    },
+    {
+      "id": "M09.F02.I02",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F04.I03 整批设置角色菜单"
+    },
+    {
+      "id": "M09.F02.I03",
+      "action": "废弃",
+      "reason": "9/7：→ M00.F04.I04 清空角色菜单"
+    },
+    {
+      "id": "M09.F03",
+      "action": "废弃",
+      "reason": "9/7：旧 M09.F03 当前用户有效菜单已迁 M04.F04.I08"
+    },
+    {
+      "id": "M09.F03.I04",
+      "action": "废弃",
+      "reason": "9/7：→ M04.F04.I08 当前用户有效菜单"
     }
   ],
-  "sync_files": []
+  "sync_files": [
+    "docs/functions/function-tree.md"
+  ]
 }

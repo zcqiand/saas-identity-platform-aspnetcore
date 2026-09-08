@@ -6,7 +6,7 @@ using Xunit;
 namespace Saas.Identity.AspNetCore.Tests.Auth.Session;
 
 /// <summary>
-/// M03.F01.I01 — SaasSessionStore（进程内 ConcurrentDictionary + TTL 24h）。
+/// M01.F04.I03 — SaasSessionStore（进程内 ConcurrentDictionary + TTL 24h）。
 ///
 /// 复现 ADR-0013 路线 A：saas OAuth 端点改造的 session 存储层。Phase 6+ 切 Redis。
 /// 本任务：进程内实现 + TTL 过期 + 单点 ID 生成。
@@ -14,7 +14,7 @@ namespace Saas.Identity.AspNetCore.Tests.Auth.Session;
 public class SaasSessionStoreTest
 {
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public void Put_thenGet_returnsSameSession()
     {
         var store = new SaasSessionStore(TimeSpan.FromMinutes(5));
@@ -27,7 +27,7 @@ public class SaasSessionStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public void Get_unknownId_returnsNull()
     {
         var store = new SaasSessionStore();
@@ -35,7 +35,7 @@ public class SaasSessionStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public void Get_expiredSession_returnsNullAndRemoves()
     {
         // TTL 100ms — put 后等 200ms 再 get，应当作过期
@@ -49,7 +49,7 @@ public class SaasSessionStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public void Delete_removesSession()
     {
         var store = new SaasSessionStore();
@@ -60,7 +60,7 @@ public class SaasSessionStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public void GenerateId_returnsUniqueIds()
     {
         var store = new SaasSessionStore();

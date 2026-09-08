@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 namespace Saas.Identity.AspNetCore.Security;
 
 /// <summary>
-/// M03.F01.I02 — 失败锁定异常（连续 5 次密码错 -> 锁定 15min）。
+/// M01.F04.I02 — 失败锁定异常（连续 5 次密码错 -> 锁定 15min）。
 /// 抛此异常时 Program.cs 异常映射返 423 LOCKED 状态码。
 /// </summary>
 public sealed class AccountLockedException : Exception

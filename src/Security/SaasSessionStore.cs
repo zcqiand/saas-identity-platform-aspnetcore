@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 namespace Saas.Identity.AspNetCore.Security;
 
 /// <summary>
-/// M03.F01.I01 — saas session 记录（与 Phase 6 OAuth 端点配套）。
+/// M01.F04.I03 — saas session 记录（与 Phase 6 OAuth 端点配套）。
 /// 进程内 ConcurrentDictionary + TTL；Phase 6+ 切 Redis。
 /// </summary>
 public sealed record SaasSession(

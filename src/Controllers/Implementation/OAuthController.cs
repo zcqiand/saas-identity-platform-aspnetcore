@@ -43,7 +43,7 @@ public class OauthController : OauthControllerBase
         _jwt = jwt;
     }
 
-    // M04.F03.I07 — 授权码签发
+    // M04.F03.I01 — 授权码签发
     public override async Task<Response3> Authorize(AuthorizeCodeRequest body)
     {
         // 2026-08-29 修 saas-vue / saas-react → saas-aspnetcore 跨域 POST 401:
@@ -125,7 +125,7 @@ public class OauthController : OauthControllerBase
         };
     }
 
-    // M04.F03.I08 + I09 — 令牌交换 + 刷新（按 grantType 路由）
+    // M04.F03.I02 + I09 — 令牌交换 + 刷新（按 grantType 路由）
     public override async Task<TokenResponse> Token(TokenRequest body)
     {
         // 2026-08-29: 放宽 session 要求 (RFC 6749 §4.1.3 — token 端点只验 code +

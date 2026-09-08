@@ -17,8 +17,8 @@ namespace Saas.Identity.AspNetCore.Tests.Controllers;
 
 /// <summary>
 /// M03 认证：登录 + 登出 + OIDC + refresh。
-/// ADR-0013 路线 A：M03.F01.I01 登录写 saas session cookie + access token；
-/// M03.F01.I02 失败锁定 5 次 / 15min。
+/// ADR-0013 路线 A：M01.F04.I03 登录写 saas session cookie + access token；
+/// M01.F04.I02 失败锁定 5 次 / 15min。
 /// </summary>
 public class AuthControllerTests
 {
@@ -101,10 +101,10 @@ public class AuthControllerTests
         await db.SaveChangesAsync();
     }
 
-    // === M03.F01.I01 ===
+    // === M01.F04.I03 ===
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG；DbContext InMemory 不支持 Dictionary<string,object> Metadata")]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Login_validCredentials_returnsTokensAndSetsCookie()
     {
         using var db = NewDb();
@@ -123,7 +123,7 @@ public class AuthControllerTests
     }
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Login_invalidPassword_throwsAndRecordsFailure()
     {
         using var db = NewDb();
@@ -135,7 +135,7 @@ public class AuthControllerTests
     }
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Login_unknownUser_throws()
     {
         using var db = NewDb();
@@ -145,7 +145,7 @@ public class AuthControllerTests
     }
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Login_suspendedUser_throws()
     {
         using var db = NewDb();
@@ -158,10 +158,10 @@ public class AuthControllerTests
             () => controller.Login(new() { Username = "alice", Password = "dev123456" }));
     }
 
-    // === M03.F01.I02 失败锁定 ===
+    // === M01.F04.I02 失败锁定 ===
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public async Task Login_5WrongPasswords_locksAccount_throwsLocked()
     {
         using var db = NewDb();
@@ -179,7 +179,7 @@ public class AuthControllerTests
     }
 
     [Fact(Skip = "M10.F04 集成测试留 Phase 5 Testcontainers PG")]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public async Task Login_lockedAccount_shortDuration_unlocks()
     {
         using var db = NewDb();
@@ -200,18 +200,18 @@ public class AuthControllerTests
     // === M03.F02 占位 (Phase 5) ===
 
     [Fact(Skip = "M03.F02 OIDC 路径 Phase 6 改造；本次任务仅覆盖 M03.F01")]
-    [Trait("Fn", "M03.F02.I03")]
+    [Trait("Fn", "M01.F04.I04")]
     public Task Callback_exchangesCode() => Task.CompletedTask;
 
     [Fact(Skip = "M03.F02 refresh Phase 6 改造")]
-    [Trait("Fn", "M03.F02.I04")]
+    [Trait("Fn", "M01.F04.I05")]
     public Task Refresh_returnsNewToken() => Task.CompletedTask;
 
-    // === M03.F02.I04 — 2026-08-31 contract-test M96.F02.I24 抓获 ===
+    // === M01.F04.I05 — 2026-08-31 contract-test M96.F02.I24 抓获 ===
     // 未知 refreshToken 必须拒绝（ Unauthorized → 401/400 契约面），不能静默重发。
 
     [Fact]
-    [Trait("Fn", "M03.F02.I04")]
+    [Trait("Fn", "M01.F04.I05")]
     public async Task Refresh_unknownToken_throws()
     {
         var (controller, _) = NewController(NewDb());
@@ -226,7 +226,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M03.F02.I04")]
+    [Trait("Fn", "M01.F04.I05")]
     public async Task Refresh_malformedToken_throws()
     {
         var (controller, _) = NewController(NewDb());
@@ -241,10 +241,10 @@ public class AuthControllerTests
             }));
     }
 
-    // === M03.F03.I05 ===
+    // === M01.F04.I06 ===
 
     [Fact]
-    [Trait("Fn", "M03.F03.I05")]
+    [Trait("Fn", "M01.F04.I06")]
     public async Task Logout_completes()
     {
         var (controller, _) = NewController(NewDb());

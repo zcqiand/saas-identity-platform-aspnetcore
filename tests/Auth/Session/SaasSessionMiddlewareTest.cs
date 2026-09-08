@@ -6,7 +6,7 @@ using Xunit;
 namespace Saas.Identity.AspNetCore.Tests.Auth.Session;
 
 /// <summary>
-/// M03.F01.I01 — SaasSessionMiddleware（cookie saasSession -> HttpContext.Items 注入）。
+/// M01.F04.I03 — SaasSessionMiddleware（cookie saasSession -> HttpContext.Items 注入）。
 /// ADR-0013 路线 A：所有 OAuth / Me 端点检查 session 中间件注入的 session。
 /// </summary>
 public class SaasSessionMiddlewareTest
@@ -24,7 +24,7 @@ public class SaasSessionMiddlewareTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task ValidCookie_injectsSessionIntoItems()
     {
         var store = new SaasSessionStore();
@@ -39,7 +39,7 @@ public class SaasSessionMiddlewareTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task NoCookie_doesNotInject()
     {
         var store = new SaasSessionStore();
@@ -48,7 +48,7 @@ public class SaasSessionMiddlewareTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task UnknownCookieValue_doesNotInject()
     {
         var store = new SaasSessionStore();
@@ -57,7 +57,7 @@ public class SaasSessionMiddlewareTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task ExpiredCookie_doesNotInject()
     {
         var store = new SaasSessionStore(TimeSpan.FromMilliseconds(100));
@@ -71,7 +71,7 @@ public class SaasSessionMiddlewareTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Next_invoked_always()
     {
         var store = new SaasSessionStore();

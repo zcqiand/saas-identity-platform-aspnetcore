@@ -6,14 +6,14 @@ using Xunit;
 namespace Saas.Identity.AspNetCore.Tests.Auth.Session;
 
 /// <summary>
-/// M03.F01.I02 — 失败锁定存储：连续 5 次密码错 -> 锁定 15min。
+/// M01.F04.I02 — 失败锁定存储：连续 5 次密码错 -> 锁定 15min。
 /// 进程内 ConcurrentDictionary；Phase 6+ 切 Redis / shared store。
 /// 锁定状态：键=userId, value={Attempts, LockedUntil}。
 /// </summary>
 public class FailedLoginStoreTest
 {
     [Fact]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public void Record_thenGet_attemptsIncrements()
     {
         var store = new FailedLoginStore();
@@ -23,7 +23,7 @@ public class FailedLoginStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public void LockedUser_throwsLockedException()
     {
         var store = new FailedLoginStore(maxAttempts: 5, lockoutDuration: TimeSpan.FromMilliseconds(100));
@@ -34,7 +34,7 @@ public class FailedLoginStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public void LockoutExpires_afterDuration()
     {
         var store = new FailedLoginStore(maxAttempts: 5, lockoutDuration: TimeSpan.FromMilliseconds(100));
@@ -45,7 +45,7 @@ public class FailedLoginStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public void ResetSuccess_clearsCounter()
     {
         var store = new FailedLoginStore();
@@ -56,7 +56,7 @@ public class FailedLoginStoreTest
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public void BelowThreshold_notLocked()
     {
         var store = new FailedLoginStore(maxAttempts: 5, lockoutDuration: TimeSpan.FromMinutes(15));

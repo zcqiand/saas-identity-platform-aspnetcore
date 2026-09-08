@@ -117,7 +117,7 @@ builder.Services.AddSingleton<JwtIssuer>();
 // cookie，SaasSessionMiddleware 读 store 注入 Items，Oauth/Me 控制器消费。
 // singleton：session 必须全进程共享；Phase 6+ 多副本部署切 Redis（ADR-0014）。
 builder.Services.AddSingleton<SaasSessionStore>();
-// M03.F01.I02 失败锁定（5 次 / 15min），进程内计数 — 同上 singleton。
+// M01.F04.I02 失败锁定（5 次 / 15min），进程内计数 — 同上 singleton。
 builder.Services.AddSingleton<FailedLoginStore>();
 
 // M10.Database — EF Core + Npgsql + snake_case 命名（ADR-0010）
@@ -220,7 +220,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors("NextDev");
-// M03.F01.I01 — saas session cookie 解析（注册位置见 SaasSessionMiddleware 注释）。
+// M01.F04.I03 — saas session cookie 解析（注册位置见 SaasSessionMiddleware 注释）。
 // 必须在 UseAuthentication 之前：OAuth 端点读 Items["saasSession"] 判登录态。
 app.UseMiddleware<SaasSessionMiddleware>();
 app.UseAuthentication();

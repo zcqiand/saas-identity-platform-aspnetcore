@@ -114,7 +114,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I07")]
+    [Trait("Fn", "M04.F03.I01")]
     public async Task Authorize_happyPath_returnsCode()
     {
         var (_, _, c, _) = Build();
@@ -132,7 +132,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I07")]
+    [Trait("Fn", "M04.F03.I01")]
     public async Task Authorize_invalidClient_throwsUnauthorized()
     {
         var (_, _, c, _) = Build();
@@ -148,7 +148,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I07")]
+    [Trait("Fn", "M04.F03.I01")]
     public async Task Authorize_invalidRedirectUri_throws()
     {
         var (_, _, c, _) = Build();
@@ -164,7 +164,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I07")]
+    [Trait("Fn", "M04.F03.I01")]
     public async Task Authorize_invalidScope_throws()
     {
         var (_, _, c, _) = Build();
@@ -180,7 +180,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I08")]
+    [Trait("Fn", "M04.F03.I02")]
     public async Task Token_authorizationCode_happyPath()
     {
         var (db, _, c, _) = Build();
@@ -209,7 +209,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I08")]
+    [Trait("Fn", "M04.F03.I02")]
     public async Task Token_alreadyConsumedCode_throws()
     {
         var (db, _, c, _) = Build();
@@ -245,7 +245,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I08")]
+    [Trait("Fn", "M04.F03.I02")]
     public async Task Token_redirectUriMismatch_throws()
     {
         var (db, _, c, _) = Build();
@@ -270,7 +270,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I09")]
+    [Trait("Fn", "M04.F03.I03")]
     public async Task Token_refreshToken_happyPath()
     {
         var (db, _, c, _) = Build();
@@ -306,7 +306,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M04.F03.I09")]
+    [Trait("Fn", "M04.F03.I03")]
     public async Task Token_refreshTokenReuse_throws()
     {
         var (db, _, c, _) = Build();
@@ -554,7 +554,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Flow_login_setsSaasSessionCookie_andStoresSession()
     {
         var (db, uid, tid) = OauthSessionFlow.BuildFlowDb();
@@ -583,7 +583,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I02")]
+    [Trait("Fn", "M01.F04.I02")]
     public async Task Flow_login_5WrongPasswords_thenLocked()
     {
         var (db, _, _) = OauthSessionFlow.BuildFlowDb();
@@ -704,7 +704,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     [Trait("Fn", "M04.F03.I01")]
     public async Task Flow_expiredLoginSession_authorizeThrowsUnauthorized()
     {
@@ -728,7 +728,7 @@ public class OauthControllerTests
     }
 
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     [Trait("Fn", "M04.F03.I01")]
     public async Task Flow_deletedSession_logoutSemantics_authorizeThrowsUnauthorized()
     {

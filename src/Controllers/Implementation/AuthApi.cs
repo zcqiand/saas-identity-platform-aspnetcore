@@ -22,7 +22,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 ///          生产 JwtBearer 默认拒收 → 401/500。HS256 走真实对称密钥，
 ///          Program.cs JwtBearer 用同一 key 校验, dev/prod 同路径）。
 /// v0.2.0：HS256 签名抽到 Security/JwtIssuer.cs（OauthController 也用）。
-/// v0.3.10 (PLAN-2026-001 T-3b)：M03.F01.I01 saas session cookie + lockout。
+/// v0.3.10 (PLAN-2026-001 T-3b)：M01.F04.I03 saas session cookie + lockout。
 /// </summary>
 public class AuthController : AuthControllerBase
 {
@@ -48,11 +48,11 @@ public class AuthController : AuthControllerBase
 
     public override async Task<LoginResponse> Login(LoginRequest body)
     {
-        // M03.F01.I02 锁定检查（先查 — 即使密码对也不让锁定中账号登录）
+        // M01.F04.I02 锁定检查（先查 — 即使密码对也不让锁定中账号登录）
         var username = body.Username ?? "";
         _failedLogins.EnsureNotLocked(username);
 
-        // M03.F01.I01 账号密码登录
+        // M01.F04.I03 账号密码登录
         var user = await _db.SysUsers.FirstOrDefaultAsync(u => u.Username == username);
         if (user == null || string.IsNullOrEmpty(body.Password))
         {
@@ -82,7 +82,7 @@ public class AuthController : AuthControllerBase
             .Select(tm => tm.TenantId)
             .FirstOrDefaultAsync());
 
-        // M03.F01.I01 写端点副作用 — login_success（2026-09-02 contract-test M96 audit 覆盖对齐，
+        // M01.F04.I03 写端点副作用 — login_success（2026-09-02 contract-test M96 audit 覆盖对齐，
         // 形状对齐 nextjs/msw/springboot：actor=target=登录用户，metadata={username}）
         await _audit.WriteAsync(
             currentTenantId.ToString(),
@@ -149,7 +149,7 @@ public class AuthController : AuthControllerBase
 
     public override Task Logout()
     {
-        // M03.F03.I05/I06 登出（无状态 JWT 仅前端清 cookie）
+        // M01.F04.I06/I06 登出（无状态 JWT 仅前端清 cookie）
         // 2026-08-31 contract-test M96.F02.I23：无返回 action ASP.NET 默认给 200 空体，
         // 家族契约（msw/springboot/nextjs）logout 是 204 noContent —— 显式对齐。
         Response.StatusCode = StatusCodes.Status204NoContent;
@@ -158,7 +158,7 @@ public class AuthController : AuthControllerBase
 
     public override Task<TokenResponse> Callback(OidcCallbackRequest body)
     {
-        // M03.F02.I03 OIDC Code 换取。
+        // M01.F04.I04 OIDC Code 换取。
         // 2026-08-31 contract-test M96.F02.I25：补错误分支 —— 缺 code/state/clientId
         // 原占位实现静默 200，与 msw/nextjs 的 400 分叉。
         if (string.IsNullOrEmpty(body?.Code) || string.IsNullOrEmpty(body.State))
@@ -175,7 +175,7 @@ public class AuthController : AuthControllerBase
 
     public override async Task<TokenResponse> Refresh(TokenRequest body)
     {
-        // M03.F02.I04 refresh token。
+        // M01.F04.I05 refresh token。
         // 2026-08-31 contract-test M96.F02.I24 修复：未知/垃圾 token 之前静默重发
         // （Guid.Empty 也签 token）；现在必须验 user 存在才发，否则 401。
         var match = Refresh格式(body?.RefreshToken)

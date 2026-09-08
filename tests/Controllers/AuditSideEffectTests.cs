@@ -93,10 +93,10 @@ public class AuditSideEffectTests
         return (controller, ctx);
     }
 
-    // M03.F01.I01 — login 成功写 login_success：actor=target=登录用户，metadata={username}
+    // M01.F04.I03 — login 成功写 login_success：actor=target=登录用户，metadata={username}
     // （形状对齐 nextjs app/api/v1/auth/login/route.ts 与 springboot AuthService）
     [Fact]
-    [Trait("Fn", "M03.F01.I01")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task Login_success_writesAuditEvent()
     {
         using var db = NewDb();
@@ -116,9 +116,9 @@ public class AuditSideEffectTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // M01.F01.I02 — 创建用户写 user_created：metadata={userId}
+    // M01.F04.I03 — 创建用户写 user_created：metadata={userId}
     [Fact]
-    [Trait("Fn", "M01.F01.I02")]
+    [Trait("Fn", "M01.F04.I03")]
     public async Task UsersPost_writesAuditEvent()
     {
         using var db = NewDb();
