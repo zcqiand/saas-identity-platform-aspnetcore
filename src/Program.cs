@@ -7,7 +7,7 @@ using Npgsql;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using Saas.Identity.AspNetCore.Security;
-using Saas.Identity.AspNetCore.Services;
+using Saas.Identity.AspNetCore.Infrastructure.Audit;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 
 // 2026-08-30 fail-fast：secret 缺失立即抛错，并指明缺哪个 key、去哪配。

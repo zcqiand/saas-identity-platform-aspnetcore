@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 
-namespace Saas.Identity.AspNetCore.Services;
+namespace Saas.Identity.AspNetCore.Infrastructure.Audit;
 
 /// <summary>
 /// M06.F03.I01 审计写入助手 —— 写端点副作用。所有 insert 共用同一形状：

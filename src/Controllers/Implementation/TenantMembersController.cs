@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
-using Saas.Identity.AspNetCore.Services;
+using Saas.Identity.AspNetCore.Infrastructure.Audit;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 

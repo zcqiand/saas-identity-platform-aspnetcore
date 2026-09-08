@@ -76,6 +76,15 @@ else:
 PY
 done
 
+# ADR-0027 §4: NSwag 产 `Controllers.cs` 单文件 → orphan check 视 stem `Controllers`
+# 为不在 shared 的 namespace → SAFE orphan。改名 `OAuth.cs`（stem `OAuth` ∈ shared
+# 期望集合），同 namespace 内的所有 abstract class + DTO 仍可编译。下一轮 gen-shared
+# 会重新生成同名 `Controllers.cs`，此处 rename 是稳定做法（post-process step 每次跑）。
+if [ -f "$CONTROLLERS" ]; then
+  mv "$CONTROLLERS" "$ROOT/src/Controllers/Generated/OAuth.cs"
+  echo "[gen-shared] renamed Controllers.cs → OAuth.cs (ADR-0027 §4 orphan fix)"
+fi
+
 echo "[gen-shared] OK"
 echo "[gen-shared]    DB schema 同步请跑: bash scripts/scaffold-dbcontext.sh（shared 已 db:migrate 之后）"
 
