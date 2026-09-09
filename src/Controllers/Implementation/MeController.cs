@@ -218,7 +218,7 @@ public class MeController : MeControllerBase
         {
             AccessToken = _jwt.IssueAccessToken(uid, tid),
             RefreshToken = JwtIssuer.GenerateRefreshToken(uid),
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
+            ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(_jwt.TtlSeconds),
             TenantId = tid,
         };
     }

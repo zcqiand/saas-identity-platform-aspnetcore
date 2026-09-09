@@ -51,6 +51,12 @@ public class JwtIssuer
     }
 
     /// <summary>
+    /// access token TTL（秒）。消费方（如 MeController 的 ExpiresAt 回显）必须用它，
+    /// 不许硬编码 —— 否则 JWT_TTL_SECONDS 调短后响应声称的有效期比 token 实际长。
+    /// </summary>
+    public int TtlSeconds => _ttlSeconds;
+
+    /// <summary>
     /// 发 access token。claims: sub (userId), tenant_id, jti。
     /// </summary>
     public string IssueAccessToken(Guid userId, Guid tenantId, int? ttlSeconds = null)

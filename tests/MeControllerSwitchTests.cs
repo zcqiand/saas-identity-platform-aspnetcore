@@ -17,17 +17,20 @@ namespace Saas.Identity.AspNetCore.Tests;
 /// </summary>
 public class MeControllerSwitchTests
 {
-    private static (AppDbContext db, JwtIssuer jwt) MakeDb(string name)
+    private static (AppDbContext db, JwtIssuer jwt) MakeDb(string name, int? ttlSeconds = null)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(name).Options;
         var db = new AppDbContext(options);
-        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var configPairs = new Dictionary<string, string?>
         {
             ["JWT_SIGNING_KEY"] = "test-signing-key-0123456789abcdef0123456789",
             ["JWT_ISSUER"] = "test-issuer",
             ["JWT_AUDIENCE"] = "test-audience",
-        }).Build();
+        };
+        if (ttlSeconds is not null)
+            configPairs["JWT_TTL_SECONDS"] = ttlSeconds.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var config = new ConfigurationBuilder().AddInMemoryCollection(configPairs).Build();
         return (db, new JwtIssuer(config));
     }
 
@@ -79,5 +82,53 @@ public class MeControllerSwitchTests
         Assert.Equal(tid.ToString(), jwtToken.Claims.First(c => c.Type == "tenant_id").Value);
         // refresh token 走 JwtIssuer.GenerateRefreshToken（saas-rt- 前缀，非 refresh- 假货）
         Assert.StartsWith("saas-rt-", resp.RefreshToken);
+    }
+
+    /// <summary>
+    /// ExpiresAt 必须来自 JwtIssuer 的 JWT_TTL_SECONDS 配置（可配），
+    /// 不是硬编码 AddHours(1)——短 TTL 配置下 ExpiresAt 应距 now ≤ TTL+缓冲。
+    /// </summary>
+    [Fact]
+    [Trait("Fn", "M01.F03.I02")]
+    public async Task Switch_expiresAt_followsJwtTtlSeconds_notHardcodedHour()
+    {
+        var (db, jwt) = MakeDb("switch-ttl", ttlSeconds: 60);
+        var uid = Guid.NewGuid();
+        var tid = Guid.NewGuid();
+        db.SysUsers.Add(new SysUser
+        {
+            Id = uid,
+            Username = "u2",
+            Password = "pw",
+            Email = "u2@t.cn",
+            Status = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        });
+        db.TenantMembers.Add(new TenantMember
+        {
+            Id = Guid.NewGuid(),
+            UserId = uid,
+            TenantId = tid,
+            MemberName = "u2",
+            IsOwner = false,
+            Status = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var http = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
+        http.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            { new(ClaimTypes.NameIdentifier, uid.ToString()) }));
+
+        var ctrl = new MeController(db, http, jwt);
+        var before = DateTimeOffset.UtcNow;
+        var resp = await ctrl.Switch(tid.ToString(), "lab-management");
+
+        // JWT_TTL_SECONDS=60 → ExpiresAt 距 before 不超过 70s（60 + 10s 缓冲）；
+        // 硬编码 AddHours(1) 会是 ~3600s，必红
+        Assert.True(resp.ExpiresAt - before <= TimeSpan.FromSeconds(70),
+            $"ExpiresAt should follow JWT_TTL_SECONDS=60, got delta={(resp.ExpiresAt - before).TotalSeconds:F0}s");
     }
 }
