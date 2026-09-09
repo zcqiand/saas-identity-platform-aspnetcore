@@ -201,6 +201,19 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   if ! grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env"; then
     append_if_missing SAAS_CORS_ALLOWED_ORIGINS "https://${NGINX_DOMAIN},https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk"
   fi
+  # origin 级无损追加（照抄 springboot 仓 1a1412e 模式）：存量白名单缺任一默认 origin 时
+  # 只补缺失 origin（不整值覆盖，运维手工 origin 保留）。白名单 4 域 = 本仓 NGINX_DOMAIN
+  # + saas-vue + saas-react + saas-nextjs；append-if-missing 只管 key 缺失路径，
+  # 存量 env-file 旧白名单（如只有 2 域）在此自愈。
+  for cors_origin in "https://${NGINX_DOMAIN}" \
+                     "https://saas-vue.xiangru.uk" \
+                     "https://saas-react.xiangru.uk" \
+                     "https://saas-nextjs.xiangru.uk"; do
+    if grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env" && ! grep '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env" | grep -qF "$cors_origin"; then
+      sed -i "s#^\(SAAS_CORS_ALLOWED_ORIGINS=.*\)#\1,${cors_origin}#" "$BASE/aspnetcore.env"
+      echo "→ reconcile SAAS_CORS_ALLOWED_ORIGINS: 追加缺失 origin ${cors_origin}（origin 级，不整值覆盖）"
+    fi
+  done
   # 死键清理:分段 key 无读者(Program.cs 读 flat),Saas__Cors__* 与 ASPNETCORE_ENVIRONMENT
   # 一并删除,保 key 集合与 .env.production 对齐
   for dead in Saas__Cors__AllowedOrigins ASPNETCORE_ENVIRONMENT; do
