@@ -35,6 +35,7 @@ trace = {
         # M00.F01.I03 — TenantGuard (tests/TenantGuardTests.cs，9/7 重构后保留的 2 个核心测试)
         {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch", "fns": ["M00.F01.I03"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",   "fns": ["M00.F01.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev", "fns": ["M00.F01.I03"], "inert": False},
 
         # M01.F04.I02 — FailedLoginStore (tests/Auth/Session/FailedLoginStoreTest.cs)
         {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements", "fns": ["M01.F04.I02"], "inert": False},

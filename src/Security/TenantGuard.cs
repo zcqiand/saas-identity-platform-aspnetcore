@@ -1,7 +1,5 @@
 namespace Saas.Identity.AspNetCore.Security;
 
-using Microsoft.Extensions.Hosting;
-
 /// <summary>
 /// Verifies that a tenant-scoped Controller method's path tenantId
 /// matches the JWT tenant_id claim. MANDATORY call at the start of
@@ -10,29 +8,25 @@ using Microsoft.Extensions.Hosting;
 /// If you skip this guard, an attacker can pass any tenantId in the URL
 /// and read another tenant's data — that's the whole point of this check.
 ///
-/// Dev fallback: 当 JWT 没认出来时（MSW/dev-helper 发的 alg=none token，
-/// 或者 token 过期），dev 期间信任 path tenantId 让本地能跑通。
-/// Production 仍按 JWT 严守，缺 claim 直接 throw。
+/// ADR-0019：JWT 缺 tenant_id claim 一律 401（throw），无 dev 兜底。
+/// JwtBearer v0.2.1 起已拒 alg=none dev token，缺 claim 的请求到不了这里——
+/// 旧 dev 分支（2026-09-10 审计红线 #3）已删。
 /// </summary>
 public class TenantGuard
 {
     private readonly TenantContext _context;
-    private readonly IHostEnvironment? _env;
 
-    public TenantGuard(TenantContext context, IHostEnvironment? env = null)
+    public TenantGuard(TenantContext context)
     {
         _context = context;
-        _env = env;
     }
 
     public void VerifyPathTenant(string pathTenantId)
     {
         var jwtTenantId = _context.CurrentTenantId();
 
-        // Dev 兜底：JWT 没 claim 时信 path。MSW 发 alg=none dev token 当前无法过 JwtBearer 8。
         if (string.IsNullOrEmpty(jwtTenantId))
         {
-            if (_env?.IsDevelopment() == true) return;
             throw new UnauthorizedAccessException(
                 $"tenant mismatch: path={pathTenantId} jwt={jwtTenantId}");
         }
