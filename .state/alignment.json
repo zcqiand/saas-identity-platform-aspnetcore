@@ -6,7 +6,7 @@
     "features": 13,
     "items": 55
   },
-  "warnings_total": 105,
+  "warnings_total": 102,
   "warnings": {
     "已上线但无设计映射": [
       "M00.F01.I01",
@@ -54,10 +54,7 @@
       "M00.F04.I01",
       "M01.F02.I01",
       "M04.F01.I03",
-      "M04.F01.I04",
-      "M04.F01.I05",
       "M04.F01.I06",
-      "M04.F02.I01",
       "M04.F04.I03",
       "M04.F04.I04",
       "M04.F04.I05",
@@ -158,8 +155,10 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.Applications_ops_guardRejectsForeignTenant",
         "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",
-        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch"
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch",
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev"
       ],
       "entry": []
     },
@@ -401,6 +400,7 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsGet_listsTenantScoped",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:970 (path)"
       ],
       "entry": []
@@ -413,6 +413,9 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_duplicateSubscription_throws",
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_subscribesClient",
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_unknownClient_throws404",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:970 (path)"
       ],
       "entry": []
@@ -424,7 +427,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPatch_updatesStatusAndExpiry"
+      ],
       "entry": []
     },
     "M00.F05.I04": {
@@ -434,7 +439,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsDelete_removesSubscription"
+      ],
       "entry": []
     },
     "M01.F01.I01": {
@@ -483,6 +490,7 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.MeControllerSwitchTests.Switch_returnsHs256Token_notAlgNone",
         "output\\saas-identity-platform-contract-test\\tests\\me-switch.test.ts:2204 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\me-switch.test.ts:729 (path)"
       ],
@@ -597,6 +605,7 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_listsPaged",
         "output\\saas-identity-platform-contract-test\\tests\\admin-clients-write.test.ts:891 (path)"
       ],
       "entry": []
@@ -609,6 +618,7 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPost_persistsAndReturnsDto",
         "output\\saas-identity-platform-contract-test\\tests\\admin-clients-write.test.ts:891 (path)"
       ],
       "entry": []
@@ -630,7 +640,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_byClientId_returnsDetail",
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPatch_updatesName"
+      ],
       "entry": []
     },
     "M04.F01.I05": {
@@ -640,7 +653,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsDelete_removesAndSets204"
+      ],
       "entry": []
     },
     "M04.F01.I06": {
@@ -660,7 +675,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.Status_patchUpdatesStatus"
+      ],
       "entry": []
     },
     "M04.F03.I01": {
