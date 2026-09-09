@@ -208,6 +208,7 @@ builder.Services.AddScoped<TenantRolesController>();
 builder.Services.AddScoped<TenantRoleMenusController>();
 builder.Services.AddScoped<IAuditWriter, AuditWriter>();
 builder.Services.AddScoped<TenantMembersController>();
+builder.Services.AddScoped<TenantApplicationsController>();
 
 var app = builder.Build();
 

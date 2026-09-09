@@ -45,6 +45,14 @@ trace = {
         {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsDelete_removesAndSets204", "fns": ["M04.F01.I05"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.Status_patchUpdatesStatus", "fns": ["M04.F02.I01"], "inert": False},
 
+        # M00.F05 — 租户应用订阅 CRUD（tests/TenantApplicationsControllerTests.cs，2026-09-10 审计补齐）
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_subscribesClient", "fns": ["M00.F05.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_unknownClient_throws404", "fns": ["M00.F05.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsGet_listsTenantScoped", "fns": ["M00.F05.I01"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPatch_updatesStatusAndExpiry", "fns": ["M00.F05.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsDelete_removesSubscription", "fns": ["M00.F05.I04"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.Applications_ops_guardRejectsForeignTenant", "fns": ["M00.F01.I03"], "inert": False},
+
         # M01.F04.I02 — FailedLoginStore (tests/Auth/Session/FailedLoginStoreTest.cs)
         {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements", "fns": ["M01.F04.I02"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockedUser_throwsLockedException", "fns": ["M01.F04.I02"], "inert": False},
