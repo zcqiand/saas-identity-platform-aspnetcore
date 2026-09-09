@@ -188,6 +188,15 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   append_if_missing PG_USER 'postgres'
   append_if_missing PG_PASSWORD 'changeme'
   append_if_missing PG_DATABASE 'saas_prod'
+
+  # 一次性 stale 值 reconcile —— append_if_missing 只补 key, 不覆盖值。
+  # port-scheme 5100/5200 迁移前老 env-file 写 SERVER_PORT=8080,与 Dockerfile/aspnetcore
+  # 监听 5104 + docker run -p ...:5104 不一致 → Kestrel 监听错端口, 探针 connection-refused。
+  # 同 springboot 仓 reconcile 范本 (migrate_if_stale KEY OLD NEW)。
+  if grep -q '^SERVER_PORT=8080$' "$BASE/aspnetcore.env"; then
+    sed -i 's/^SERVER_PORT=8080$/SERVER_PORT=5104/' "$BASE/aspnetcore.env"
+    echo "→ reconcile SERVER_PORT: 8080 → 5104 (port-scheme 5100/5200 迁移残留)"
+  fi
   # CORS:老值保留(运维可能手工补过 prod origin),只在缺失时写默认白名单
   if ! grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env"; then
     append_if_missing SAAS_CORS_ALLOWED_ORIGINS "https://${NGINX_DOMAIN},https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk"
