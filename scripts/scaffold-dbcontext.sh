@@ -169,21 +169,27 @@ old_pattern = re.compile(
 )
 new_text = (
     r'\1'
+    '    {\n'
+    '        # EF standard: explicit options (test InMemory / Program.cs DI NpgsqlDataSource)\n'
+    '        # already configured — do not override. Only design-time tools (scaffold) with\n'
+    '        # no options fall through to the env read + fail-fast below.\n'
+    '        if (optionsBuilder.IsConfigured) return;\n'
     '#pragma warning disable CS1030 // scaffold 模板 #warning（连接串由 env 注入，CLAUDE.md §2 fail-fast）\n'
     r'\2'
     '#pragma warning restore CS1030\n'
-    r'        => optionsBuilder.UseNpgsql(\n'
+    r'        optionsBuilder.UseNpgsql(\n'
     r'            System.Environment.GetEnvironmentVariable("DATABASE_URL")\n'
     r'                ?? throw new System.InvalidOperationException(\n'
     r'                    "DATABASE_URL 未设置。dev 加载 .env.test/.env.local；prod 由 deploy 脚本写入 VPS env-file。"\n'
     r'                    + "本规则遵循 CLAUDE.md §2 「禁止 env 默认值兜底」：secret 缺失必须 fail-fast。"\n'
-    r'                    + "（runtime 走 Program.cs DI，不进 OnConfiguring；本 fallback 仅供 EF design-time 工具）"));'
+    r'                    + "（runtime 走 Program.cs DI，不进 OnConfiguring；本 fallback 仅供 EF design-time 工具）"));\n'
+    r'    }'
 )
 if old_pattern.search(src):
     src = old_pattern.sub(new_text, src, count=1)
     with open(p, 'w', encoding='utf-8') as f:
         f.write(src)
-    print('[scaffold-dbcontext]    OnConfiguring 改 env 读取（清硬编码 password）')
+    print('[scaffold-dbcontext]    OnConfiguring 改 env 读取（清硬编码 password）+ IsConfigured guard（保 InMemory/DI 显式 options 不被覆盖）')
 else:
     print('[scaffold-dbcontext]    WARN: OnConfiguring 模式未匹配，password 可能仍是硬编码（CLAUDE.md §2 风险）', file=sys.stderr)
 PYEOF

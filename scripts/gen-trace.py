@@ -61,6 +61,9 @@ trace = {
         # OauthControllerTests 整文件 #if false（pre-existing 烂测试）。真覆盖走 contract-test 仓
         # 跨端 live（start-family.sh + 4 后端 vitest）承担。M04.F03.I01/I02/I03 的 trace 锚点
         # 由 contract-test 仓 M96.F02.I21 + aspnetcore flow-function-map.md 登记承担。
+
+        # M01.F03.I02 — 切换当前租户（tests/MeControllerSwitchTests.cs，2026-09-10 审计红线 #4 修复随附）
+        {"test": "Saas.Identity.AspNetCore.Tests.MeControllerSwitchTests.Switch_returnsHs256Token_notAlgNone", "fns": ["M01.F03.I02"], "inert": False},
     ],
 }
 

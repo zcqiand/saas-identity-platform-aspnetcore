@@ -10,7 +10,8 @@ namespace Saas.Identity.AspNetCore.Tests;
 /// </summary>
 public class StubTenantContext : TenantContext
 {
-    public string TenantId { get; set; } = "";
+    /// <summary>可空：null 模拟「JWT 无 tenant_id claim」场景（ADR-0019 审计红线 #3 测试）。</summary>
+    public string? TenantId { get; set; }
 
     public StubTenantContext() : base(null) { }
 

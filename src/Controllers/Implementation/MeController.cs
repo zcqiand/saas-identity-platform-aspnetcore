@@ -5,7 +5,6 @@ using DbUser = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.Sys
 using DtoSysMenu = Saas.Identity.AspNetCore.Controllers.Generated.SysMenu;
 using DtoTenantMember = Saas.Identity.AspNetCore.Controllers.Generated.TenantMember;
 using System.Security.Claims;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 // disambiguate DTO vs entity
@@ -26,11 +25,13 @@ public class MeController : MeControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IHttpContextAccessor _http;
+    private readonly JwtIssuer _jwt;
 
-    public MeController(AppDbContext db, IHttpContextAccessor http)
+    public MeController(AppDbContext db, IHttpContextAccessor http, JwtIssuer jwt)
     {
         _db = db;
         _http = http;
+        _jwt = jwt;
     }
 
     private Guid? CurrentUserId()
@@ -39,13 +40,6 @@ public class MeController : MeControllerBase
                   ?? _http.HttpContext?.User.FindFirstValue("sub");
         return Guid.TryParse(sub, out var id) ? id : null;
     }
-
-    private static string B64Url(string s) =>
-        Convert.ToBase64String(Encoding.UTF8.GetBytes(s))
-            .Replace("=", "").Replace("+", "-").Replace("/", "_");
-
-    private static string IssueAccessToken(Guid userId, Guid tenantId) =>
-        $"{B64Url("{\"alg\":\"none\"}")}.{B64Url($"{{\"sub\":\"{userId}\",\"tenant_id\":\"{tenantId}\",\"exp\":{((DateTimeOffset)DateTime.UtcNow.AddHours(1)).ToUnixTimeSeconds()}}}")}.dev-placeholder";
 
     public override async Task<CurrentUser> Me()
     {
@@ -222,8 +216,8 @@ public class MeController : MeControllerBase
             throw new KeyNotFoundException($"user {uid} is not a member of tenant {tid}");
         return new SwitchTenantResponse
         {
-            AccessToken = IssueAccessToken(uid, tid),
-            RefreshToken = $"refresh-{uid}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}",
+            AccessToken = _jwt.IssueAccessToken(uid, tid),
+            RefreshToken = JwtIssuer.GenerateRefreshToken(uid),
             ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             TenantId = tid,
         };
