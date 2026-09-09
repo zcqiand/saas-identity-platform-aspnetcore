@@ -1,20 +1,20 @@
 {
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
-  "passed": true,
+  "passed": false,
   "partial": true,
   "ran": [
-    "L0"
+    "L0.5"
   ],
-  "checked_at": "2026-08-12T12:36:46+0800",
+  "checked_at": "2026-09-09T19:13:14+0800",
   "gates": [
     {
-      "level": "L0",
-      "name": "结构完整性",
-      "passed": true,
-      "returncode": 0,
+      "level": "L0.5",
+      "name": "env 一致性",
+      "passed": false,
+      "returncode": 1,
       "duration_s": 0.093,
-      "output": ""
+      "output": "- nextjs: .env.local 缺 key(存在即须与 example 全集对齐,值可私有): DATABASE_NAME, DATABASE_PASSWORD, DATABASE_USER, JWT_AUTHORITY, NEXT_PUBLIC_SAAS_BASE_URL, PG_DATABASE, PG_HOST, PG_PASSWORD, PG_PORT, PG_USER, SERVER_PORT\r\n  - nextjs: .env.local 多 key(example 里没有,疑似死变量/老 key 名): SAAS_CORS_ALLOWED_ORIGINS\r\n  - springboot: .env.local 缺 key(存在即须与 example 全集对齐,值可私有): JWT_AUTHORITY, PG_DATABASE, PG_HOST, PG_PASSWORD, PG_PORT, PG_USER\r\n  - aspnetcore: .env.local 缺 key(存在即须与 example 全集对齐,值可私有): DATABASE_PASSWORD, DATABASE_USER, PG_DATABASE, PG_HOST, PG_PASSWORD, PG_PORT, PG_USER\r\n  - nextjs: deploy 脚本(docker-entrypoint.sh, saas-identity-platform-nextjs.sh, setup-vps.sh)不会写入这些 key,而 .env.example 声明了它们: DATABASE_NAME, DATABASE_PASSWORD, DATABASE_USER, JWT_AUTHORITY, NEXT_PUBLIC_SAAS_BASE_URL, PG_DATABASE, PG_HOST, PG_PASSWORD, PG_PORT, PG_USER, SERVER_PORT。本地加 key 必须同步教 deploy 脚本(线上 env 由 CI 生成)。\r\n  - nextjs: deploy 脚本(docker-entrypoint.sh, saas-identity-platform-nextjs.sh, setup-vps.sh)写入这些 key,但 .env.example 没有声明(疑似死 key/老 key 名): SAAS_CORS_ALLOWED_ORIGINS。要么从脚本删掉,要么补进仓内 env 契约。\r\n  - springboot: deploy 脚本(saas-identity-platform-springboot.sh, setup-vps.sh)不会写入这些 key,而 .env.example 声明了它们: JWT_AUTHORITY, PG_DATABASE, PG_HOST, PG_PASSWORD, PG_PORT, PG_USER。本地加 key 必须同步教 deploy 脚本(线上 env 由 CI 生成)。\r\n  - aspnetcore: deploy 脚本(saas-identity-platform-aspnetcore.sh, setup-vps.sh)不会写入这些 key,而 .env.example 声明了它们: DATABASE_PASSWORD, DATABASE_USER, PG_DATABASE, PG_HOST, PG_PASSWORD, PG_PORT, PG_USER。本地加 key 必须同步教 deploy 脚本(线上 env 由 CI 生成)。"
     }
   ]
 }
