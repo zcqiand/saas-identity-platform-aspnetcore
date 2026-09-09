@@ -6,7 +6,7 @@
     "features": 13,
     "items": 55
   },
-  "warnings_total": 109,
+  "warnings_total": 105,
   "warnings": {
     "已上线但无设计映射": [
       "M00.F01.I01",
@@ -53,15 +53,11 @@
       "M00.F01.I05",
       "M00.F04.I01",
       "M01.F02.I01",
-      "M04.F01.I01",
-      "M04.F01.I02",
       "M04.F01.I03",
       "M04.F01.I04",
       "M04.F01.I05",
       "M04.F01.I06",
       "M04.F02.I01",
-      "M04.F04.I01",
-      "M04.F04.I02",
       "M04.F04.I03",
       "M04.F04.I04",
       "M04.F04.I05",
@@ -194,7 +190,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:2501 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:963 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-write-2.test.ts:1241 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-write.test.ts:987 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I02": {
@@ -204,7 +205,12 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:2501 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:963 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-write-2.test.ts:1241 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-write.test.ts:987 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I03": {
@@ -214,7 +220,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:3675 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I04": {
@@ -224,7 +232,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:3675 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I05": {
@@ -234,7 +244,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:3675 (path)"
+      ],
       "entry": []
     },
     "M00.F02.I06": {
@@ -388,7 +400,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:970 (path)"
+      ],
       "entry": []
     },
     "M00.F05.I02": {
@@ -398,7 +412,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:970 (path)"
+      ],
       "entry": []
     },
     "M00.F05.I03": {
@@ -580,7 +596,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-clients-write.test.ts:891 (path)"
+      ],
       "entry": []
     },
     "M04.F01.I02": {
@@ -590,7 +608,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\admin-clients-write.test.ts:891 (path)"
+      ],
       "entry": []
     },
     "M04.F01.I03": {
@@ -693,7 +713,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\client-menus-write.test.ts:1047 (path)"
+      ],
       "entry": []
     },
     "M04.F04.I02": {
@@ -703,7 +725,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\client-menus-write.test.ts:1047 (path)"
+      ],
       "entry": []
     },
     "M04.F04.I03": {
