@@ -48,6 +48,7 @@ trace = {
         # M00.F05 — 租户应用订阅 CRUD（tests/TenantApplicationsControllerTests.cs，2026-09-10 审计补齐）
         {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_subscribesClient", "fns": ["M00.F05.I02"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_unknownClient_throws404", "fns": ["M00.F05.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_duplicateSubscription_throws", "fns": ["M00.F05.I02"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsGet_listsTenantScoped", "fns": ["M00.F05.I01"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPatch_updatesStatusAndExpiry", "fns": ["M00.F05.I03"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsDelete_removesSubscription", "fns": ["M00.F05.I04"], "inert": False},

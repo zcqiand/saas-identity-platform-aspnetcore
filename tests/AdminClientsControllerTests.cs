@@ -95,6 +95,7 @@ public class AdminClientsControllerTests
         await ctrl.ClientsPost(MakeCreate());
         await ctrl.ClientsDelete("lab-management");
         Assert.Equal(0, await db.OauthClients.CountAsync());
+        Assert.Equal(204, ctrl.Response.StatusCode);
     }
 
     [Fact]

@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Controllers.Implementation;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
-using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated;
 using DbApp = Saas.Identity.AspNetCore.Infrastructure.Persistence.Generated.TenantApplication;
 using Saas.Identity.AspNetCore.Security;
@@ -66,6 +65,24 @@ public class TenantApplicationsControllerTests
         await Assert.ThrowsAsync<KeyNotFoundException>(() => ctrl.ApplicationsPost(
             TenantId.ToString(),
             new SubscribeTenantApplicationRequest { ClientId = "nope", ExpireTime = DateTimeOffset.UtcNow }));
+    }
+
+    [Fact]
+    [Trait("Fn", "M00.F05.I02")]
+    public async Task ApplicationsPost_duplicateSubscription_throws()
+    {
+        var (db, ctrl) = Make("tenant-apps-dup");
+        await ctrl.ApplicationsPost(TenantId.ToString(), new SubscribeTenantApplicationRequest
+        {
+            ClientId = "lab-management", ExpireTime = DateTimeOffset.UtcNow.AddYears(1),
+        });
+        await Assert.ThrowsAsync<ArgumentException>(() => ctrl.ApplicationsPost(
+            TenantId.ToString(), new SubscribeTenantApplicationRequest
+            {
+                ClientId = "lab-management", ExpireTime = DateTimeOffset.UtcNow.AddYears(2),
+            }));
+        // 拒绝后不落第二行
+        Assert.Equal(1, await db.TenantApplications.CountAsync(ta => ta.TenantId == TenantId));
     }
 
     [Fact]

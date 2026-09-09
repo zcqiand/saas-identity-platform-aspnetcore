@@ -59,12 +59,23 @@ public class TenantApplicationsController : TenantApplicationsControllerBase
         string tenantId, SubscribeTenantApplicationRequest body)
     {
         _guard.VerifyPathTenant(tenantId);
+        var tid = Guid.Parse(tenantId);
+        // 无 (tenant_id, client_id) unique index —— 应用层查重，拒绝重复订阅
+        //（否则 Patch/Delete 的 FirstOrDefaultAsync 会静默取任意一行）。
+        // ArgumentException → 400 INVALID_REQUEST（Program.cs 异常映射段已映射；InvalidOperationException 未映射会落 500）。
+        var duplicate = await _db.TenantApplications
+            .AnyAsync(ta => ta.TenantId == tid && ta.ClientId == body.ClientId);
+        if (duplicate)
+        {
+            throw new ArgumentException(
+                $"subscription already exists: tenant={tenantId} client={body.ClientId}");
+        }
         var client = await _db.OauthClients.FirstOrDefaultAsync(c => c.ClientId == body.ClientId)
             ?? throw new KeyNotFoundException($"client {body.ClientId} not found");
         var e = new DbApp
         {
             Id = Guid.NewGuid(),
-            TenantId = Guid.Parse(tenantId),
+            TenantId = tid,
             ClientId = body.ClientId,
             Status = 1, // active
             ExpireTime = body.ExpireTime.UtcDateTime,
