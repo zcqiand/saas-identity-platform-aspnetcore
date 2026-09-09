@@ -37,18 +37,20 @@ public partial class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // EF standard: when explicit options are already configured (test InMemory /
-        // Program.cs DI NpgsqlDataSource), do not override. Only design-time tools
-        // (scaffold) with no options fall through to env read + fail-fast below.
+        // EF standard: explicit options (test InMemory / Program.cs DI NpgsqlDataSource)
+        // already configured — do not override. Only design-time tools (scaffold) with
+        // no options fall through to the env read + fail-fast below.
         if (optionsBuilder.IsConfigured) return;
+#pragma warning disable CS1030 // scaffold 模板 #warning（连接串由 env 注入，CLAUDE.md §2 fail-fast）
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+#pragma warning restore CS1030
         optionsBuilder.UseNpgsql(
             System.Environment.GetEnvironmentVariable("DATABASE_URL")
                 ?? throw new System.InvalidOperationException(
                     "DATABASE_URL 未设置。dev 加载 .env.test/.env.local；prod 由 deploy 脚本写入 VPS env-file。"
                     + "本规则遵循 CLAUDE.md §2 「禁止 env 默认值兜底」：secret 缺失必须 fail-fast。"
-                    + "（runtime 走 Program.cs DI，不进 OnConfiguring；本 fallback 仅供 EF design-time 工具）"));
+                    + "（runtime 走 Program.cs DI，不进 OnConfiguring；本路径仅 EF design-time 工具触达）"));
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");
