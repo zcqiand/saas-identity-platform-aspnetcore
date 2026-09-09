@@ -4,7 +4,7 @@
   "api_synced_cmd": "gen-shared.sh",
   "shared_sha": "b749c18480fa9a95a09e0b4d1b3cf19c824f1d65",
   "consumer_repo": "saas-identity-platform-aspnetcore",
-  "db_synced_sha": "b749c18480fa9a95a09e0b4d1b3cf19c824f1d65",
-  "db_synced_at": "2026-09-09T08:24:44.282306+00:00",
+  "db_synced_sha": "4f6b02c5437625f455601d4f8a8607f1257aa0c7",
+  "db_synced_at": "2026-09-09T14:30:18.751044+00:00",
   "db_synced_cmd": "scaffold-dbcontext.sh"
 }

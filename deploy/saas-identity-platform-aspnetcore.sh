@@ -61,7 +61,7 @@ if [ ! -f "$BASE/aspnetcore.env" ]; then
     echo "ERROR: $BASE/aspnetcore.env missing and JWT_SIGNING_KEY env not set (add GitHub Secret JWT_SIGNING_KEY → ci.yml envs → ssh-action envs; JwtIssuer.cs fail-fast, 缺了容器起不来)" >&2
     exit 1
   fi
-  echo "→ bootstrapping $BASE/aspnetcore.env (key 集合 = .env.production, 9 key)"
+  echo "→ bootstrapping $BASE/aspnetcore.env (key 集合 = .env.production, 16 key)"
   umask 077
   {
     printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
@@ -73,6 +73,13 @@ if [ ! -f "$BASE/aspnetcore.env" ]; then
     printf 'JWT_TTL_SECONDS=3600\n'
     printf 'SERVER_PORT=5104\n'
     printf 'DATABASE_NAME=saas_prod\n'
+    printf 'DATABASE_USER=postgres\n'
+    printf 'DATABASE_PASSWORD=changeme\n'
+    printf 'PG_HOST=100.79.128.25\n'
+    printf 'PG_PORT=5432\n'
+    printf 'PG_USER=postgres\n'
+    printf 'PG_PASSWORD=changeme\n'
+    printf 'PG_DATABASE=saas_prod\n'
     printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
   } > "$BASE/aspnetcore.env"
   chown deploy:deploy "$BASE/aspnetcore.env" 2>/dev/null || true
@@ -174,6 +181,13 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   append_if_missing JWT_TTL_SECONDS '3600'
   append_if_missing SERVER_PORT '5104'
   append_if_missing DATABASE_NAME 'saas_prod'
+  append_if_missing DATABASE_USER 'postgres'
+  append_if_missing DATABASE_PASSWORD 'changeme'
+  append_if_missing PG_HOST '100.79.128.25'
+  append_if_missing PG_PORT '5432'
+  append_if_missing PG_USER 'postgres'
+  append_if_missing PG_PASSWORD 'changeme'
+  append_if_missing PG_DATABASE 'saas_prod'
   # CORS:老值保留(运维可能手工补过 prod origin),只在缺失时写默认白名单
   if ! grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env"; then
     append_if_missing SAAS_CORS_ALLOWED_ORIGINS "https://${NGINX_DOMAIN},https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk"
