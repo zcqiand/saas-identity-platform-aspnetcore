@@ -37,6 +37,14 @@ trace = {
         {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",   "fns": ["M00.F01.I03"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev", "fns": ["M00.F01.I03"], "inert": False},
 
+        # M04.F01 + M04.F02.I01 — admin OAuth client CRUD（tests/AdminClientsControllerTests.cs，2026-09-10 审计补齐）
+        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPost_persistsAndReturnsDto", "fns": ["M04.F01.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_listsPaged", "fns": ["M04.F01.I01"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_byClientId_returnsDetail", "fns": ["M04.F01.I04"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPatch_updatesName", "fns": ["M04.F01.I04"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsDelete_removesAndSets204", "fns": ["M04.F01.I05"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.Status_patchUpdatesStatus", "fns": ["M04.F02.I01"], "inert": False},
+
         # M01.F04.I02 — FailedLoginStore (tests/Auth/Session/FailedLoginStoreTest.cs)
         {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements", "fns": ["M01.F04.I02"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockedUser_throwsLockedException", "fns": ["M01.F04.I02"], "inert": False},

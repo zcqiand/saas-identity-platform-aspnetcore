@@ -200,6 +200,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<ClientMenusController>();
 builder.Services.AddScoped<ClientsController>();
 builder.Services.AddScoped<AdminTenantsController>();
+builder.Services.AddScoped<AdminClientsController>();
 builder.Services.AddScoped<AuthController>();
 builder.Services.AddScoped<MeController>();
 builder.Services.AddScoped<OauthController>();
