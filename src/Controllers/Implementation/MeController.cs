@@ -161,7 +161,6 @@ public class MeController : MeControllerBase
                 ClientId = m.ClientId,
                 ParentId = m.ParentId,
                 Title = m.Title,
-                
                 Path = m.Path,
                 Icon = m.Icon,
                 Type = m.Type switch

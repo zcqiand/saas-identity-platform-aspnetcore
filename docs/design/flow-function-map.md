@@ -19,10 +19,10 @@ flowchart TD
 
 | 步骤 | 名称 | 角色 | 输入 | 输出 | 状态流转 | 支撑功能子项 |
 |---|---|---|---|---|---|---|
-| S01 | 授权码签发 | 资源方应用（client） | client_id / redirect_uri / scopes / 用户会话 | saas-code-{ts}-{rand}（TTL 10min，落 oauth_codes） | code: issued → consumed | M04.F03.I07 |
-| S02 | 授权码换令牌 | 资源方应用 | code + client 凭据 + redirect_uri | access token（HS256 JwtIssuer）+ refresh_token（TTL 7d） | code: issued → consumed; refresh: active | M04.F03.I08 |
+| S01 | 授权码签发 | 资源方应用（client） | client_id / redirect_uri / scopes / 用户会话 | saas-code-{ts}-{rand}（TTL 10min，落 oauth_codes） | code: issued → consumed | M04.F03.I01 |
+| S02 | 授权码换令牌 | 资源方应用 | code + client 凭据 + redirect_uri | access token（HS256 JwtIssuer）+ refresh_token（TTL 7d） | code: issued → consumed; refresh: active | M04.F03.I02 |
 | S03 | 访问资源 | 资源方应用 | Bearer access token | 资源方本地校验后的业务响应 | — | （资源方仓条目） |
-| S04 | 令牌刷新 | 资源方应用 | refresh_token | 新 access + 新 refresh（旋转换发） | refresh: old → consumed, new → active | M04.F03.I09 |
+| S04 | 令牌刷新 | 资源方应用 | refresh_token | 新 access + 新 refresh（旋转换发） | refresh: old → consumed, new → active | M04.F03.I03 |
 
 ### 评审时问这四个问题
 
@@ -40,4 +40,4 @@ flowchart TD
 | M09.F02.I02 | 设置角色菜单（PUT /tenants/:t/roles/:r/menus，整批替换 role_menu_grants） | 接口 | tenant admin 操作用；前端角色管理页流程图尚未落地 |
 | M09.F03.I04 | app 分组映射（按 app.code 输出 Map<appCode, List<EffectiveMenuNode>>） | 接口 | GET /me/menus 装配链路第三步；不独立暴露，归属 M09.F03 「当前用户有效菜单」装配流程 |
 
-（本批次 FLOW-OAUTH-01 登记的 M04.F03.I07-I09 均已归入授权码流程。）
+（本批次 FLOW-OAUTH-01 登记的 M04.F03.I01-I03 均已归入授权码流程。）

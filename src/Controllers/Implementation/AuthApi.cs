@@ -120,7 +120,7 @@ public class AuthController : AuthControllerBase
             {
                 Id = user.Id,
                 Username = user.Username,
-                                Email = user.Email,
+                Email = user.Email,
                 Mobile = user.Mobile,
                 Status = (SysUserStatus)user.Status,
                 FailedAttempts = user.FailedAttempts,

@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Saas.Identity.AspNetCore</RootNamespace>
     <AssemblyName>Saas.Identity.AspNetCore</AssemblyName>
+    <!-- CS1030 = scaffold 模板自带 #warning「保护连接串」，scaffold-dbcontext.sh 产物。
+         L2 gate 用 /p:TreatWarningsAsErrors=true，把 #warning 升级为 error。
+         连接串真实来源是 env（ADR-0019），scaffold 模板文字仅占位，靠 ADR-0019 部署链注入。
+         不在 Generated/*.cs 上手改是 ADR-0025 D7 约束；NoWarn 集中抑制。 -->
+    <NoWarn>$(NoWarn);CS1030</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

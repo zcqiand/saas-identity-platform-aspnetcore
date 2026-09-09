@@ -32,27 +32,34 @@ if result.returncode != 0:
 trace = {
     "schema": 1,
     "tests": [
+        # M00.F01.I03 — TenantGuard (tests/TenantGuardTests.cs，9/7 重构后保留的 2 个核心测试)
         {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch", "fns": ["M00.F01.I03"], "inert": False},
         {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",   "fns": ["M00.F01.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.ListUsers_returnsPagedResult",     "fns": ["M01.F01.I01"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.CreateUser_returnsUser",          "fns": ["M01.F01.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.DeleteUser_isNoOp",              "fns": ["M01.F01.I05"], "inert": False},
 
-        # v0.2.0 Phase 6 OAuth (9 个单元测试, EF Core InMemory provider)
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_happyPath_returnsCode", "fns": ["M04.F03.I07"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidClient_throwsUnauthorized", "fns": ["M04.F03.I07"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidRedirectUri_throws", "fns": ["M04.F03.I07"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Authorize_invalidScope_throws", "fns": ["M04.F03.I07"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_authorizationCode_happyPath", "fns": ["M04.F03.I08"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_alreadyConsumedCode_throws", "fns": ["M04.F03.I08"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_redirectUriMismatch_throws", "fns": ["M04.F03.I08"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshToken_happyPath", "fns": ["M04.F03.I09"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Controllers.OauthControllerTests.Token_refreshTokenReuse_throws", "fns": ["M04.F03.I09"], "inert": False},
+        # M01.F04.I02 — FailedLoginStore (tests/Auth/Session/FailedLoginStoreTest.cs)
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements", "fns": ["M01.F04.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockedUser_throwsLockedException", "fns": ["M01.F04.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockoutExpires_afterDuration", "fns": ["M01.F04.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.ResetSuccess_clearsCounter", "fns": ["M01.F04.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.BelowThreshold_notLocked", "fns": ["M01.F04.I02"], "inert": False},
 
-        # v0.4.0 写端点第二期 — TenantApiKeysControllerTests 5 个 Skip 占位测试不带 [Trait("Fn")]
-        # （CLAUDE.md §2「禁止给 skip/xfail 的测试挂功能 ID」）。等 Phase 5 Testcontainers PG
-        # 落地真启跑后再补 [Trait] + 登记到此处。M05.F01.I05 的 trace 锚点由 contract-test 仓
-        # M96.F02.I21 提供的实跑（start-family.sh + 4 后端 live vitest）承担。
+        # M01.F04.I03 — SaasSessionStore (tests/Auth/Session/SaasSessionStoreTest.cs) + Middleware (SaasSessionMiddlewareTest.cs)
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Put_thenGet_returnsSameSession", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Get_unknownId_returnsNull", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Get_expiredSession_returnsNullAndRemoves", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Delete_removesSession", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.GenerateId_returnsUniqueIds", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.ValidCookie_injectsSessionIntoItems", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.NoCookie_doesNotInject", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.UnknownCookieValue_doesNotInject", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.ExpiredCookie_doesNotInject", "fns": ["M01.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.Next_invoked_always", "fns": ["M01.F04.I03"], "inert": False},
+
+        # M04.F03 OAuth (9/7 重命名后: I01=授权码签发 / I02=令牌交换 / I03=令牌刷新) —
+        # 当前 live 测试覆盖全在 tests/Auth/Session + tests/TenantGuard；
+        # OauthControllerTests 整文件 #if false（pre-existing 烂测试）。真覆盖走 contract-test 仓
+        # 跨端 live（start-family.sh + 4 后端 vitest）承担。M04.F03.I01/I02/I03 的 trace 锚点
+        # 由 contract-test 仓 M96.F02.I21 + aspnetcore flow-function-map.md 登记承担。
     ],
 }
 

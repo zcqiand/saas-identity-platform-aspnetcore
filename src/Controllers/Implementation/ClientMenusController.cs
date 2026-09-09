@@ -75,7 +75,7 @@ public class ClientMenusController : ClientMenusControllerBase
         if (body.Title != null) e.Title = body.Title;
         if (body.Path != null) e.Path = body.Path;
         if (body.Icon != null) e.Icon = body.Icon;
-        if (body.ParentId != null && Guid.TryParse(body.ParentId.ToString(), out var pid)) e.ParentId = pid;
+        if (Guid.TryParse(body.ParentId.ToString(), out var pid)) e.ParentId = pid;
         e.Type = (short)body.Type;
         e.SortOrder = body.SortOrder;
         e.Status = (short)body.Status;
