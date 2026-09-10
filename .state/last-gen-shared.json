@@ -1,6 +1,6 @@
 {
   "api_synced_sha": "b28d58756c02600a32d23a0d740c367551eea476",
-  "api_synced_at": "2026-09-10T05:36:05.419507+00:00",
+  "api_synced_at": "2026-09-10T06:42:12.063347+00:00",
   "api_synced_cmd": "gen-shared.sh",
   "shared_sha": "cd515224c328e839f8cfcda627191bbcdfb59bc8",
   "consumer_repo": "saas-identity-platform-aspnetcore",
