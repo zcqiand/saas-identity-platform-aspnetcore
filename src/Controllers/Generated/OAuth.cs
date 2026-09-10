@@ -265,11 +265,11 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SysRoleMenu>> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
+        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SysRoleMenu>> MenusPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetSysRoleMenusRequest body);
+        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetSysRoleMenusRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
         [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
@@ -835,6 +835,37 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RoleMenuGrant
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("roleId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid RoleId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("menuIds")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.List<string> MenuIds { get; set; } = new System.Collections.Generic.List<string>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset UpdatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class SetSysRoleMenusRequest
     {
 
@@ -1061,29 +1092,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class SysRoleMenu
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("roleId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid RoleId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("menuId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid MenuId { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class SysUser
     {
 
@@ -1139,8 +1147,11 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Runtime.Serialization.EnumMember(Value = @"active")]
         Active = 0,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"invited")]
+        Invited = 1,
+
         [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
-        Disabled = 1,
+        Disabled = 2,
 
     }
 

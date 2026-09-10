@@ -79,6 +79,19 @@ trace = {
         # 跨端 live（start-family.sh + 4 后端 vitest）承担。M04.F03.I01/I02/I03 的 trace 锚点
         # 由 contract-test 仓 M96.F02.I21 + aspnetcore flow-function-map.md 登记承担。
 
+        # M00.F04.I02-I04 — role-menus 聚合返回（tests/TenantRoleMenusControllerTests.cs，2026-09-10 I20 方案 C）
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusGet_returnsGrantAggregate", "fns": ["M00.F04.I02"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_returnsGrantAggregate", "fns": ["M00.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_replacesAll", "fns": ["M00.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_unknownRole_throws404", "fns": ["M00.F04.I03"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.RoleMenus_ops_guardRejectsForeignTenant", "fns": ["M00.F01.I03"], "inert": False},
+
+        # M00.F02.I01/I06/I08 — invitation status=invited 真 user 行 + status 枚举显式映射（tests/TenantMembersControllerTests.cs，2026-09-10 I42 方案 C）
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Invitations_createsInvitedUserAndActiveMember", "fns": ["M00.F02.I06"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_mapsDbStatusToEnum_notRawCast", "fns": ["M00.F02.I01"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_statusFilter_usesDbValueNotEnumNumber", "fns": ["M00.F02.I01"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Status_endpoint_writesDbValueNotEnumNumber", "fns": ["M00.F02.I08"], "inert": False},
+
         # M01.F03.I02 — 切换当前租户（tests/MeControllerSwitchTests.cs，2026-09-10 审计红线 #4 修复随附）
         {"test": "Saas.Identity.AspNetCore.Tests.MeControllerSwitchTests.Switch_returnsHs256Token_notAlgNone", "fns": ["M01.F03.I02"], "inert": False},
     ],

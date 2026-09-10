@@ -4,15 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
-// alias to disambiguate DTO SysRoleMenu from entity (no entity equivalent — pure DTO)
-using ApiRoleMenu = Saas.Identity.AspNetCore.Controllers.Generated.SysRoleMenu;
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>
 /// Concrete M00.F04 角色菜单授权（tenant-scoped）。
-/// v0.5.0 NSwag 重 emit：RoleMenuGrant DTO → SysRoleMenu（直接反映 sys_role_menu 表）；
-/// 端点全部加 clientId 必填 query；EF skip nav（SysRole.Menus）保留不变。
+/// 2026-09-10 I20 方案 C：GET/PUT 切 RoleMenuGrant 聚合返回（{roleId, tenantId, menuIds[], updatedAt}，
+/// 与 msw/nextjs 对齐）；SysRoleMenu 行 DTO 已从 shared 契约移除。
+/// v0.5.0 端点 clientId 必填 query；EF skip nav（SysRole.Menus）保留不变。
 /// </summary>
 public class TenantRoleMenusController : TenantRoleMenusControllerBase
 {
@@ -25,7 +24,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         _db = db;
     }
 
-    public override async Task<ICollection<ApiRoleMenu>> MenusGet(string tenantId, string roleId, string clientId)
+    public override async Task<RoleMenuGrant> MenusGet(string tenantId, string roleId, string clientId)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
@@ -33,14 +32,10 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
             .Include(r => r.Menus)
             .FirstOrDefaultAsync(r => r.Id == id)
             ?? throw new KeyNotFoundException($"role {roleId} not found");
-        return role.Menus.Select(m => new ApiRoleMenu
-        {
-            RoleId = role.Id,
-            MenuId = m.Id,
-        }).ToList();
+        return ToGrant(role);
     }
 
-    public override async Task<ICollection<ApiRoleMenu>> MenusPut(string tenantId, string roleId, string clientId, SetSysRoleMenusRequest body)
+    public override async Task<RoleMenuGrant> MenusPut(string tenantId, string roleId, string clientId, SetSysRoleMenusRequest body)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
@@ -61,13 +56,9 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
             var newMenus = await _db.SysMenus.Where(m => menuIds.Contains(m.Id)).ToListAsync();
             foreach (var m in newMenus) role.Menus.Add(m);
         }
-        role.UpdatedAt = DateTime.UtcNow;
+        role.UpdatedAt = DateTime.UtcNow; // touch — 聚合 updatedAt 来源（家族约定）
         await _db.SaveChangesAsync();
-        return role.Menus.Select(m => new ApiRoleMenu
-        {
-            RoleId = role.Id,
-            MenuId = m.Id,
-        }).ToList();
+        return ToGrant(role);
     }
 
     public override async Task MenusDelete(string tenantId, string roleId, string clientId)
@@ -82,4 +73,12 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         role.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
     }
+
+    private static RoleMenuGrant ToGrant(DbRole role) => new()
+    {
+        RoleId = role.Id,
+        TenantId = role.TenantId,
+        MenuIds = role.Menus.Select(m => m.Id.ToString()).ToList(),
+        UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(role.UpdatedAt, DateTimeKind.Utc)),
+    };
 }

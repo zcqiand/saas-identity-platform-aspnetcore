@@ -58,7 +58,7 @@ public class TenantMembersController : TenantMembersControllerBase
             TenantId = m.TenantId,
             MemberName = m.MemberName,
             IsOwner = m.IsOwner,
-            Status = (TenantMemberStatus)(int)m.Status,
+            Status = MapMemberStatus(m.Status),
             CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(m.CreatedAt, DateTimeKind.Utc)),
             UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(m.UpdatedAt, DateTimeKind.Utc)),
         },
@@ -68,7 +68,7 @@ public class TenantMembersController : TenantMembersControllerBase
             Username = u.Username,
             Email = u.Email,
             Mobile = u.Mobile,
-            Status = (SysUserStatus)(int)u.Status,
+            Status = MapUserStatus(u.Status),
             FailedAttempts = u.FailedAttempts,
             LockedUntil = u.LockedUntil != null ? new DateTimeOffset(DateTime.SpecifyKind(u.LockedUntil.Value, DateTimeKind.Utc)) : default,
             CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(u.CreatedAt, DateTimeKind.Utc)),
@@ -77,6 +77,23 @@ public class TenantMembersController : TenantMembersControllerBase
         Roles = m.Roles?.Select(r => r.Id.ToString()).ToList() ?? new List<string>(),
     };
 
+    // DB smallint（1=active, 2=invited, 0=disabled）→ 生成枚举（Active=0/Invited=1/Disabled=2 按声明顺序编号）。
+    // 旧裸 cast (SysUserStatus)(int)u.Status 与 DB 值域错位（2026-09-10 I42 修复随带）。
+    private static SysUserStatus MapUserStatus(short db) => db switch
+    {
+        1 => SysUserStatus.Active,
+        2 => SysUserStatus.Invited,
+        _ => SysUserStatus.Disabled,
+    };
+
+    // DB smallint（1=active, 0=disabled）→ 生成枚举（Active=0/Disabled=1）。同款错位随带修。
+    private static TenantMemberStatus MapMemberStatus(short db)
+        => db == 1 ? TenantMemberStatus.Active : TenantMemberStatus.Disabled;
+
+    // 枚举 → DB smallint（MapMemberStatus 反向；Status 端点写入用，避免把 Active 写成 DB 0=disabled）
+    private static short ToDbMemberStatus(TenantMemberStatus s)
+        => s == TenantMemberStatus.Active ? (short)1 : (short)0;
+
     public override async Task<Response5> MembersGet(string tenantId, int? page, int? pageSize, TenantMemberStatus? status)
     {
         _guard.VerifyPathTenant(tenantId);
@@ -84,7 +101,7 @@ public class TenantMembersController : TenantMembersControllerBase
         var p = page ?? 0;
         var ps = pageSize ?? 20;
         var q = _db.TenantMembers.Where(m => m.TenantId == tid);
-        if (status.HasValue) q = q.Where(m => m.Status == (short)status.Value);
+        if (status.HasValue) q = q.Where(m => m.Status == ToDbMemberStatus(status.Value));
         var items = await q.OrderByDescending(m => m.CreatedAt).Skip(p * ps).Take(ps).ToListAsync();
         var total = await q.CountAsync();
         return new Response5
@@ -141,7 +158,7 @@ public class TenantMembersController : TenantMembersControllerBase
             Username = body.Email ?? Guid.NewGuid().ToString(),
             Password = "",
             Email = body.Email,
-            Status = 1,
+            Status = 2, // invited（I42：invitation 建的是 status=2 invited 真 user 行，不是 1 active）
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -151,7 +168,8 @@ public class TenantMembersController : TenantMembersControllerBase
             Id = Guid.NewGuid(),
             TenantId = Guid.Parse(tenantId),
             UserId = user.Id,
-            Status = 1,
+            MemberName = user.Username, // 家族约定：invitation 响应 memberName = username（= email）
+            Status = 1, // member 立即 active（I42 oracle：user=invited, member=active）
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
@@ -218,7 +236,7 @@ public class TenantMembersController : TenantMembersControllerBase
         var uid = Guid.Parse(userId);
         var member = await _db.TenantMembers.FirstOrDefaultAsync(m => m.UserId == uid && m.TenantId == Guid.Parse(tenantId))
             ?? throw new KeyNotFoundException("Member not found");
-        member.Status = (short)body.Status;
+        member.Status = ToDbMemberStatus(body.Status);
         await _db.SaveChangesAsync();
         var u = await _db.SysUsers.FirstAsync(x => x.Id == member.UserId); return ToDto(member, u);
     }

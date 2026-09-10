@@ -158,7 +158,8 @@
         "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.Applications_ops_guardRejectsForeignTenant",
         "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",
         "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch",
-        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev"
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev",
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.RoleMenus_ops_guardRejectsForeignTenant"
       ],
       "entry": []
     },
@@ -190,6 +191,8 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_mapsDbStatusToEnum_notRawCast",
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_statusFilter_usesDbValueNotEnumNumber",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:2501 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-members-read.test.ts:963 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-members-write-2.test.ts:1241 (path)",
@@ -255,7 +258,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Invitations_createsInvitedUserAndActiveMember"
+      ],
       "entry": []
     },
     "M00.F02.I07": {
@@ -275,7 +280,9 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Status_endpoint_writesDbValueNotEnumNumber"
+      ],
       "entry": []
     },
     "M00.F03.I01": {
@@ -287,7 +294,7 @@
       "designs": [],
       "tests": [
         "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:1078 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1167 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1089 (path)"
       ],
       "entry": []
     },
@@ -300,7 +307,7 @@
       "designs": [],
       "tests": [
         "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:1078 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1167 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1089 (path)"
       ],
       "entry": []
     },
@@ -358,9 +365,10 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusGet_returnsGrantAggregate",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-role-menus-write.test.ts:1223 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:3698 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1271 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1193 (path)"
       ],
       "entry": []
     },
@@ -372,9 +380,12 @@
       "flows": [],
       "designs": [],
       "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_replacesAll",
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_returnsGrantAggregate",
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_unknownRole_throws404",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-role-menus-write.test.ts:1223 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:3698 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1271 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1193 (path)"
       ],
       "entry": []
     },
@@ -388,7 +399,7 @@
       "tests": [
         "output\\saas-identity-platform-contract-test\\tests\\tenant-role-menus-write.test.ts:1223 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-read.test.ts:3698 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1271 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-roles-write.test.ts:1193 (path)"
       ],
       "entry": []
     },
