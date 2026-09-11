@@ -104,9 +104,18 @@ public class TenantMembersController : TenantMembersControllerBase
         if (status.HasValue) q = q.Where(m => m.Status == ToDbMemberStatus(status.Value));
         var items = await q.OrderByDescending(m => m.CreatedAt).Skip(p * ps).Take(ps).ToListAsync();
         var total = await q.CountAsync();
+        // 2026-09-12 修复：同一 DbContext 不允许并发查询（Task.WhenAll 内 await 首个查询后
+        // 其余继续并发 → "A second operation was started on this context instance" 500）。
+        // 改为一次批量取 users 组装字典，再串行映射。
+        var userIds = items.Select(m => m.UserId).Distinct().ToList();
+        var userMap = await _db.SysUsers
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id);
         return new Response5
         {
-            Items = (await Task.WhenAll(items.Select(async m => ToDto(m, await _db.SysUsers.FirstOrDefaultAsync(u => u.Id == m.UserId) ?? new DbUser())))).ToList(),
+            Items = items
+                .Select(m => ToDto(m, userMap.GetValueOrDefault(m.UserId) ?? new DbUser()))
+                .ToList(),
             Page = p,
             PageSize = ps,
             Total = total,

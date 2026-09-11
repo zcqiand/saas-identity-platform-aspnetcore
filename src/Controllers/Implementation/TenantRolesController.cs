@@ -45,7 +45,10 @@ public class TenantRolesController : TenantRolesControllerBase
         var tid = Guid.Parse(tenantId);
         var p = page ?? 0;
         var ps = pageSize ?? 20;
-        var q = _db.SysRoles.Where(r => r.TenantId == tid && r.ClientId == clientId);
+        // 2026-09-12 修复：clientId 空串（?clientId=）不再过滤（此前生成 WHERE FALSE → 恒空）
+        var q = string.IsNullOrEmpty(clientId)
+            ? _db.SysRoles.Where(r => r.TenantId == tid)
+            : _db.SysRoles.Where(r => r.TenantId == tid && r.ClientId == clientId);
         var items = await q.OrderByDescending(r => r.CreatedAt).Skip(p * ps).Take(ps).ToListAsync();
         var total = await q.CountAsync();
         return new Response6
