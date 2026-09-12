@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 // disambiguate DTO vs entity
 using DtoSysUser = Saas.Identity.AspNetCore.Controllers.Generated.SysUser;
-using DtoTenantMember = Saas.Identity.AspNetCore.Controllers.Generated.TenantMember;
+using DtoMembership = Saas.Identity.AspNetCore.Controllers.Generated.TenantMembership;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Infrastructure.Audit;
@@ -77,10 +77,24 @@ public class AuthController : AuthControllerBase
 
         // sys_user 是 global 自然人，TenantId 在 tenant_member 上（M01.F04 9/7 重组）；
         // 选第一个 active membership 作为 currentTenantId。
-        var currentTenantId = (await _db.TenantMembers
-            .Where(tm => tm.UserId == user.Id && tm.Status == 1)
-            .Select(tm => tm.TenantId)
-            .FirstOrDefaultAsync());
+        // ADR-0032：availableTenants 是真值 TenantMembership[] —— tenant_application ⨝
+        // tenant_member（client_id 匹配、member status=1 active），roleIds 由 MembershipViews
+        // 走 tenant_member_role ⨝ sys_role。clientId 未传或该 app 无订阅时退化为全部 active
+        // membership（msw oracle：handlers-extra login 只按 userId+active 过滤）。
+        var membersQuery = _db.TenantMembers
+            .Include(tm => tm.Roles)
+            .Where(tm => tm.UserId == user.Id && tm.Status == 1);
+        if (!string.IsNullOrEmpty(body.ClientId))
+        {
+            var appTenantIds = await _db.TenantApplications
+                .Where(ta => ta.ClientId == body.ClientId)
+                .Select(ta => ta.TenantId)
+                .ToListAsync();
+            if (appTenantIds.Count > 0)
+                membersQuery = membersQuery.Where(tm => appTenantIds.Contains(tm.TenantId));
+        }
+        var members = await membersQuery.ToListAsync();
+        var currentTenantId = members.FirstOrDefault()?.TenantId ?? Guid.Empty;
 
         // M01.F04.I03 写端点副作用 — login_success（2026-09-02 contract-test M96 audit 覆盖对齐，
         // 形状对齐 nextjs/msw/springboot：actor=target=登录用户，metadata={username}）
@@ -114,32 +128,26 @@ public class AuthController : AuthControllerBase
 
         return new LoginResponse
         {
-            // v0.5.0 NSwag 重 emit：LoginResponse 重构为 { user: SysUser, availableTenants,
-            // accessToken, refreshToken, tokenType, expiresIn }；UserId/CurrentTenantId 取消。
+            // ADR-0032 重 emit：LoginResponse = { user: SysUser, availableTenants: TenantMembership[],
+            // userId(required), currentTenantId?, accessToken, refreshToken, tokenType, expiresIn, clientId }。
             User = new DtoSysUser
             {
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
                 Mobile = user.Mobile,
-                Status = (SysUserStatus)user.Status,
+                Status = StatusEnumMaps.MapUserStatus(user.Status),
                 FailedAttempts = user.FailedAttempts,
                 LockedUntil = user.LockedUntil != null ? new DateTimeOffset(DateTime.SpecifyKind(user.LockedUntil.Value, DateTimeKind.Utc)) : default,
                 CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc)),
                 UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(user.UpdatedAt, DateTimeKind.Utc)),
             },
-            AvailableTenants = new List<DtoTenantMember>
-            {
-                new DtoTenantMember
-                {
-                    Id = Guid.NewGuid(),
-                    TenantId = currentTenantId,
-                    UserId = user.Id,
-                    Status = TenantMemberStatus.Active,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                }
-            },
+            AvailableTenants = MembershipViews.FromEntities(members),
+            UserId = user.Id,
+            CurrentTenantId = currentTenantId,
+            // 契约 required string；msw oracle 取请求体 clientId ?? ""（ADR-0019 不适用：
+            // login 的 clientId 是路由上下文回显，不是业务身份判权字段）。
+            ClientId = body.ClientId ?? "",
             AccessToken = _jwt.IssueAccessToken(user.Id, currentTenantId),
             RefreshToken = $"refresh-{user.Id}-{((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds()}",
             TokenType = "Bearer",

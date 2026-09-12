@@ -156,7 +156,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/me/tenants")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TenantMember>> Tenants([Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TenantMembership>> Tenants([Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/me/tenants/{tenantId}/switch")]
@@ -207,7 +207,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members")]
-        public abstract System.Threading.Tasks.Task<TenantMemberView> MembersPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateSysUserRequest body);
+        public abstract System.Threading.Tasks.Task<TenantMemberUserView> MembersPost([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] CreateSysUserRequest body);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/invitations")]
@@ -215,11 +215,11 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}")]
-        public abstract System.Threading.Tasks.Task<TenantMemberView> MembersGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId);
+        public abstract System.Threading.Tasks.Task<TenantMemberUserView> MembersGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}")]
-        public abstract System.Threading.Tasks.Task<TenantMemberView> MembersPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateSysUserRequest body);
+        public abstract System.Threading.Tasks.Task<TenantMemberUserView> MembersPatch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] UpdateSysUserRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
         [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}")]
@@ -227,11 +227,11 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}/roles")]
-        public abstract System.Threading.Tasks.Task<TenantMemberView> Roles([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetTenantMemberRolesRequest body);
+        public abstract System.Threading.Tasks.Task<TenantMemberUserView> Roles([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetTenantMemberRolesRequest body);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPatch, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/members/{userId}/status")]
-        public abstract System.Threading.Tasks.Task<TenantMemberView> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body4 body);
+        public abstract System.Threading.Tasks.Task<TenantMemberUserView> Status([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string userId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] Body4 body);
 
     }
 
@@ -498,19 +498,21 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     public partial class CurrentUser
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("user")]
-        [System.ComponentModel.DataAnnotations.Required]
-        public SysUser User { get; set; } = new SysUser();
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string Email { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("memberships")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<TenantMember> Memberships { get; set; } = new System.Collections.Generic.List<TenantMember>();
+        public System.Collections.Generic.List<TenantMembership> Memberships { get; set; } = new System.Collections.Generic.List<TenantMembership>();
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("currentTenantId")]
         public System.Guid CurrentTenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
-        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -675,7 +677,16 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("availableTenants")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<TenantMember> AvailableTenants { get; set; } = new System.Collections.Generic.List<TenantMember>();
+        public System.Collections.Generic.List<TenantMembership> AvailableTenants { get; set; } = new System.Collections.Generic.List<TenantMembership>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid UserId { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+
+        [System.Text.Json.Serialization.JsonPropertyName("currentTenantId")]
+        public System.Guid CurrentTenantId { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("accessToken")]
         public string AccessToken { get; set; }
@@ -946,10 +957,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.Guid TenantId { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("clientId")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientId { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1287,8 +1294,62 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Runtime.Serialization.EnumMember(Value = @"active")]
         Active = 0,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"invited")]
+        Invited = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"suspended")]
+        Suspended = 2,
+
         [System.Runtime.Serialization.EnumMember(Value = @"disabled")]
-        Disabled = 1,
+        Disabled = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TenantMemberUserView
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("username")]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
+        public string Username { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("email")]
+        public string Email { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantMemberStatus>))]
+        public TenantMemberStatus Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset CreatedAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("updatedAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset UpdatedAt { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -1307,6 +1368,46 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("roles")]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<string> Roles { get; set; } = new System.Collections.Generic.List<string>();
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TenantMembership
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid UserId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tenantId")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Guid TenantId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("roleIds")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
+
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TenantMemberStatus>))]
+        public TenantMemberStatus Status { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("joinedAt")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset JoinedAt { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -1782,7 +1883,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("items")]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.List<TenantMemberView> Items { get; set; } = new System.Collections.Generic.List<TenantMemberView>();
+        public System.Collections.Generic.List<TenantMemberUserView> Items { get; set; } = new System.Collections.Generic.List<TenantMemberUserView>();
 
         [System.Text.Json.Serialization.JsonPropertyName("page")]
         public int Page { get; set; }

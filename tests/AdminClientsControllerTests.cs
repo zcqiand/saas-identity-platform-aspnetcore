@@ -48,6 +48,22 @@ public class AdminClientsControllerTests
     }
 
     [Fact]
+    [Trait("Fn", "M04.F01.I02")]
+    public async Task ClientsPost_withoutValidity_appliesFamilyDefaults_3600_86400()
+    {
+        // 2026-09-12 四方 live I45：请求缺 validity 时，响应必须与 oracle（msw/nextjs 实测
+        // 3600/86400）一致，而不是 CLR 0 → EF 跳列 → 读回 DB 默认 7200/2592000。
+        var db = MakeDb("admin-clients-post-defaults");
+        var ctrl = new AdminClientsController(db);
+        var body = MakeCreate();
+        body.AccessTokenValidity = 0;
+        body.RefreshTokenValidity = 0;
+        var dto = await ctrl.ClientsPost(body);
+        Assert.Equal(3600, dto.AccessTokenValidity);
+        Assert.Equal(86400, dto.RefreshTokenValidity);
+    }
+
+    [Fact]
     [Trait("Fn", "M04.F01.I01")]
     public async Task ClientsGet_listsPaged()
     {

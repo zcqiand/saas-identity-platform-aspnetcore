@@ -51,6 +51,7 @@ public partial class AppDbContext : DbContext
                     + "本规则遵循 CLAUDE.md §2 「禁止 env 默认值兜底」：secret 缺失必须 fail-fast。"
                     + "（runtime 走 Program.cs DI，不进 OnConfiguring；本路径仅 EF design-time 工具触达）"));
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");

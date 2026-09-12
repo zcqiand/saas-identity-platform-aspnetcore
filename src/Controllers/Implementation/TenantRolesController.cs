@@ -35,6 +35,9 @@ public class TenantRolesController : TenantRolesControllerBase
         RoleName = e.RoleName,
         Description = e.Description,
         IsPreset = e.IsPreset,
+        // 2026-09-12 修复：DTO SysRole.Status 是 int（契约层无枚举），漏映射恒默认 0；
+        // DB smallint 直传（1=active，msw/seed 同值）。
+        Status = e.Status,
         CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(e.CreatedAt, DateTimeKind.Utc)),
         UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(e.UpdatedAt, DateTimeKind.Utc)),
     };
@@ -49,7 +52,9 @@ public class TenantRolesController : TenantRolesControllerBase
         var q = string.IsNullOrEmpty(clientId)
             ? _db.SysRoles.Where(r => r.TenantId == tid)
             : _db.SysRoles.Where(r => r.TenantId == tid && r.ClientId == clientId);
-        var items = await q.OrderByDescending(r => r.CreatedAt).Skip(p * ps).Take(ps).ToListAsync();
+        // 2026-09-12 四方 live 修复（roles list 排序）：msw oracle 返回插入序（created_at ASC），
+        // 此前 DESC 让 normalize 后第 5 行起与 oracle 分叉；显式 created_at ASC, id ASC 对齐。
+        var items = await q.OrderBy(r => r.CreatedAt).ThenBy(r => r.Id).Skip(p * ps).Take(ps).ToListAsync();
         var total = await q.CountAsync();
         return new Response6
         {
@@ -85,7 +90,10 @@ public class TenantRolesController : TenantRolesControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
-        var e = await _db.SysRoles.FirstOrDefaultAsync(r => r.Id == id)
+        // 2026-09-12：role 单条寻址必须校验归属租户（对齐 springboot findRoleInTenant，
+        // 否则租户 A 路径可读租户 B 的 role——跨租户越权）
+        var tid = Guid.Parse(tenantId);
+        var e = await _db.SysRoles.FirstOrDefaultAsync(r => r.Id == id && r.TenantId == tid)
             ?? throw new KeyNotFoundException("Role not found");
         return ToDto(e);
     }
@@ -94,7 +102,9 @@ public class TenantRolesController : TenantRolesControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
-        var e = await _db.SysRoles.FirstOrDefaultAsync(r => r.Id == id)
+        // 2026-09-12：同 RolesGet，patch/delete 也按 (id, tenantId) 双键寻址
+        var tid = Guid.Parse(tenantId);
+        var e = await _db.SysRoles.FirstOrDefaultAsync(r => r.Id == id && r.TenantId == tid)
             ?? throw new KeyNotFoundException("Role not found");
         if (body.RoleName != null) e.RoleName = body.RoleName;
         if (body.Description != null) e.Description = body.Description;
@@ -107,7 +117,9 @@ public class TenantRolesController : TenantRolesControllerBase
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
-        var e = await _db.SysRoles.FirstOrDefaultAsync(r => r.Id == id);
+        // 2026-09-12：同 RolesGet，delete 按 (id, tenantId) 双键寻址
+        var tid = Guid.Parse(tenantId);
+        var e = await _db.SysRoles.FirstOrDefaultAsync(r => r.Id == id && r.TenantId == tid);
         if (e != null)
         {
             _db.SysRoles.Remove(e);

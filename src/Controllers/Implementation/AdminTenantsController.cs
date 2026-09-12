@@ -25,7 +25,7 @@ public class AdminTenantsController : AdminTenantsControllerBase
         Id = e.Id,
         TenantKey = e.TenantKey,
         Name = e.Name,
-        Status = (TenantStatus)(int)e.Status, // 1=Active/2=Suspended/3=Archived (entity smallint ↔ enum ordinal)
+        Status = StatusEnumMaps.MapTenantStatus(e.Status), // DB 1=active, 2=suspended（裸 cast off-by-one 已修）
         CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(e.CreatedAt, DateTimeKind.Utc)),
         UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(e.UpdatedAt, DateTimeKind.Utc)),
     };
@@ -75,7 +75,7 @@ public class AdminTenantsController : AdminTenantsControllerBase
         var gid = Guid.Parse(id);
         var e = await _db.Tenants.FirstAsync(t => t.Id == gid);
         if (body.Name != null) e.Name = body.Name;
-        e.Status = (short)body.Status;
+        e.Status = StatusEnumMaps.ToDbTenantStatus(body.Status);
         e.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return ToDto(e);

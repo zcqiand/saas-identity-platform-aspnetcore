@@ -131,7 +131,13 @@ builder.Services.AddSingleton<FailedLoginStore>();
 // appsettings.json 内嵌的 dev 连接串）。ConnectionStrings:Postgres 仍作 fallback。
 var pgConn = builder.Configuration["DATABASE_URL"]
     ?? builder.Configuration.GetConnectionString("Postgres");
-var dataSourceBuilder = new NpgsqlDataSourceBuilder(pgConn);
+// 2026-09-12 live 跑批 53300 修复：Npgsql 默认 Max Pool Size=100，四方 contract-test
+// 全量并发跑批时把共享 PG（max_connections=100，同实例还住着 lab/saas_prod 等 4 个库）
+// 打满 → "sorry, too many clients already" → login 500 级联（59 failed 的主因）。
+// 显式压到 10，与 springboot Hikari / nextjs pg-pool 的默认档对齐——多后端共库是
+// 「前端不可区分」的物理基础，单后端不得独占连接预算。
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(
+    new NpgsqlConnectionStringBuilder(pgConn) { MaxPoolSize = 10 }.ConnectionString);
 dataSourceBuilder.EnableDynamicJson();
 // v0.5.0：所有 PG native enum 已废（api_key_status / audit_action / user_status /
 // membership_status / tenant_status / app_status / menu_status / menu_type /
@@ -147,7 +153,15 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 // v0.2.0 NSwag-generated Controllers + 11 concrete implementations
 // Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
 // concrete 实现 在 src/Controllers/Implementation/<Tag>Controller.cs（手写业务）
-builder.Services.AddControllers()
+builder.Services.AddControllers(o =>
+{
+    // 2026-09-12 修复：body 反序列化失败（未知枚举串 type:"page"、坏 JSON 等）时 JsonInputFormatter
+    // 只记 ModelState error、[FromBody] 参数（BindRequired）留 null —— 本仓控制器无 [ApiController]
+    // 自动 400，action 继续跑 → body.ParentId NullReferenceException → 500。
+    // 此 filter：ModelState invalid 且有 body 参数没绑上 → 400 INVALID_REQUEST；
+    // 属性级 [Required] 校验失败时参数对象已构造（非 null）不受影响，保持既有行为。
+    o.Filters.Add<MalformedBodyFilter>();
+})
     .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.ClientMenusControllerBase).Assembly)
     // 2026-08-30：合同测试发现 aspnetcore enum 序列化为 PascalCase（"Active"），
     // OpenAPI/TypeSpec 与 msw/nextjs/springboot 都期望小写（"active"）。
@@ -162,6 +176,15 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter(
                 System.Text.Json.JsonNamingPolicy.SnakeCaseLower));
+        // 2026-09-12 修复：enum 属性必须走非泛型 JsonStringEnumConverter(SnakeCaseLower)。
+        // NSwag 属性级 [JsonStringEnumConverter<SysMenuType>] 是 .NET 8 泛型版，两个问题：
+        // ① 本 runtime (8.0.x) 泛型版忽略 EnumMemberAttribute → 序列化出 PascalCase（"Active"），
+        //    与 msw/nextjs/springboot 的小写 "active" 分叉；
+        // ② 泛型版读未知枚举串（如 type:"page"）抛 NullReferenceException 而非 JsonException
+        //    → 绕过输入格式化器的 400 路径，冒 500。
+        // SnakeCaseLower 命名与全部 EnumMember 值一一对应（active/invited/menu/authorization_code...），
+        // 非 generic 版未知值抛 JsonException → JsonInputFormatter 正常 400。
+        // CustomConverter 优先级 > JsonConverterAttribute（STJ 文档），能真正盖住 NSwag 属性级 converter。
         var resolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver();
         resolver.Modifiers.Add(typeInfo =>
         {
@@ -169,10 +192,8 @@ builder.Services.AddControllers()
                 return;
             foreach (var prop in typeInfo.Properties)
             {
-                if (System.Nullable.GetUnderlyingType(prop.PropertyType) is { } u && u.IsEnum)
-                    prop.CustomConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(
-                        System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
-                else if (prop.PropertyType.IsEnum)
+                var enumType = System.Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                if (enumType.IsEnum)
                     prop.CustomConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(
                         System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
             }
@@ -277,5 +298,31 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();
+
+/// <summary>body JSON 反序列化失败（参数没绑上）→ 400 INVALID_REQUEST，不让 null body 冒 500。</summary>
+internal sealed class MalformedBodyFilter : Microsoft.AspNetCore.Mvc.Filters.IActionFilter
+{
+    public void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+    {
+        // 只管 [FromBody] 参数：MVC 把绑定失败的 body **直接从 ActionArguments 剔除**（不是放 null）。
+        // query 参数（clientId 等）绑定失败不拦 —— 实现层有空值兜底（不过滤），保持既有宽松行为。
+        if (context.ActionDescriptor.Parameters.Any(p =>
+                p.BindingInfo?.BindingSource == Microsoft.AspNetCore.Mvc.ModelBinding.BindingSource.Body
+                && !context.ActionArguments.ContainsKey(p.Name)))
+        {
+            var message = context.ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrEmpty(m)) ?? "invalid request body";
+            context.Result = new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
+            {
+                error = "INVALID_REQUEST",
+                error_description = message,
+            });
+        }
+    }
+
+    public void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context) { }
+}
 
 public partial class Program { }

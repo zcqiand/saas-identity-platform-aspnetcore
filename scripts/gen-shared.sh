@@ -53,7 +53,10 @@ mkdir -p "$ROOT/src/Controllers/Generated" "$ROOT/src/Models/Generated"
 # in the contract-test ADR; when a new endpoint emits a default-encoded field,
 # add it here.
 CONTROLLERS="$ROOT/src/Controllers/Generated/Controllers.cs"
-for FIELD in parentId lastUsedAt expiresAt revokedAt; do
+# ADR-0032 (2026-09-12)：currentTenantId（LoginResponse / CurrentUser，optional uuid）加入
+# 默认值抑制清单 —— 实现以 Guid.Empty 表示「无当前租户」，不抑制会序列化出
+# "00000000-0000-0000-0000-000000000000"，与 msw/nextjs/springboot 的字段缺失不等价。
+for FIELD in parentId lastUsedAt expiresAt revokedAt currentTenantId; do
   # Match the JsonPropertyName attribute line and inject JsonIgnore above it.
   # Use Python (not sed) so the multi-platform shell handles newline insertion reliably.
   python3 - "$CONTROLLERS" "$FIELD" <<'PY'

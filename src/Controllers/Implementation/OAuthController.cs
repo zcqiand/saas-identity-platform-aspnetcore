@@ -178,7 +178,10 @@ public class OauthController : OauthControllerBase
         if (user == null)
             throw new ArgumentException("INVALID_GRANT: code user not in saas");
 
-        // 一次性消费 — 标记 consumed
+        // 一次性消费 — code 行删除（oauth_codes 无 consumed 列；删除即消费，
+        // 重放同 code 走上面 "code not found" → 400 INVALID_GRANT，RFC 6749 §4.1.2）。
+        // 只删 authorization code 行本身；下方新写入的 refresh token 行不受影响。
+        _db.OauthCodes.Remove(oauthCode);
 
         // 发新 refresh token + access token
         var refresh = JwtIssuer.GenerateRefreshToken(user.Id);
