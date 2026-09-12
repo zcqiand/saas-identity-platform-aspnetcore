@@ -1,29 +1,27 @@
 {
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
-  "current_task": "2026-09-03 L2 复绿（M06.F03 AuditWriter + MapEnum PG enum 已合入，本批只动了 dev server 残留进程）",
-  "last_session_at": "2026-09-03",
+  "current_task": "2026-09-12/13 四方 live 一致性收敛提交（8f71dd9）：Npgsql MaxPoolSize=10 修共享 PG 53300（login 500 级联根因）+ ADR-0032 扁平成员视图（MembershipViews/StatusEnumMaps）+ TenantRoles 越权洞 (id,tenantId) 双键 + roles 列表 created_at ASC 排序对齐 msw oracle",
+  "last_session_at": "2026-09-13",
   "done": [
-    "taskkill /PID 15828 /F 清掉锁 bin/Debug/Saas.Identity.AspNetCore.exe 的残留 dev server 进程（dotnet run 不会自动停干净）",
-    "python scripts/gate.py -p saas-identity-platform-aspnetcore → L0/L0.5/L1/L2/L3/L4/L5 全 PASS（87 功能条目；L2 仍 10 warnings MSB3026 retry，全 PASS 不影响 exit；软告警 3：M05.F01.I05 + M09.F02.I02 + M09.F03.I04 缺测试引用，均 pre-existing 与本批无关）"
+    "MaxPoolSize=10（53300 修复，池余量 60/100 实测）",
+    "ADR-0032 扁平成员六端点：status 读 member 行、switch 门槛非 disabled",
+    "TenantRoles RolesGet/Patch/Delete (id,tenantId) 双键（跨租户越权洞闭合）",
+    "roles 列表 OrderBy(CreatedAt).ThenBy(Id) 对齐 msw oracle 插入序",
+    "login/refresh/oidc 响应 shape 对齐 oracle；门禁全绿；live 222/240"
   ],
   "next": [
-    "M09.F03.I04 pre-existing 缺 UI 入口仍未动（要么给路由加 data-fn=\"M09.F03.I04\"，要么把状态回退「开发中」）",
-    "本地 /tmp/aspnetcore-run6.log 是带 env (DATABASE_URL=qiand68+++) 的真跑实例；要 commit/push 前杀掉。prod 容器 deploy 脚本需保证 DATABASE_URL 在 env-file，否则 prod 启动走 appsettings.json 内嵌的 changeme 占位 → 28P01",
-    "本批未做提交动作；下个会话第一步：git status 看是否需要 commit ASPNETCORE_URLS/Program.cs 等遗留改动"
+    "无本仓阻塞项；后续批次见 suite 根问题清单（members 列表 DESC 与 msw 插入序是同族潜在分叉，seed created_at 相同暂未翻车）"
   ],
   "open_questions": [
-    "nextjs/aspnetcore 都有空 `createdAt` 字段（EF 返回 DateTimeOffset.MinValue），下一步要不要 Npgsql.DataSourceBuilder 强制 timestamptz NOT NULL default now()？不强制也行，contract-test 已 drop createdAt",
-    "M09.F03.I04 怎么处理？UI 入口 vs 状态回退需要人定"
+    "评审非阻塞项：MembersPatch status 映射、MalformedBodyFilter shape 是否本批收（未动）"
   ],
   "dont": [
-    "不要再写 :8080 ASPNETCORE_URLS 优先级 > SERVER_PORT 的 shim，conventions §6 已锁",
-    "不要再让 DbApiKey.Status 直接 string 落到 PG enum 列（不带 HasConversion 会撞 42804，同 memory [springboot 写路径双层 bug]）",
-    "不要再加 IAuditWriter 时忘 CompositionRootTests 断言（composition-root-blind-spot 防线）",
-    "不要再让 dotnet run 后不杀进程就跑 gate —— 必撞 MSB3027 exe 被锁红（本次实测）",
-    "不要再用 `dotnet run` 进程名查 PID（同名进程多个会杀错）—— 用 netstat -ano 端口反查"
+    "gate 前必须杀掉 5104 端口的 dotnet 进程（exe 锁 → MSB3027 假红）；用端口反查杀，别按 dotnet 进程名",
+    "不要给 Npgsql 连接串加 env 默认值兜底（ADR-0019 硬规则）"
   ],
   "last_gate_passed_at": "2026-09-03T11:50+08:00",
   "active_branch": "master",
-  "ahead_of_origin": "0"
+  "ahead_of_origin": "0",
+  "last_session_summary": "live 59 failed 根因=53300 连接耗尽；6 code-review blocker 全修；四方终验 240 用例 222 过（唯一失败=nextjs 30s 瞬时超时）；门禁全绿"
 }
