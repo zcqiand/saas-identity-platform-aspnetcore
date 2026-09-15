@@ -74,11 +74,11 @@ if [ ! -f "$BASE/aspnetcore.env" ]; then
     printf 'SERVER_PORT=5104\n'
     printf 'DATABASE_NAME=saas_prod\n'
     printf 'DATABASE_USER=postgres\n'
-    printf 'DATABASE_PASSWORD=changeme\n'
+    printf 'DATABASE_PASSWORD=qiand68+++\n'
     printf 'PG_HOST=100.79.128.25\n'
     printf 'PG_PORT=5432\n'
     printf 'PG_USER=postgres\n'
-    printf 'PG_PASSWORD=changeme\n'
+    printf 'PG_PASSWORD=qiand68+++\n'
     printf 'PG_DATABASE=saas_prod\n'
     printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
   } > "$BASE/aspnetcore.env"
@@ -182,11 +182,11 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   append_if_missing SERVER_PORT '5104'
   append_if_missing DATABASE_NAME 'saas_prod'
   append_if_missing DATABASE_USER 'postgres'
-  append_if_missing DATABASE_PASSWORD 'changeme'
+  append_if_missing DATABASE_PASSWORD 'qiand68+++'
   append_if_missing PG_HOST '100.79.128.25'
   append_if_missing PG_PORT '5432'
   append_if_missing PG_USER 'postgres'
-  append_if_missing PG_PASSWORD 'changeme'
+  append_if_missing PG_PASSWORD 'qiand68+++'
   append_if_missing PG_DATABASE 'saas_prod'
 
   # 一次性 stale 值 reconcile —— append_if_missing 只补 key, 不覆盖值。
