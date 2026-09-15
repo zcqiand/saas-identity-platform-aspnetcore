@@ -15,6 +15,8 @@ public partial class AppDbContext : DbContext
     {
     }
 
+    public virtual DbSet<DrizzleMigration> DrizzleMigrations { get; set; }
+
     public virtual DbSet<OauthAccessToken> OauthAccessTokens { get; set; }
 
     public virtual DbSet<OauthClient> OauthClients { get; set; }
@@ -55,6 +57,17 @@ public partial class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");
+
+        modelBuilder.Entity<DrizzleMigration>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("__drizzle_migrations_pkey");
+
+            entity.ToTable("__drizzle_migrations");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.Hash).HasColumnName("hash");
+        });
 
         modelBuilder.Entity<OauthAccessToken>(entity =>
         {

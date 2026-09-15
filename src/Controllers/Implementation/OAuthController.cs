@@ -14,7 +14,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 /// Concrete M04 OAuth 授权码签发 + 令牌交换 / 刷新。
 /// v0.4.0：Phase 5 mock（Guid.NewGuid() + 字面量字符串）。
 /// v0.2.0：Phase 6 真 OAuth —
-///   - apps.client_id 校验（apps 表 App 实体，V014 seed lab-mgmt）
+///   - apps.client_id 校验（apps 表 App 实体，V014 seed lab-management）
 ///   - apps.redirect_uris 包含请求 redirect_uri
 ///   - apps.scopes 包含请求 scope（V014 scopes = lab.read, lab.write）
 ///   - oauth_codes 表存 authorization_code (TTL 10min) + refresh_token (TTL 7d)
