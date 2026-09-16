@@ -206,6 +206,10 @@ public class OauthController : OauthControllerBase
             TokenType = "Bearer",
             ExpiresIn = 3600,
             Scope = oauthCode.Scope ?? "",
+            // T11(2026-09-16) SSOT TokenResponse 必填三件回显（tsp/routes/oauth.tsp）。
+            ClientId = app.ClientId,
+            UserId = user.Id.ToString(),
+            TenantId = oauthCode.TenantId,
         };
     }
 
@@ -248,6 +252,10 @@ public class OauthController : OauthControllerBase
             TokenType = "Bearer",
             ExpiresIn = 3600,
             Scope = oldRefresh.Scope ?? "",
+            // T11(2026-09-16) SSOT TokenResponse 必填三件回显（tsp/routes/oauth.tsp）。
+            ClientId = app.ClientId,
+            UserId = oldRefresh.UserId.ToString(),
+            TenantId = oldRefresh.TenantId,
         };
     }
 

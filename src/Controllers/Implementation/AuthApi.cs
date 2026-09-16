@@ -202,6 +202,11 @@ public class AuthController : AuthControllerBase
             TokenType = "Bearer",
             ExpiresIn = 3600,
             Scope = "",
+            // T11(2026-09-16) SSOT TokenResponse 必填三件回显（tsp/routes/oauth.tsp）。
+            // 此前 TenantId 缺省序列化成全零 GUID —— I24 四方比对分叉的根因。
+            UserId = user.Id.ToString(),
+            ClientId = body?.ClientId ?? "",
+            TenantId = refreshTenantId,
         };
     }
 
