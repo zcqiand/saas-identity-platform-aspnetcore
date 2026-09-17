@@ -12,7 +12,7 @@
       "operationGenerationMode": "MultipleClientsFromFirstTagAndPathSegments",
       "className": "{controller}",
       "namespace": "Saas.Identity.AspNetCore.Controllers.Generated",
-      "output": "src/Controllers/Generated/Controllers.cs",
+      "output": "src/Controllers/Generated/AllGenerated.cs",
       "controllerBaseClass": "ControllerBase",
       "controllerStyle": "Abstract",
       "controllerTarget": "AspNetCore",

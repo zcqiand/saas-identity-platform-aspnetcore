@@ -6,10 +6,17 @@
 # - 本仓走 DB-First：DbContext + entity 由 dotnet ef dbcontext scaffold 从真库重生（见 scripts/scaffold-dbcontext.sh）
 # - 不再跑 EF Migrations；schema 由 shared 仓 drizzle-kit migrate 统一管理
 #
-# Generated files (declared in aspnetcore.nswag):
-#   - src/Controllers/Generated/<Tag>Controller.cs  — abstract base class
-#     with method stubs throwing NotImplementedException
-#   - src/Models/Generated/<Name>.cs — DTO records/types
+# Generated files (declared in aspnetcore.nswag + post-split):
+#   - src/Controllers/Generated/AllGenerated.cs  — NSwag 单次 run 产（中间产物）
+#   - src/Controllers/Generated/<Tag>Controller.cs  — 按 tag 拆的 abstract base
+#     class（11 个：AdminClients/AdminTenants/Auth/Clients/ClientMenus/Me/Oauth/
+#     TenantApplications/TenantMembers/TenantRoles/TenantRoleMenus）
+#   - src/Models/Generated/<Name>.cs — DTO records/types（按类拆，每类一文件）
+#
+# §2.2 决策（2026-09-17）：NSwag 原生不支持 per-tag 拆分，故 NSwag 仍产单文件
+# AllGenerated.cs，由本脚本调 split-nswag-output.py（brace-match + regex）拆为
+# 11 controller + 47 DTO 文件。JsonIgnore post-process 在 split 前跑（先在
+# AllGenerated.cs 注入属性，再 split 时随类落到对应 DTO 文件）。
 #
 # User-implemented controllers live in src/Controllers/Implementation/<Tag>Controller.cs
 # as partial classes inheriting the generated base, providing business logic
@@ -52,14 +59,14 @@ mkdir -p "$ROOT/src/Controllers/Generated" "$ROOT/src/Models/Generated"
 # Keep this list aligned with [lab-management-systems-shared-aspnetcore-co-rule]
 # in the contract-test ADR; when a new endpoint emits a default-encoded field,
 # add it here.
-CONTROLLERS="$ROOT/src/Controllers/Generated/Controllers.cs"
+ALL_GEN="$ROOT/src/Controllers/Generated/AllGenerated.cs"
 # ADR-0032 (2026-09-12)：currentTenantId（LoginResponse / CurrentUser，optional uuid）加入
 # 默认值抑制清单 —— 实现以 Guid.Empty 表示「无当前租户」，不抑制会序列化出
 # "00000000-0000-0000-0000-000000000000"，与 msw/nextjs/springboot 的字段缺失不等价。
 for FIELD in parentId lastUsedAt expiresAt revokedAt currentTenantId; do
   # Match the JsonPropertyName attribute line and inject JsonIgnore above it.
   # Use Python (not sed) so the multi-platform shell handles newline insertion reliably.
-  python3 - "$CONTROLLERS" "$FIELD" <<'PY'
+  python3 - "$ALL_GEN" "$FIELD" <<'PY'
 import re, sys, pathlib
 path, field = sys.argv[1], sys.argv[2]
 p = pathlib.Path(path)
@@ -79,14 +86,17 @@ else:
 PY
 done
 
-# ADR-0027 §4: NSwag 产 `Controllers.cs` 单文件 → orphan check 视 stem `Controllers`
-# 为不在 shared 的 namespace → SAFE orphan。改名 `OAuth.cs`（stem `OAuth` ∈ shared
-# 期望集合），同 namespace 内的所有 abstract class + DTO 仍可编译。下一轮 gen-shared
-# 会重新生成同名 `Controllers.cs`，此处 rename 是稳定做法（post-process step 每次跑）。
-if [ -f "$CONTROLLERS" ]; then
-  mv "$CONTROLLERS" "$ROOT/src/Controllers/Generated/OAuth.cs"
-  echo "[gen-shared] renamed Controllers.cs → OAuth.cs (ADR-0027 §4 orphan fix)"
-fi
+# §2.2 (2026-09-17)：NSwag 单文件 → 按类拆为多文件（Controllers/<Tag>Controller.cs +
+# Models/<Dto>.cs）。NSwag 原生不支持 per-tag 拆分（multipleClients+outputPerOperation
+# 实测无效），本仓走「NSwag 单次 run 产 AllGenerated.cs → Python brace-match 切分」两步。
+#
+# 切分前先清空 per-tag / per-dto 目录避免 stale 文件残留（PR 改名 / 删 endpoint 时）。
+python3 "$ROOT/scripts/split-nswag-output.py" "$ALL_GEN" \
+  "$ROOT/src/Controllers/Generated" "$ROOT/src/Models/Generated" \
+  || { echo "[gen-shared] ERROR: split failed" >&2; exit 1; }
+
+# 删除合并前的大文件（已拆出 11+47 个 per-class 文件）
+rm -f "$ALL_GEN"
 
 echo "[gen-shared] OK"
 echo "[gen-shared]    DB schema 同步请跑: bash scripts/scaffold-dbcontext.sh（shared 已 db:migrate 之后）"

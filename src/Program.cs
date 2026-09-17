@@ -151,7 +151,8 @@ builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseNpgsql(dataSource));
 
 // v0.2.0 NSwag-generated Controllers + 11 concrete implementations
-// Controllers 在 src/Controllers/Generated/Controllers.cs（NSwag 产物，勿手改）
+// Controllers 在 src/Controllers/Generated/<Tag>Controller.cs（NSwag 产物，§2.2 按 tag 拆，勿手改）
+// DTOs 在 src/Models/Generated/<Name>.cs（同上，split 自 AllGenerated.cs）
 // concrete 实现 在 src/Controllers/Implementation/<Tag>Controller.cs（手写业务）
 builder.Services.AddControllers(o =>
 {
@@ -212,7 +213,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "saas-identity-platform-aspnetcore",
         Version = "v1",
-        Description = "ASP.NET Core 8 后端。NSwag 读 ../saas-identity-platform-shared/generated/openapi/openapi.yaml 产 Controllers.cs；concrete 实现见 src/Controllers/Implementation/。",
+        Description = "ASP.NET Core 8 后端。NSwag 读 ../saas-identity-platform-shared/generated/openapi/openapi.yaml 产 AllGenerated.cs → 按类拆分为 src/Controllers/Generated/<Tag>Controller.cs + src/Models/Generated/<Dto>.cs（spec §2.2）；concrete 实现见 src/Controllers/Implementation/。",
     });
 });
 
