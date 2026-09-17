@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc;
 #pragma warning disable 8604 // Disable "CS8604 Possible null reference argument for parameter"
 #pragma warning disable 8625 // Disable "CS8625 Cannot convert null literal to non-nullable reference type"
 #pragma warning disable 8765 // Disable "CS8765 Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes)."
+#nullable enable
 
 namespace Saas.Identity.AspNetCore.Controllers.Generated
 {
@@ -51,27 +52,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum AuthorizeCodeRequestResponseType
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"code")]
-        Code = 0,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public enum TokenRequestGrantType
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"authorization_code")]
-        Authorization_code = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"refresh_token")]
-        Refresh_token = 1,
 
     }
 }

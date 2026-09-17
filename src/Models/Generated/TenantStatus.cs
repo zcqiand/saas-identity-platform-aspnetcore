@@ -28,27 +28,14 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CreateTenantRequest
+    public enum TenantStatus
     {
 
-        [System.Text.Json.Serialization.JsonPropertyName("tenantKey")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 2)]
-        public string TenantKey { get; set; }
+        [System.Runtime.Serialization.EnumMember(Value = @"active")]
+        Active = 0,
 
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.StringLength(128, MinimumLength = 2)]
-        public string Name { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+        [System.Runtime.Serialization.EnumMember(Value = @"suspended")]
+        Suspended = 1,
 
     }
 }
