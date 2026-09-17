@@ -6,7 +6,7 @@
     "features": 13,
     "items": 55
   },
-  "warnings_total": 102,
+  "warnings_total": 98,
   "warnings": {
     "已上线但无设计映射": [
       "M00.F01.I01",
@@ -26,8 +26,6 @@
       "M01.F03.I02",
       "M01.F04.I01",
       "M01.F04.I02",
-      "M01.F04.I04",
-      "M01.F04.I05",
       "M01.F04.I06",
       "M04.F01.I01",
       "M04.F01.I02",
@@ -54,7 +52,7 @@
       "M00.F04.I01",
       "M01.F02.I01",
       "M04.F01.I03",
-      "M04.F01.I06",
+      "M04.F03.I03",
       "M04.F04.I03",
       "M04.F04.I04",
       "M04.F04.I05",
@@ -79,8 +77,6 @@
       "M01.F03.I02",
       "M01.F04.I01",
       "M01.F04.I02",
-      "M01.F04.I04",
-      "M01.F04.I05",
       "M01.F04.I06",
       "M04.F01.I01",
       "M04.F01.I02",
@@ -515,9 +511,9 @@
       "flows": [],
       "designs": [],
       "tests": [
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1260 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1576 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:2854 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1153 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1469 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:2747 (path)"
       ],
       "entry": []
     },
@@ -533,10 +529,7 @@
         "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockedUser_throwsLockedException",
         "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockoutExpires_afterDuration",
         "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements",
-        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.ResetSuccess_clearsCounter",
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1260 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:1576 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:2854 (path)"
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.ResetSuccess_clearsCounter"
       ],
       "entry": []
     },
@@ -562,28 +555,23 @@
       "entry": []
     },
     "M01.F04.I04": {
-      "name": "OIDC Code 换取",
-      "status": "已上线",
+      "name": "~~OIDC Code 换取~~",
+      "status": "已废弃",
       "type": "接口",
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:6729 (path)"
-      ],
+      "tests": [],
       "entry": []
     },
     "M01.F04.I05": {
-      "name": "refresh token",
-      "status": "已上线",
+      "name": "~~refresh token~~",
+      "status": "已废弃",
       "type": "接口",
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:4778 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:5952 (path)"
-      ],
+      "tests": [],
       "entry": []
     },
     "M01.F04.I06": {
@@ -594,7 +582,7 @@
       "flows": [],
       "designs": [],
       "tests": [
-        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:3830 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\auth.test.ts:3723 (path)"
       ],
       "entry": []
     },
@@ -682,7 +670,10 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [],
+      "tests": [
+        "output\\saas-identity-platform-contract-test\\tests\\apps-public.test.ts:22 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\apps-public.test.ts:569 (path)"
+      ],
       "entry": []
     },
     "M04.F02.I01": {
@@ -739,14 +730,7 @@
       "requirements": [],
       "flows": [],
       "designs": [],
-      "tests": [
-        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:11105 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:12055 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:6035 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:7267 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:8493 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\oauth.test.ts:9983 (path)"
-      ],
+      "tests": [],
       "entry": []
     },
     "M04.F04.I01": {
