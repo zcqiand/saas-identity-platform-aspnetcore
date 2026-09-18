@@ -135,6 +135,9 @@ public class TenantMembersController : TenantMembersControllerBase
         var items = await q
             .Include(m => m.Roles)
             .OrderByDescending(m => m.CreatedAt)
+            // 2026-09-18 tiebreak 显式化：家族 seed 多行 created_at 相同，仅按 created_at 排序时
+            // 顺序依赖插入序/堆序不稳定；tiebreak = id ASC（对齐本仓 roles 列表 ThenBy(Id) 先例）。
+            .ThenBy(m => m.Id)
             .Skip(p * ps).Take(ps).ToListAsync();
         // 2026-09-12 修复：同一 DbContext 不允许并发查询（Task.WhenAll 内 await 首个查询后
         // 其余继续并发 → "A second operation was started on this context instance" 500）。

@@ -70,6 +70,45 @@ public class TenantMembersControllerTests
 
     [Fact]
     [Trait("Fn", "M00.F02.I01")]
+    public async Task MembersGet_ordersCreatedAtDesc_withIdTiebreak_stableUnderSameCreatedAt()
+    {
+        var (db, ctrl) = Make("members-order");
+        // 2026-09-18 排序显式化收口：家族约定 list = created_at DESC；
+        // 家族 seed 多行 created_at 相同 —— 同时间戳下顺序必须稳定，tiebreak = member.id ASC
+        // （对齐 aspnetcore roles 列表 ThenBy(Id) 与 springboot findByUserId id ASC 先例）。
+        // 故意让插入序 ≠ id 序：无 tiebreak 时 InMemory 落插入序，断言必红。
+        var older = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc);
+        var newer = new DateTime(2026, 9, 18, 0, 0, 0, DateTimeKind.Utc);
+
+        var uOld = MakeUser("u-old");
+        db.SysUsers.Add(uOld);
+        var mOld = MakeMember(uOld.Id);
+        mOld.Id = new Guid("00000000-0000-0000-0000-000000000001");
+        mOld.CreatedAt = older;
+
+        var u1 = MakeUser("u-first-inserted");
+        db.SysUsers.Add(u1);
+        var m1 = MakeMember(u1.Id);
+        m1.Id = new Guid("00000000-0000-0000-0000-00000000000b"); // id 大，tiebreak 应排后
+        m1.CreatedAt = newer;
+
+        var u2 = MakeUser("u-second-inserted");
+        db.SysUsers.Add(u2);
+        var m2 = MakeMember(u2.Id);
+        m2.Id = new Guid("00000000-0000-0000-0000-00000000000a"); // id 小，tiebreak 应排前
+        m2.CreatedAt = newer;
+
+        db.TenantMembers.AddRange(mOld, m1, m2);
+        await db.SaveChangesAsync();
+
+        var page = await ctrl.MembersGet(TenantId.ToString(), 0, 20, null);
+        var ids = page.Items.Select(i => i.Id).ToList();
+        // created_at DESC：newer 两行在前；同 created_at → id ASC：u2 在 u1 前；older 最后。
+        Assert.Equal(new[] { u2.Id, u1.Id, uOld.Id }, ids);
+    }
+
+    [Fact]
+    [Trait("Fn", "M00.F02.I01")]
     public async Task MembersGet_returnsFlatView_addressableByUserId()
     {
         var (db, ctrl) = Make("members-flat");
