@@ -127,8 +127,14 @@ elif cmd.startswith("scaffold"):
     marker["db_synced_at"] = now
     marker["db_synced_cmd"] = cmd
 
-shas = [s for s in (marker.get("api_synced_sha"), marker.get("db_synced_sha")) if s]
-marker["shared_sha"] = max(shas) if shas else shared_sha
+# shared_sha 取「最近一次同步」对应的 sha：ISO-8601 UTC 时间戳字典序==时间序。
+# 勿用 max(sha)——SHA 字典序不是 git 时间序（5.21 事故）。
+entries = [
+    (marker.get(k + "_at", ""), marker[k + "_sha"])
+    for k in ("api_synced", "db_synced")
+    if marker.get(k + "_sha")
+]
+marker["shared_sha"] = max(entries)[1] if entries else shared_sha
 marker["consumer_repo"] = repo
 
 with open(marker_path, "w", encoding="utf-8") as f:
