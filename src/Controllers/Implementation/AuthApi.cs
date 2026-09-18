@@ -163,5 +163,4 @@ public class AuthController : AuthControllerBase
         Response.StatusCode = StatusCodes.Status204NoContent;
         return Task.CompletedTask;
     }
-
-    }
+}
