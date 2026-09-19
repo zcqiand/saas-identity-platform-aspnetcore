@@ -1,27 +1,29 @@
 {
   "schema": 1,
   "project": "saas-identity-platform-aspnetcore",
-  "current_task": "2026-09-12/13 四方 live 一致性收敛提交（8f71dd9）：Npgsql MaxPoolSize=10 修共享 PG 53300（login 500 级联根因）+ ADR-0032 扁平成员视图（MembershipViews/StatusEnumMaps）+ TenantRoles 越权洞 (id,tenantId) 双键 + roles 列表 created_at ASC 排序对齐 msw oracle",
-  "last_session_at": "2026-09-13",
+  "current_task": "2026-09-19 family-leftovers wave 收口（Task 6）：本仓 canonical 绿（R1 full gate exit 0）；R2/R3 L5 红=环境注入副作用已还原",
+  "last_session_at": "2026-09-19",
   "done": [
     "MaxPoolSize=10（53300 修复，池余量 60/100 实测）",
     "ADR-0032 扁平成员六端点：status 读 member 行、switch 门槛非 disabled",
     "TenantRoles RolesGet/Patch/Delete (id,tenantId) 双键（跨租户越权洞闭合）",
     "roles 列表 OrderBy(CreatedAt).ThenBy(Id) 对齐 msw oracle 插入序",
-    "login/refresh/oidc 响应 shape 对齐 oracle；门禁全绿；live 222/240"
+    "login/refresh/oidc 响应 shape 对齐 oracle；门禁全绿；live 222/240",
+    "Task 6 收口：三轮判读，canonical 绿（R1）；环境类红定性 + 树两次还原"
   ],
   "next": [
-    "无本仓阻塞项；后续批次见 suite 根问题清单（members 列表 DESC 与 msw 插入序是同族潜在分叉，seed created_at 相同暂未翻车）"
+    "无代码欠账；剩余项见 docs/superpowers/plans/2026-09-18-family-leftovers-remediation.md"
   ],
   "open_questions": [
     "评审非阻塞项：MembersPatch status 映射、MalformedBodyFilter shape 是否本批收（未动）"
   ],
   "dont": [
     "gate 前必须杀掉 5104 端口的 dotnet 进程（exe 锁 → MSB3027 假红）；用端口反查杀，别按 dotnet 进程名",
-    "不要给 Npgsql 连接串加 env 默认值兜底（ADR-0019 硬规则）"
+    "不要给 Npgsql 连接串加 env 默认值兜底（ADR-0019 硬规则）",
+    "scaffold 门认 DATABASE_URL：误连 lab 库会生成 25 个 lab 实体落盘并触发 L5 trace 陈旧（Task 6 R2/R3 两次实证）"
   ],
   "last_gate_passed_at": "2026-09-03T11:50+08:00",
   "active_branch": "master",
   "ahead_of_origin": "0",
-  "last_session_summary": "live 59 failed 根因=53300 连接耗尽；6 code-review blocker 全修；四方终验 240 用例 222 过（唯一失败=nextjs 30s 瞬时超时）；门禁全绿"
+  "last_session_summary": "无代码改动：R1 绿；R2/R3 L5 trace 陈旧 = --all lab_test 注入致 scaffold 拉 25 个 lab 实体污染工作树（AppDbContext 改写 + untracked），两次均已 git checkout/clean 还原，树回干净"
 }
