@@ -31,7 +31,11 @@ public class TenantApplicationsController : TenantApplicationsControllerBase
         TenantId = e.TenantId,
         ClientId = e.ClientId,
         Status = e.Status,
-        ExpireTime = new DateTimeOffset(DateTime.SpecifyKind(e.ExpireTime!.Value, DateTimeKind.Utc)),
+        // 5.18：expireTime 可选（SSOT TenantApplication.expireTime?）——未设值回 null，
+        // 不再 e.ExpireTime!.Value 强解（存量行 expire_time IS NULL 会 NRE 500）。
+        ExpireTime = e.ExpireTime.HasValue
+            ? new DateTimeOffset(DateTime.SpecifyKind(e.ExpireTime.Value, DateTimeKind.Utc))
+            : (DateTimeOffset?)null,
         CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(e.CreatedAt, DateTimeKind.Utc)),
     };
 
@@ -78,7 +82,8 @@ public class TenantApplicationsController : TenantApplicationsControllerBase
             TenantId = tid,
             ClientId = body.ClientId,
             Status = 1, // active
-            ExpireTime = body.ExpireTime.GetValueOrDefault().UtcDateTime,
+            // 5.18：expireTime? 可选——不传存 NULL（永久订阅），不再落 MinValue(0001-01-01)。
+            ExpireTime = body.ExpireTime?.UtcDateTime,
             CreatedAt = DateTime.UtcNow,
         };
         _db.TenantApplications.Add(e);
@@ -94,7 +99,12 @@ public class TenantApplicationsController : TenantApplicationsControllerBase
                 ta => ta.TenantId == Guid.Parse(tenantId) && ta.ClientId == clientId)
             ?? throw new KeyNotFoundException($"subscription tenant={tenantId} client={clientId} not found");
         e.Status = (short)body.Status;
-        e.ExpireTime = body.ExpireTime.GetValueOrDefault().UtcDateTime;
+        // 5.18 partial-update 语义：PATCH 不带 expireTime → 不改（与 nextjs/springboot 对齐），
+        // 不再无条件覆写 MinValue。显式带值才更新。
+        if (body.ExpireTime.HasValue)
+        {
+            e.ExpireTime = body.ExpireTime.Value.UtcDateTime;
+        }
         await _db.SaveChangesAsync();
         return ToDto(e);
     }
