@@ -75,7 +75,9 @@ public class AdminTenantsController : AdminTenantsControllerBase
         var gid = Guid.Parse(id);
         var e = await _db.Tenants.FirstAsync(t => t.Id == gid);
         if (body.Name != null) e.Name = body.Name;
-        e.Status = StatusEnumMaps.ToDbTenantStatus(body.Status ?? TenantStatus.Active);
+        // 5.26 partial-update 语义（5.18 先例 333d8ac 同款）：PATCH 不带 status = 保持
+        // 原值，不再覆写回 Active。
+        if (body.Status.HasValue) e.Status = StatusEnumMaps.ToDbTenantStatus(body.Status.Value);
         e.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return ToDto(e);

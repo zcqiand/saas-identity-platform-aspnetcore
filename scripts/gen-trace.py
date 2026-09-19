@@ -94,6 +94,10 @@ trace = {
 
         # M01.F03.I02 — 切换当前租户（tests/MeControllerSwitchTests.cs，2026-09-10 审计红线 #4 修复随附）
         {"test": "Saas.Identity.AspNetCore.Tests.MeControllerSwitchTests.Switch_returnsHs256Token_notAlgNone", "fns": ["M01.F03.I02"], "inert": False},
+
+        # 5.26 — partial-update「不传不改」语义（tests/PartialUpdateSemanticsTests.cs）
+        {"test": "Saas.Identity.AspNetCore.Tests.PartialUpdateSemanticsTests.MenusPatch_withoutOptionalFields_keepsOriginalValues", "fns": ["M04.F04.I04"], "inert": False},
+        {"test": "Saas.Identity.AspNetCore.Tests.PartialUpdateSemanticsTests.TenantsPatch_withoutStatus_keepsOriginalStatus", "fns": ["M00.F01.I04"], "inert": False},
     ],
 }
 

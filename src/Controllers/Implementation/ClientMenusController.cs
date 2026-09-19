@@ -75,10 +75,12 @@ public class ClientMenusController : ClientMenusControllerBase
         if (body.Title != null) e.Title = body.Title;
         if (body.Path != null) e.Path = body.Path;
         if (body.Icon != null) e.Icon = body.Icon;
-        e.ParentId = body.ParentId ?? Guid.Empty;
-        e.Type = (short)(body.Type ?? (SysMenuType)0);
-        e.SortOrder = body.SortOrder ?? 0;
-        e.Status = (short)(body.Status ?? 0);
+        // 5.26 partial-update 语义（5.18 先例 333d8ac 同款）：PATCH 不传 = 保持原值，
+        // 不再重置默认（Guid.Empty / 0）。
+        if (body.ParentId.HasValue) e.ParentId = body.ParentId.Value;
+        if (body.Type.HasValue) e.Type = (short)body.Type.Value;
+        if (body.SortOrder.HasValue) e.SortOrder = body.SortOrder.Value;
+        if (body.Status.HasValue) e.Status = (short)body.Status.Value;
         await _db.SaveChangesAsync();
         return ToDto(e);
     }
