@@ -63,7 +63,9 @@ ALL_GEN="$ROOT/src/Controllers/Generated/AllGenerated.cs"
 # ADR-0032 (2026-09-12)：currentTenantId（LoginResponse / CurrentUser，optional uuid）加入
 # 默认值抑制清单 —— 实现以 Guid.Empty 表示「无当前租户」，不抑制会序列化出
 # "00000000-0000-0000-0000-000000000000"，与 msw/nextjs/springboot 的字段缺失不等价。
-for FIELD in parentId lastUsedAt expiresAt revokedAt currentTenantId; do
+# 5.25（2026-09-19）：lastUsedAt/revokedAt 已不存在于契约（恒 WARN not found），
+# regen 实证零内容漂移后从清单删除——死项清理，非行为变更。
+for FIELD in parentId expiresAt currentTenantId; do
   # Match the JsonPropertyName attribute line and inject JsonIgnore above it.
   # Use Python (not sed) so the multi-platform shell handles newline insertion reliably.
   python3 - "$ALL_GEN" "$FIELD" <<'PY'
