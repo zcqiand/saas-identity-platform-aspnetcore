@@ -134,7 +134,7 @@
 |---|---|---|---|---|---|
 | M01.F04.I01 | 密码登录 API | 接口 | 仅后端 | 用邮箱+密码换取 saas session cookie | 已上线 |
 | M01.F04.I02 | 失败锁定 | 接口 | 仅后端 | 连续 5 次密码错误锁定账户 15 分钟，窗口内拒绝登录 | 已上线 |
-| M01.F04.I03 | 密码登录 UI | 页面 | 仅前端 | 前端仓负责实现 | 已废弃 |
+| M01.F04.I03 | 密码登录 UI | 页面 | 仅前端 | 前端仓负责实现 | 已上线 |
 | M01.F04.I04 | ~~OIDC Code 换取~~ | 接口 | 仅后端 | ~~用 authorization_code 换取 access_token + refresh_token~~（合并到 M04.F03.I02 authorization_code grant；saas-2026-09-16-001+003） | 已废弃 |
 | M01.F04.I05 | ~~refresh token~~ | 接口 | 仅后端 | ~~用 refresh_token 换取新的 access_token~~（合并到 M04.F03.I02 refresh_token grant；saas-2026-09-16-001+003） | 已废弃 |
 | M01.F04.I06 | 登出（本地清理） | 接口 | 前端+后端 | 清理当前浏览器 session cookie | 已上线 |
