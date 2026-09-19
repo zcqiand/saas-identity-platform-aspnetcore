@@ -42,7 +42,7 @@ public class TenantRolesController : TenantRolesControllerBase
         UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(e.UpdatedAt, DateTimeKind.Utc)),
     };
 
-    public override async Task<Response6> RolesGet(string tenantId, string clientId, int? page, int? pageSize)
+    public override async Task<Response6> RolesGet(string tenantId, string? clientId, int? page, int? pageSize)
     {
         _guard.VerifyPathTenant(tenantId);
         var tid = Guid.Parse(tenantId);

@@ -33,15 +33,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("roleName")]
         [System.ComponentModel.DataAnnotations.StringLength(64, MinimumLength = 1)]
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        public int Status { get; set; }
+        public int? Status { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

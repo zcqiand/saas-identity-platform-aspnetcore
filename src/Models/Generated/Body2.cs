@@ -34,9 +34,9 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
-        public string ParentId { get; set; }
+        public string? ParentId { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

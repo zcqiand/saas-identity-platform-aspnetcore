@@ -46,12 +46,12 @@ public class ClientMenusController : ClientMenusControllerBase
         {
             Id = Guid.NewGuid(),
             ClientId = clientId,
-            ParentId = body.ParentId,
+            ParentId = body.ParentId ?? Guid.Empty,
             Title = body.Title,
             Type = (short)body.Type,
             Path = body.Path,
             Icon = body.Icon,
-            SortOrder = body.SortOrder,
+            SortOrder = body.SortOrder ?? 0,
             CreatedAt = DateTime.UtcNow,
         };
         _db.SysMenus.Add(e);
@@ -75,10 +75,10 @@ public class ClientMenusController : ClientMenusControllerBase
         if (body.Title != null) e.Title = body.Title;
         if (body.Path != null) e.Path = body.Path;
         if (body.Icon != null) e.Icon = body.Icon;
-        if (Guid.TryParse(body.ParentId.ToString(), out var pid)) e.ParentId = pid;
-        e.Type = (short)body.Type;
-        e.SortOrder = body.SortOrder;
-        e.Status = (short)body.Status;
+        e.ParentId = body.ParentId ?? Guid.Empty;
+        e.Type = (short)(body.Type ?? (SysMenuType)0);
+        e.SortOrder = body.SortOrder ?? 0;
+        e.Status = (short)(body.Status ?? 0);
         await _db.SaveChangesAsync();
         return ToDto(e);
     }

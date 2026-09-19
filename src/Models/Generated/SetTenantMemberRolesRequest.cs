@@ -35,7 +35,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<string> RoleIds { get; set; } = new System.Collections.Generic.List<string>();
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

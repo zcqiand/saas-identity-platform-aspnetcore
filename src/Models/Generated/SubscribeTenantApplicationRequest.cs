@@ -33,12 +33,12 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientId { get; set; }
+        public string ClientId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("expireTime")]
-        public System.DateTimeOffset ExpireTime { get; set; }
+        public System.DateTimeOffset? ExpireTime { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

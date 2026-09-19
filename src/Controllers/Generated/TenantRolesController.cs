@@ -32,7 +32,7 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles")]
-        public abstract System.Threading.Tasks.Task<Response6> RolesGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] string clientId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
+        public abstract System.Threading.Tasks.Task<Response6> RolesGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] string? clientId, [Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles")]

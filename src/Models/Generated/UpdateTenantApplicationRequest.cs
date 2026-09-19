@@ -32,12 +32,12 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        public int Status { get; set; }
+        public int Status { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("expireTime")]
-        public System.DateTimeOffset ExpireTime { get; set; }
+        public System.DateTimeOffset? ExpireTime { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

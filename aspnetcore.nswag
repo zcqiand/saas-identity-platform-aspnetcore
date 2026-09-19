@@ -19,6 +19,8 @@
       "generateModelValidationAttributes": true,
       "useActionResultType": false,
       "addNullableAnnotations": true,
+      "generateOptionalPropertiesAsNullable": true,
+      "generateNullableReferenceTypes": true,
       "generateDtoTypes": true,
       "typeStyle": "Record",
       "dateType": "System.DateTime",

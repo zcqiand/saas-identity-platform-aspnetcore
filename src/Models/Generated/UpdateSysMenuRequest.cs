@@ -34,34 +34,34 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("parentId")]
-        public System.Guid ParentId { get; set; }
+        public System.Guid? ParentId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("title")]
-        public string Title { get; set; }
+        public string? Title { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("type")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysMenuType>))]
-        public SysMenuType Type { get; set; }
+        public SysMenuType? Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("path")]
-        public string Path { get; set; }
+        public string? Path { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("component")]
-        public string Component { get; set; }
+        public string? Component { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("perms")]
-        public string Perms { get; set; }
+        public string? Perms { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("icon")]
-        public string Icon { get; set; }
+        public string? Icon { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("sortOrder")]
-        public int SortOrder { get; set; }
+        public int? SortOrder { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        public int Status { get; set; }
+        public int? Status { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

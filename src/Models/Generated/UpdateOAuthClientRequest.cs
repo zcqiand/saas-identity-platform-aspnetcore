@@ -32,30 +32,30 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("clientName")]
-        public string ClientName { get; set; }
+        public string? ClientName { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
-        public string GrantTypes { get; set; }
+        public string? GrantTypes { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
-        public string RedirectUris { get; set; }
+        public string? RedirectUris { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        public string Scopes { get; set; }
+        public string? Scopes { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("accessTokenValidity")]
-        public int AccessTokenValidity { get; set; }
+        public int? AccessTokenValidity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshTokenValidity")]
-        public int RefreshTokenValidity { get; set; }
+        public int? RefreshTokenValidity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("autoApprove")]
-        public bool AutoApprove { get; set; }
+        public bool? AutoApprove { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        public int Status { get; set; }
+        public int? Status { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

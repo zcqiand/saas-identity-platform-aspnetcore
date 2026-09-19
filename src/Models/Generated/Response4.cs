@@ -36,15 +36,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public System.Collections.Generic.List<TenantApplication> Items { get; set; } = new System.Collections.Generic.List<TenantApplication>();
 
         [System.Text.Json.Serialization.JsonPropertyName("page")]
-        public int Page { get; set; }
+        public int Page { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
-        public int PageSize { get; set; }
+        public int PageSize { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("total")]
-        public long Total { get; set; }
+        public long Total { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

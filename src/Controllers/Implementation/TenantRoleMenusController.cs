@@ -24,7 +24,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         _db = db;
     }
 
-    public override async Task<RoleMenuGrant> MenusGet(string tenantId, string roleId, string clientId)
+    public override async Task<RoleMenuGrant> MenusGet(string tenantId, string roleId, string? clientId)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
@@ -35,7 +35,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         return ToGrant(role);
     }
 
-    public override async Task<RoleMenuGrant> MenusPut(string tenantId, string roleId, string clientId, SetSysRoleMenusRequest body)
+    public override async Task<RoleMenuGrant> MenusPut(string tenantId, string roleId, string? clientId, SetSysRoleMenusRequest body)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);
@@ -61,7 +61,7 @@ public class TenantRoleMenusController : TenantRoleMenusControllerBase
         return ToGrant(role);
     }
 
-    public override async Task MenusDelete(string tenantId, string roleId, string clientId)
+    public override async Task MenusDelete(string tenantId, string roleId, string? clientId)
     {
         _guard.VerifyPathTenant(tenantId);
         var id = Guid.Parse(roleId);

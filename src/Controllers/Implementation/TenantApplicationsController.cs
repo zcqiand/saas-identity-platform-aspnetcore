@@ -78,7 +78,7 @@ public class TenantApplicationsController : TenantApplicationsControllerBase
             TenantId = tid,
             ClientId = body.ClientId,
             Status = 1, // active
-            ExpireTime = body.ExpireTime.UtcDateTime,
+            ExpireTime = body.ExpireTime.GetValueOrDefault().UtcDateTime,
             CreatedAt = DateTime.UtcNow,
         };
         _db.TenantApplications.Add(e);
@@ -94,7 +94,7 @@ public class TenantApplicationsController : TenantApplicationsControllerBase
                 ta => ta.TenantId == Guid.Parse(tenantId) && ta.ClientId == clientId)
             ?? throw new KeyNotFoundException($"subscription tenant={tenantId} client={clientId} not found");
         e.Status = (short)body.Status;
-        e.ExpireTime = body.ExpireTime.UtcDateTime;
+        e.ExpireTime = body.ExpireTime.GetValueOrDefault().UtcDateTime;
         await _db.SaveChangesAsync();
         return ToDto(e);
     }

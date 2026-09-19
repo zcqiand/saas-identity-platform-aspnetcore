@@ -33,26 +33,26 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientId { get; set; }
+        public string ClientId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("redirectUri")]
         [System.ComponentModel.DataAnnotations.Required]
         [System.ComponentModel.DataAnnotations.StringLength(500, MinimumLength = 1)]
-        public string RedirectUri { get; set; }
+        public string RedirectUri { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("responseType")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AuthorizeCodeRequestResponseType>))]
-        public AuthorizeCodeRequestResponseType ResponseType { get; set; }
+        public AuthorizeCodeRequestResponseType ResponseType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("scope")]
-        public string Scope { get; set; }
+        public string? Scope { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("state")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string State { get; set; }
+        public string State { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

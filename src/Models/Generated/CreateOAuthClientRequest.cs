@@ -33,37 +33,37 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientId { get; set; }
+        public string ClientId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("clientName")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientName { get; set; }
+        public string ClientName { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("clientSecret")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientSecret { get; set; }
+        public string ClientSecret { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("grantTypes")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string GrantTypes { get; set; }
+        public string GrantTypes { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("redirectUris")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string RedirectUris { get; set; }
+        public string RedirectUris { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("scopes")]
-        public string Scopes { get; set; }
+        public string? Scopes { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("accessTokenValidity")]
-        public int AccessTokenValidity { get; set; }
+        public int? AccessTokenValidity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshTokenValidity")]
-        public int RefreshTokenValidity { get; set; }
+        public int? RefreshTokenValidity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("autoApprove")]
-        public bool AutoApprove { get; set; }
+        public bool? AutoApprove { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

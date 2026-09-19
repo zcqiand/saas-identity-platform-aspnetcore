@@ -64,7 +64,7 @@ public class MeController : MeControllerBase
         };
     }
 
-    public override async Task<IDictionary<string, ICollection<EffectiveMenuNode>>> Menus(string clientId)
+    public override async Task<IDictionary<string, ICollection<EffectiveMenuNode>>> Menus(string? clientId)
     {
         var uid = CurrentUserId();
         if (uid is null)
@@ -164,7 +164,7 @@ public class MeController : MeControllerBase
         return grouped;
     }
 
-    public override async Task<ICollection<DtoMembership>> Tenants(string clientId)
+    public override async Task<ICollection<DtoMembership>> Tenants(string? clientId)
     {
         var uid = CurrentUserId()
             ?? throw new UnauthorizedAccessException("no JWT sub claim");
@@ -175,7 +175,7 @@ public class MeController : MeControllerBase
         return MembershipViews.FromEntities(memberships);
     }
 
-    public override async Task<SwitchTenantResponse> Switch(string tenantId, string clientId)
+    public override async Task<SwitchTenantResponse> Switch(string tenantId, string? clientId)
     {
         var uid = CurrentUserId()
             ?? throw new UnauthorizedAccessException("Bearer sub required for tenant switch");

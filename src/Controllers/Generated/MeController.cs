@@ -36,15 +36,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/me/menus")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<EffectiveMenuNode>>> Menus([Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<EffectiveMenuNode>>> Menus([Microsoft.AspNetCore.Mvc.FromQuery] string? clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/me/tenants")]
-        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TenantMembership>> Tenants([Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
+        public abstract System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TenantMembership>> Tenants([Microsoft.AspNetCore.Mvc.FromQuery] string? clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPost, Microsoft.AspNetCore.Mvc.Route("api/v1/me/tenants/{tenantId}/switch")]
-        public abstract System.Threading.Tasks.Task<SwitchTenantResponse> Switch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
+        public abstract System.Threading.Tasks.Task<SwitchTenantResponse> Switch([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.FromQuery] string? clientId);
 
     }
 }

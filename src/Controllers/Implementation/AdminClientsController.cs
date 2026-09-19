@@ -67,9 +67,9 @@ public class AdminClientsController : AdminClientsControllerBase
             GrantTypes = body.GrantTypes,
             RedirectUris = body.RedirectUris,
             Scopes = body.Scopes,
-            AccessTokenValidity = body.AccessTokenValidity > 0 ? body.AccessTokenValidity : 3600,
-            RefreshTokenValidity = body.RefreshTokenValidity > 0 ? body.RefreshTokenValidity : 86400,
-            AutoApprove = body.AutoApprove,
+            AccessTokenValidity = body.AccessTokenValidity is int atv && atv > 0 ? atv : 3600,
+            RefreshTokenValidity = body.RefreshTokenValidity is int rtv && rtv > 0 ? rtv : 86400,
+            AutoApprove = body.AutoApprove ?? false,
             Status = 1, // active
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,

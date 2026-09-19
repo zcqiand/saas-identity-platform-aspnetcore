@@ -75,7 +75,7 @@ public class AdminTenantsController : AdminTenantsControllerBase
         var gid = Guid.Parse(id);
         var e = await _db.Tenants.FirstAsync(t => t.Id == gid);
         if (body.Name != null) e.Name = body.Name;
-        e.Status = StatusEnumMaps.ToDbTenantStatus(body.Status);
+        e.Status = StatusEnumMaps.ToDbTenantStatus(body.Status ?? TenantStatus.Active);
         e.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return ToDto(e);

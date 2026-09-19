@@ -41,30 +41,30 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
 
         [System.Text.Json.Serialization.JsonPropertyName("userId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public System.Guid UserId { get; set; }
+        public System.Guid UserId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
 
         [System.Text.Json.Serialization.JsonPropertyName("currentTenantId")]
-        public System.Guid CurrentTenantId { get; set; }
+        public System.Guid? CurrentTenantId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("accessToken")]
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
-        public string RefreshToken { get; set; }
+        public string? RefreshToken { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("tokenType")]
-        public string TokenType { get; set; }
+        public string? TokenType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("expiresIn")]
-        public int ExpiresIn { get; set; }
+        public int? ExpiresIn { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientId { get; set; }
+        public string ClientId { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

@@ -34,25 +34,25 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("grantType")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TokenRequestGrantType>))]
-        public TokenRequestGrantType GrantType { get; set; }
+        public TokenRequestGrantType GrantType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("code")]
-        public string Code { get; set; }
+        public string? Code { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("refreshToken")]
-        public string RefreshToken { get; set; }
+        public string? RefreshToken { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("clientId")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string ClientId { get; set; }
+        public string ClientId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("clientSecret")]
-        public string ClientSecret { get; set; }
+        public string? ClientSecret { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("redirectUri")]
-        public string RedirectUri { get; set; }
+        public string? RedirectUri { get; set; } = default!;
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public System.Collections.Generic.IDictionary<string, object> AdditionalProperties

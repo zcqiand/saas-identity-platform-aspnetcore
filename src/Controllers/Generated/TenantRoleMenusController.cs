@@ -32,15 +32,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     {
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
+        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusGet([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] string? clientId);
 
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpPut, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] string clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetSysRoleMenusRequest body);
+        public abstract System.Threading.Tasks.Task<RoleMenuGrant> MenusPut([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] string? clientId, [Microsoft.AspNetCore.Mvc.FromBody] [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] SetSysRoleMenusRequest body);
 
         /// <returns>There is no content to send for this request, but the headers may be useful.</returns>
         [Microsoft.AspNetCore.Mvc.HttpDelete, Microsoft.AspNetCore.Mvc.Route("api/v1/tenants/{tenantId}/roles/{roleId}/menus")]
-        public abstract System.Threading.Tasks.Task MenusDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] string clientId);
+        public abstract System.Threading.Tasks.Task MenusDelete([Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string tenantId, [Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired] string roleId, [Microsoft.AspNetCore.Mvc.FromQuery] string? clientId);
 
     }
 }
