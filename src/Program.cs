@@ -162,6 +162,10 @@ builder.Services.AddControllers(o =>
     // 此 filter：ModelState invalid 且有 body 参数没绑上 → 400 INVALID_REQUEST；
     // 属性级 [Required] 校验失败时参数对象已构造（非 null）不受影响，保持既有行为。
     o.Filters.Add<MalformedBodyFilter>();
+    // 5.34 错误语义收口：关掉 MVC 对 NRT 非空引用属性的隐式 [Required] 推断
+    //（lab 先例 lab-management-system-aspnetcore/src/Program.cs 同款一行修）；
+    // 契约必填校验由 NSwag 产出的显式 [Required] 承担，不受此开关影响。
+    o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
 })
     .AddApplicationPart(typeof(Saas.Identity.AspNetCore.Controllers.Generated.ClientMenusControllerBase).Assembly)
     // 2026-08-30：合同测试发现 aspnetcore enum 序列化为 PascalCase（"Active"），
@@ -195,8 +199,11 @@ builder.Services.AddControllers(o =>
             {
                 var enumType = System.Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
                 if (enumType.IsEnum)
-                    prop.CustomConverter = new System.Text.Json.Serialization.JsonStringEnumConverter(
-                        System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
+                    // 2026-09-20 5.34 修复：CustomConverter 必须显式支持 Nullable<enum> —— 非泛型
+                    // JsonStringEnumConverter.CanConvert 只认 enum 本体，对 SysUserStatus? 这类
+                    // 可空枚举属性直接抛 "not supported by the current JsonConverterFactory" →
+                    // body 参数被剔除 → MalformedBodyFilter 400（live 对拍 I39/I70 家族根因）。
+                    prop.CustomConverter = new SnakeCaseEnumJsonConverterFactory();
             }
         });
         o.JsonSerializerOptions.TypeInfoResolver = resolver;
@@ -327,3 +334,65 @@ internal sealed class MalformedBodyFilter : Microsoft.AspNetCore.Mvc.Filters.IAc
 }
 
 public partial class Program { }
+
+/// <summary>
+/// 5.34 错误语义收口（2026-09-20）：SnakeCaseLower 枚举绑定 converter，nullable-aware。
+/// 非泛型 JsonStringEnumConverter.CanConvert 只接受 enum 本体；NSwag 生成的请求 DTO 里
+/// 枚举普遍是 SysUserStatus? 这类可空形态，直接挂上会在首次反序列化时抛
+/// "not supported by the current JsonConverterFactory" → JsonInputFormatter 记 binding 失败 →
+/// body 参数被剔除 → MalformedBodyFilter 400 INVALID_REQUEST，请求到不了控制器。
+/// 这里对 Nullable&lt;TEnum&gt; 包一层解包 converter，序列化/反序列化语义与非可空属性完全一致
+///（snake_case 小写，与非泛型 converter + SnakeCaseLower 现行为对齐）。
+/// </summary>
+internal sealed class SnakeCaseEnumJsonConverterFactory : System.Text.Json.Serialization.JsonConverterFactory
+{
+    public override bool CanConvert(Type typeToConvert) =>
+        typeToConvert.IsEnum ||
+        System.Nullable.GetUnderlyingType(typeToConvert)?.IsEnum == true;
+
+    public override System.Text.Json.Serialization.JsonConverter? CreateConverter(
+        Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        // STJ 规定 factory 的 CreateConverter 必须返回具体 converter（不能再是 factory），
+        // 所以非可空分支也要把 JsonStringEnumConverter 展开到 concrete enum converter。
+        var factory = new System.Text.Json.Serialization.JsonStringEnumConverter(
+            System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
+        var enumType = System.Nullable.GetUnderlyingType(typeToConvert);
+        if (enumType is null)
+            return factory.CreateConverter(typeToConvert, options);
+        var wrapper = typeof(NullableEnumJsonConverter<>).MakeGenericType(enumType);
+        return (System.Text.Json.Serialization.JsonConverter?)Activator.CreateInstance(wrapper, options);
+    }
+
+    /// <summary>Nullable&lt;TEnum&gt; 解包：null 短路，非 null 委托给非可空 enum converter。</summary>
+    private sealed class NullableEnumJsonConverter<T> : System.Text.Json.Serialization.JsonConverter<T?>
+        where T : struct
+    {
+        private readonly System.Text.Json.Serialization.JsonConverter<T> _inner;
+
+        public NullableEnumJsonConverter(System.Text.Json.JsonSerializerOptions options)
+        {
+            _inner = (System.Text.Json.Serialization.JsonConverter<T>)new System.Text.Json.Serialization.JsonStringEnumConverter(
+                    System.Text.Json.JsonNamingPolicy.SnakeCaseLower)
+                .CreateConverter(typeof(T), options)!;
+        }
+
+        public override T? Read(
+            ref System.Text.Json.Utf8JsonReader reader,
+            Type typeToConvert,
+            System.Text.Json.JsonSerializerOptions options)
+        {
+            if (reader.TokenType == System.Text.Json.JsonTokenType.Null) return null;
+            return _inner.Read(ref reader, typeof(T), options);
+        }
+
+        public override void Write(
+            System.Text.Json.Utf8JsonWriter writer,
+            T? value,
+            System.Text.Json.JsonSerializerOptions options)
+        {
+            if (value.HasValue) _inner.Write(writer, value.Value, options);
+            else writer.WriteNullValue();
+        }
+    }
+}
