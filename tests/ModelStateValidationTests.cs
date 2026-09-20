@@ -100,7 +100,7 @@ public class ModelStateValidationTests : IClassFixture<ModelStateValidationTests
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
         var body = await BodyAsync(resp);
-        Assert.Equal("INVALID_REQUEST", body.GetProperty("error").GetString());
+        Assert.Equal("INVALID_REQUEST", body.GetProperty("code").GetString());
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class ModelStateValidationTests : IClassFixture<ModelStateValidationTests
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
         var body = await BodyAsync(resp);
-        Assert.Equal("INVALID_REQUEST", body.GetProperty("error").GetString());
+        Assert.Equal("INVALID_REQUEST", body.GetProperty("code").GetString());
     }
 
     [Fact]

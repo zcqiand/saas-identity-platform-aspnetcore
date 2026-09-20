@@ -37,10 +37,6 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.Text.Json.Serialization.JsonPropertyName("mobile")]
         public string? Mobile { get; set; } = default!;
 
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SysUserStatus>))]
-        public SysUserStatus? Status { get; set; } = default!;
-
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]

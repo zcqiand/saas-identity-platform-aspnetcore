@@ -239,8 +239,9 @@ public class TenantMembersController : TenantMembersControllerBase
         var member = await FindMemberAsync(tenantId, ParseGuid(userId), includeRoles: true)
             ?? throw new KeyNotFoundException("Member not found");
         var u = await _db.SysUsers.FirstAsync(x => x.Id == member.UserId);
-        // 9/7 重组：status 走 tenant_member.status，专职 /status 端点；PATCH 只接 email/mobile
-        //（UpdateSysUserRequest.Status 是非可空枚举，「未传」与「active」不可区分，不在此处理）。
+        // 9/7 重组：status 走 tenant_member.status，专职 /status 端点；PATCH 只接 email/mobile。
+        // 5.13-①（2026-09-20 人裁）：契约 UpdateSysUserRequest 已删 status 字段，PATCH 通道
+        // 不再承载状态；body 里契约外的 status 属未知属性，System.Text.Json 按扩展数据忽略。
         if (body.Email != null) u.Email = body.Email;
         if (body.Mobile != null) u.Mobile = body.Mobile;
         member.UpdatedAt = DateTime.UtcNow;

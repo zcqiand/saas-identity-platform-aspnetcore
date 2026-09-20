@@ -18,14 +18,14 @@ namespace Saas.Identity.AspNetCore.Tests;
 
 /// <summary>
 /// 5.34 — 错误语义收口（池项 5.34 / live 对拍 I22/I39/I70 的测试级锁）：
-///   a) PATCH /tenants/{t}/members/{u} 合法 body（含 status 枚举，走 UpdateSysUserRequest）
-///      对已存在成员 → 200（NRT 隐式 Required 推断不得把请求拦成 400）；
+///   a) PATCH /tenants/{t}/members/{u} 合法 body 对已存在成员 → 200
+///      （NRT 隐式 Required 推断不得把请求拦成 400）；
 ///   b) 同 PATCH 不存在 userId → 404，envelope code NOT_FOUND；
 ///   c) POST /auth/login 错密码 → 401，envelope code UNAUTHORIZED。
 /// 走真管线（WebApplicationFactory + InMemory DB）：JWKS 同 key HS256 自签 token 过
 /// TenantGuard，body 反序列化/校验/validation 全在 MVC 管线里，控制器单元测试盖不住。
-/// envelope 形状见 Program.cs UseExceptionHandler：非锁定错误是
-/// { error: &lt;code&gt;, error_description }（pre-existing 旧形状，本批只锁语义不动形状）。
+/// envelope 形状见 Program.cs UseExceptionHandler：5.13-② 起全部错误统一契约
+/// ErrorResponse { code, message }（锁定错误另有 LockedAccountResponse 的 lockedUntil）。
 /// </summary>
 public class ErrorSemanticsTests : IClassFixture<ErrorSemanticsTests.Factory>
 {
@@ -118,7 +118,9 @@ public class ErrorSemanticsTests : IClassFixture<ErrorSemanticsTests.Factory>
         var (tenantId, userId, _) = SeedActiveMember($"u-patch-{Guid.NewGuid():N}");
         using var client = ClientFor(tenantId);
 
-        // 合法 body：email/mobile + status 枚举字段（snake_case 小写 "active"，走 UpdateSysUserRequest）
+        // 合法 body：email/mobile + 契约外 status 字段 —— 5.13-① 起 UpdateSysUserRequest
+        // 已无 status（状态唯一通道 /status），body 里的 "status":"active" 是未知属性，
+        // 必须被容忍（200，System.Text.Json 扩展数据忽略），不得 400/改写成员状态。
         var resp = await client.PatchAsync(
             $"api/v1/tenants/{tenantId}/members/{userId}",
             new StringContent(
@@ -150,7 +152,7 @@ public class ErrorSemanticsTests : IClassFixture<ErrorSemanticsTests.Factory>
 
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
         var body = await BodyAsync(resp);
-        Assert.Equal("NOT_FOUND", body.GetProperty("error").GetString());
+        Assert.Equal("NOT_FOUND", body.GetProperty("code").GetString());
     }
 
     [Fact]
@@ -168,6 +170,6 @@ public class ErrorSemanticsTests : IClassFixture<ErrorSemanticsTests.Factory>
 
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
         var body = await BodyAsync(resp);
-        Assert.Equal("UNAUTHORIZED", body.GetProperty("error").GetString());
+        Assert.Equal("UNAUTHORIZED", body.GetProperty("code").GetString());
     }
 }

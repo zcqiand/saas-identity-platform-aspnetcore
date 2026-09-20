@@ -292,7 +292,9 @@ app.UseExceptionHandler(errorApp =>
         };
         // M01.F04.I02 — 失败锁定走 shared LockedAccountResponse 契约：
         // { code: "ACCOUNT_LOCKED", message, lockedUntil: ISO-8601, remainingAttempts? }。
-        // 其它错误保留旧 { error, error_description } 形状（pre-existing，非本次任务范围）。
+        // 5.13-②（2026-09-20 人裁）：其余错误从旧 { error, error_description } 迁契约
+        // ErrorResponse 形状 { code, message }（main.tsp @error model）—— 本仓不再有
+        // 「锁定走契约、其余走旧形状」的两派分叉。
         if (ex is AccountLockedException lockEx)
         {
             await ctx.Response.WriteAsJsonAsync(new
@@ -304,7 +306,7 @@ app.UseExceptionHandler(errorApp =>
         }
         else
         {
-            await ctx.Response.WriteAsJsonAsync(new { error = code, error_description = ex?.Message ?? "unknown" });
+            await ctx.Response.WriteAsJsonAsync(new { code, message = ex?.Message ?? "unknown" });
         }
     });
 });
@@ -330,8 +332,8 @@ internal sealed class MalformedBodyFilter : Microsoft.AspNetCore.Mvc.Filters.IAc
                 .FirstOrDefault(m => !string.IsNullOrEmpty(m)) ?? "invalid request body";
             context.Result = new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
             {
-                error = "INVALID_REQUEST",
-                error_description = message,
+                code = "INVALID_REQUEST",
+                message,
             });
         }
     }
@@ -351,8 +353,9 @@ internal sealed class MalformedBodyFilter : Microsoft.AspNetCore.Mvc.Filters.IAc
 ///     query/route 参数的绑定失败/缺省产生的错误（key = 参数名）不拦 —— 保持既有宽松语义
 ///     （实现层有空值兜底，见 MalformedBodyFilter 同款约定）。
 ///
-/// envelope 照抄 MalformedBodyFilter 的 400 形状 { error, error_description }（家族 error 两派
-/// {code,message} vs {error,error_description}，本仓从后者），error_description = 校验错误汇总。
+/// envelope 与 MalformedBodyFilter 同款契约形状 { code, message }
+///（5.13-②：旧 { error, error_description } 已迁 ErrorResponse，main.tsp @error model），
+/// message = 校验错误汇总。
 /// </summary>
 internal sealed class ModelStateValidationFilter : Microsoft.AspNetCore.Mvc.Filters.IActionFilter
 {
@@ -392,8 +395,8 @@ internal sealed class ModelStateValidationFilter : Microsoft.AspNetCore.Mvc.Filt
 
         context.Result = new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
         {
-            error = "INVALID_REQUEST",
-            error_description = message,
+            code = "INVALID_REQUEST",
+            message,
         });
     }
 
