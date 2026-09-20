@@ -162,6 +162,12 @@ builder.Services.AddControllers(o =>
     // 此 filter：ModelState invalid 且有 body 参数没绑上 → 400 INVALID_REQUEST；
     // 属性级 [Required] 校验失败时参数对象已构造（非 null）不受影响，保持既有行为。
     o.Filters.Add<MalformedBodyFilter>();
+    // 5.64 契约注解运行时 enforce（人裁 2026-09-20）：DTO 的 [Required]/[StringLength]
+    // 此前只进 ModelState、无人消费 → 短密码（契约 @minLength(8)）真 200 建行。
+    // 此 filter 只拦 body DTO 属性级校验失败（详见 ModelStateValidationFilter 注释）；
+    // 注册在 MalformedBodyFilter 之后 —— body 绑定失败（参数被剔除）由前者短路，
+    // 两 filter 职责边界见各自类头注释。
+    o.Filters.Add<ModelStateValidationFilter>();
     // 5.34 错误语义收口：关掉 MVC 对 NRT 非空引用属性的隐式 [Required] 推断
     //（lab 先例 lab-management-system-aspnetcore/src/Program.cs 同款一行修）；
     // 契约必填校验由 NSwag 产出的显式 [Required] 承担，不受此开关影响。
@@ -328,6 +334,67 @@ internal sealed class MalformedBodyFilter : Microsoft.AspNetCore.Mvc.Filters.IAc
                 error_description = message,
             });
         }
+    }
+
+    public void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context) { }
+}
+
+/// <summary>
+/// 5.64（2026-09-20 人裁）：DTO DataAnnotations 校验失败 → 400 INVALID_REQUEST。
+/// 本仓无 [ApiController]（禁改，那会动推断/绑定行为面），NSwag 产物的
+/// [Required]/[StringLength] 只记 ModelState、无 filter 消费 → 契约长度/必填运行时不 enforce。
+///
+/// 职责边界（与 MalformedBodyFilter 互补，勿合并）：
+///   - MalformedBodyFilter：body 反序列化失败 —— 参数对象没构造出来，被从 ActionArguments 剔除 → 400。
+///   - 本 filter：body 参数已绑定成功，但属性级校验（[Required]/[StringLength] 等）失败 → 400。
+///     只收 ModelState 里归属 body DTO 的条目（空前缀下 key = DTO 属性名，或「body参数名.」前缀）；
+///     query/route 参数的绑定失败/缺省产生的错误（key = 参数名）不拦 —— 保持既有宽松语义
+///     （实现层有空值兜底，见 MalformedBodyFilter 同款约定）。
+///
+/// envelope 照抄 MalformedBodyFilter 的 400 形状 { error, error_description }（家族 error 两派
+/// {code,message} vs {error,error_description}，本仓从后者），error_description = 校验错误汇总。
+/// </summary>
+internal sealed class ModelStateValidationFilter : Microsoft.AspNetCore.Mvc.Filters.IActionFilter
+{
+    public void OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext context)
+    {
+        if (context.ModelState.IsValid)
+            return;
+
+        // 无 body 参数的 action（以及 body 没绑上的 —— 那是 MalformedBodyFilter 的辖域，
+        // 且它注册在前、短路后本 filter 不会执行）不拦。
+        var bodyParam = context.ActionDescriptor.Parameters.FirstOrDefault(p =>
+            p.BindingInfo?.BindingSource == Microsoft.AspNetCore.Mvc.ModelBinding.BindingSource.Body);
+        if (bodyParam == null || !context.ActionArguments.ContainsKey(bodyParam.Name))
+            return;
+
+        // 错误条目必须归属 body DTO：body 复杂模型空前缀绑定，key = 属性名（"Password"）；
+        // 兜底带前缀形态（"body.Password"）。query/route 错误的 key 是参数名，天然不匹配。
+        var propNames = bodyParam.ParameterType.GetProperties()
+            .Select(p => p.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var prefix = bodyParam.Name + ".";
+
+        var errors = context.ModelState
+            .Where(kv => kv.Key.Length == 0
+                || propNames.Contains(kv.Key)
+                || kv.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .SelectMany(kv => kv.Value!.Errors) // ModelStateDictionary 枚举 Value 标注可空，实际非空
+            .ToList();
+        if (errors.Count == 0)
+            return;
+
+        var message = string.Join("; ", errors
+            .Select(e => !string.IsNullOrEmpty(e.ErrorMessage) ? e.ErrorMessage : e.Exception?.Message)
+            .Where(m => !string.IsNullOrEmpty(m)));
+        if (string.IsNullOrEmpty(message))
+            message = "invalid request body";
+
+        context.Result = new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
+        {
+            error = "INVALID_REQUEST",
+            error_description = message,
+        });
     }
 
     public void OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext context) { }
