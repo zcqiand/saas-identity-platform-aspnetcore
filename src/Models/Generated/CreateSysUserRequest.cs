@@ -37,7 +37,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         public string Username { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("password")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.StringLength(256, MinimumLength = 8)]
         public string Password { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("email")]
