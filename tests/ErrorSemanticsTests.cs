@@ -128,6 +128,10 @@ public class ErrorSemanticsTests : IClassFixture<ErrorSemanticsTests.Factory>
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var body = await BodyAsync(resp);
         Assert.Equal("patched@example.com", body.GetProperty("email").GetString());
+        // 5.34 converter 语义回显锁：响应 status 枚举必须序列化为 snake_case 字符串
+        // （非泛型 JsonStringEnumConverter(SnakeCaseLower)，Program.cs 2026-09-12 修复），
+        // 不是数字（1）也不是 PascalCase（"Active"）。
+        Assert.Equal("active", body.GetProperty("status").GetString());
     }
 
     [Fact]
