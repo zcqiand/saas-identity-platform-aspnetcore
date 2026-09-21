@@ -220,15 +220,26 @@ try:
 except (FileNotFoundError, json.JSONDecodeError):
     marker = {}
 
-now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+# 5.77（2026-09-21 人裁立项）：同 sha 零写入——目标通道 synced_sha 与现存 marker 相同
+# → 整个 marker 文件零写入（时间戳/mtime 保持原值，字节级幂等）；sha 真变才全量写
+# （新 sha + 新时间戳）。判据只比 sha，时间戳不参与；JSON 形状/key 名一概不动。
 if cmd.startswith("gen-shared"):
-    marker["api_synced_sha"] = shared_sha
-    marker["api_synced_at"] = now
-    marker["api_synced_cmd"] = cmd
-elif cmd.startswith("scaffold"):
-    marker["db_synced_sha"] = shared_sha
-    marker["db_synced_at"] = now
-    marker["db_synced_cmd"] = cmd
+    channel = "api_synced"
+elif cmd.startswith(("scaffold", "sync-db", "pull-schema")):
+    channel = "db_synced"
+else:
+    channel = None
+
+if channel is not None and marker.get(channel + "_sha") == shared_sha:
+    print("[marker] %s_sha unchanged (%s...) - zero write, keep timestamp (5.77)"
+          % (channel, shared_sha[:12]))
+    sys.exit(3)
+
+now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+if channel is not None:
+    marker[channel + "_sha"] = shared_sha
+    marker[channel + "_at"] = now
+    marker[channel + "_cmd"] = cmd
 
 # shared_sha 取「最近一次同步」对应的 sha：ISO-8601 UTC 时间戳字典序==时间序。
 # 勿用 max(sha)——SHA 字典序不是 git 时间序（5.21 事故）。
@@ -247,5 +258,10 @@ PYEOF
 then
   echo "[scaffold-dbcontext]    ADR-0026 marker 已落盘: $MARKER (shared HEAD ${SHARED_SHA:0:7})"
 else
-  echo "[scaffold-dbcontext]    WARN: marker 写失败（python3 缺失？）—— staleness 将报 UNKNOWN" >&2
+  rc=$?
+  if [ "$rc" -eq 3 ]; then
+    echo "[scaffold-dbcontext]    ADR-0026 marker sha 未变，零写入（5.77 同 sha 不刷时间戳）: $MARKER"
+  else
+    echo "[scaffold-dbcontext]    WARN: marker 写失败（python3 缺失？）—— staleness 将报 UNKNOWN" >&2
+  fi
 fi
