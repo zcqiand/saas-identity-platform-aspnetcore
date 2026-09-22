@@ -1,10 +1,10 @@
 {
-  "api_synced_sha": "62d305bfe67104f89e34faba80073762f3d6bdc9",
-  "api_synced_at": "2026-09-20T15:10:21.908714+00:00",
+  "api_synced_sha": "816189ef2134df1132800467c3bd61e40d394ed7",
+  "api_synced_at": "2026-09-22T12:04:21.094468+00:00",
   "api_synced_cmd": "gen-shared.sh",
-  "shared_sha": "62d305bfe67104f89e34faba80073762f3d6bdc9",
+  "shared_sha": "816189ef2134df1132800467c3bd61e40d394ed7",
   "consumer_repo": "saas-identity-platform-aspnetcore",
-  "db_synced_sha": "d865ddce7f7b38a401bb08b749580f51f56a9a52",
-  "db_synced_at": "2026-09-20T08:28:33.624453+00:00",
+  "db_synced_sha": "62d305bfe67104f89e34faba80073762f3d6bdc9",
+  "db_synced_at": "2026-09-20T15:50:56.127782+00:00",
   "db_synced_cmd": "scaffold-dbcontext.sh"
 }
