@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 
+// @impl M04.F01.I06 — book anchor (xr-know-016)
+
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 public class ClientsController : ClientsControllerBase

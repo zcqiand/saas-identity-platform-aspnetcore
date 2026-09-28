@@ -6,6 +6,8 @@ using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 // alias 避免与 NSwag-generated DTO `OAuthClient` 冲突
 using ApiClient = Saas.Identity.AspNetCore.Controllers.Generated.OAuthClient;
 
+// @impl M04.F01.I02 + M04.F02.I01 — book anchor (xr-know-016)
+
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>

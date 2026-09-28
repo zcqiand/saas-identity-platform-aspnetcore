@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 
+// @impl M01.F04.I02 — book anchor (xr-know-016)
+
 namespace Saas.Identity.AspNetCore.Security;
 
 /// <summary>

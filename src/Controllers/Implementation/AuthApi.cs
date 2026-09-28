@@ -13,6 +13,8 @@ using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 using Saas.Identity.AspNetCore.Infrastructure.Audit;
 
+// @impl M01.F04.I01 + M01.F04.I06 — book anchor (xr-know-016)
+
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>

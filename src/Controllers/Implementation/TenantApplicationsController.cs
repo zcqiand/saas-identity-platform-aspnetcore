@@ -7,6 +7,8 @@ using Saas.Identity.AspNetCore.Security;
 // alias 避免与 NSwag-generated DTO `TenantApplication` 冲突
 using ApiApp = Saas.Identity.AspNetCore.Controllers.Generated.TenantApplication;
 
+// @impl M00.F05.I02 — book anchor (xr-know-016)
+
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>

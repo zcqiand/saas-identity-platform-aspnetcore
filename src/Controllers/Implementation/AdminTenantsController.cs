@@ -6,6 +6,8 @@ using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 // alias 避免与 NSwag-generated DTO `Tenant` 冲突
 using ApiTenant = Saas.Identity.AspNetCore.Controllers.Generated.Tenant;
 
+// @impl M00.F01.I01 — book anchor (xr-know-016)
+
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
 /// <summary>

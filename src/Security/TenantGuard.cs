@@ -1,3 +1,4 @@
+// @impl M00.F01.I03 — book anchor (xr-know-016)
 namespace Saas.Identity.AspNetCore.Security;
 
 /// <summary>
