@@ -7,7 +7,8 @@ using Saas.Identity.AspNetCore.Security;
 // alias to disambiguate DTO SysRole (NSwag) from entity DbRole (scaffold)
 using ApiRole = Saas.Identity.AspNetCore.Controllers.Generated.SysRole;
 
-// @impl M00.F03.I01 + M00.F03.I02 — book anchor (xr-know-016)
+// @impl M00.F03.I01 (book anchor xr-know-016)
+// @impl M00.F03.I02 — book anchor (xr-know-016)
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 

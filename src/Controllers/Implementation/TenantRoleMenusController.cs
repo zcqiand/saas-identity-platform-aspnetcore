@@ -5,7 +5,8 @@ using Saas.Identity.AspNetCore.Controllers.Generated;
 using Saas.Identity.AspNetCore.Infrastructure.Persistence;
 using Saas.Identity.AspNetCore.Security;
 
-// @impl M00.F04.I01 + M00.F04.I03 — book anchor (xr-know-016)
+// @impl M00.F04.I01 (book anchor xr-know-016)
+// @impl M00.F04.I03 — book anchor (xr-know-016)
 
 namespace Saas.Identity.AspNetCore.Controllers.Implementation;
 
