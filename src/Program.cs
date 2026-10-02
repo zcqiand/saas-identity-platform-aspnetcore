@@ -313,6 +313,15 @@ app.UseExceptionHandler(errorApp =>
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
+// REQ-2026-001 根路径默认跳转 Swagger UI（基础设施端点：不进契约面/功能树，与 /health 同模式
+// minimal API，只占精确 "/"，不吞 /api/*；在 SaasSessionMiddleware 语义之外——不设不读会话，
+// 该中间件对无 cookie 请求是纯透传）。
+// AllowAnonymous → 带/不带 Authorization 行为一致（AC-2）；
+// ExcludeFromDescription → 不出现在 swagger.json（AC-4）。
+app.MapGet("/", () => Results.Redirect("/swagger"))
+    .AllowAnonymous()
+    .ExcludeFromDescription();
+
 app.Run();
 
 /// <summary>body JSON 反序列化失败（参数没绑上）→ 400 INVALID_REQUEST，不让 null body 冒 500。</summary>

@@ -5,7 +5,7 @@
 | 提出人 | 用户 |
 | 提出日期 | 2026-10-02 |
 | 优先级 | P2 |
-| 状态 | 待评审 |
+| 状态 | 开发中 |
 | 关联 ADR | ADR-0027（消费树 ⊆ BASE subset invariant，本需求据以不登记功能树，见 §4） |
 
 ## 1. 需求描述
@@ -50,8 +50,17 @@
 
 | 任务 ID | 任务描述 | 类型 | 负责人 | 预估 | 状态 |
 |---|---|---|---|---|---|
-| T-1 | 根路径跳转：`/` → `/swagger`（重定向中间件或 MapGet，挂在管道早段、匿名、不进 ApiExplorer、不触碰 saas session cookie） | 开发 | 待定 | XS | 待开始 |
-| T-2 | L1-L4 门禁回归 + curl 三验（302、跟随 200、/api/v1/* 不回归） | 门禁 | 待定 | XS | 待开始 |
+| T-1 | 根路径跳转：`/` → `/swagger`（重定向中间件或 MapGet，挂在管道早段、匿名、不进 ApiExplorer、不触碰 saas session cookie） | 开发 | Claude | XS | 完成 |
+| T-2 | L1-L4 门禁回归 + curl 三验（302、跟随 200、/api/v1/* 不回归） | 门禁 | Claude | XS | 完成 |
+
+### 实施记录（2026-10-02）
+
+- **改动**：`src/Program.cs` 根路径精确 `"/"` minimal API 重定向（`Results.Redirect("/swagger")`，链 `.AllowAnonymous()` + `.ExcludeFromDescription()`，注册于 `/health` 旁、`MapControllers` 同层；在 SaasSessionMiddleware 语义之外——该中间件对无 cookie 请求纯透传，不设不读会话）。
+- **测试**：`tests/RootSwaggerRedirectTests.cs`（5 用例，不挂 Fn ID——基础设施端点不进功能树，依据见 §4；trace.json 由 gen-trace.py 硬编码清单产出，本测试不进清单即不进 trace）。
+- **TDD 红**：`RootPath_anonymousGet_redirects302ToSwagger` / `RootPath_withAuthorizationHeader_stillRedirects302` 失败，`Expected: Found / Actual: NotFound`（实现前 `/` 是 404）。
+- **TDD 绿**：实现后 5 用例全过（`Passed! - Failed: 0, Passed: 5`）。
+- **T-2 门禁**：suite 根 `python scripts/gate.py -p saas-identity-platform-aspnetcore` **exit 0**，L1-L5 全绿。
+- **curl 三验承载方式**：由真管线集成测试（WebApplicationFactory 走完整中间件栈）替代手工 curl——302 → `/swagger`、跟随 `/swagger/index.html` 200、`/api/v1/*` 与 `/health` 不回归（404/200 断言）、`/swagger/v1/swagger.json` 200 且 `paths` 无 `"/"`（AC-4）。
 
 ## 4. 功能影响（需求与功能对齐的唯一位置）
 
