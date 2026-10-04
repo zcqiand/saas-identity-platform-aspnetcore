@@ -21,3 +21,7 @@ obj/
 # .env.production: 部署契约真值(含 secret),gitignored 不进 git(2026-08-28 起,同 .env.local 模式)
 # key 集合由 suite L0.5 门核对(存在时与 .env.example 严格双向比对);真值经 scripts/sync-secrets 进 GitHub Secrets
 .env.production
+
+# 2026-10-04：教学演示载体注明不入仓不提交（见 tests/Teaching/*.cs 文件头）；TestResults 为 dotnet test 运行产物
+tests/Teaching/
+tests/TestResults/
