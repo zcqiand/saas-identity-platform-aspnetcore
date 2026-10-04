@@ -1,0 +1,627 @@
+{
+  "_schema": "code-suite-handoff v1",
+  "_note": "写书的事实底，非逐字引用源。book 引用该 tag 的终态文件(带 source=)；此清单供作者对账建造顺序。",
+  "project": "saas-identity-platform-aspnetcore",
+  "tag": "v0.3.33-20260928",
+  "stack": "aspnetcore",
+  "gate_proof": {
+    "tag": "v0.3.33-20260928",
+    "checked_at": "2026-09-28T15:35:43+00:00",
+    "verified": true,
+    "all_green": true,
+    "method": "gate.py --all",
+    "gate_command": "D:\\qiand-life\\1-projects\\xr-code-suite\\scripts\\gate.py -p saas-identity-platform-aspnetcore"
+  },
+  "function_tree": [
+    {
+      "fn_id": "M00.F01.I01",
+      "name": "租户列表",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F01.I02",
+      "name": "创建租户",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F01.I03",
+      "name": "租户详情",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F01.I04",
+      "name": "更新租户",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F01.I05",
+      "name": "删除租户",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I01",
+      "name": "成员列表",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I02",
+      "name": "创建成员",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I03",
+      "name": "成员详情",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I04",
+      "name": "更新成员",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I05",
+      "name": "删除成员",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I06",
+      "name": "邀请成员",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F02.I07",
+      "name": "接受邀请",
+      "type": "接口",
+      "status": "规划"
+    },
+    {
+      "fn_id": "M00.F02.I08",
+      "name": "状态切换",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F03.I01",
+      "name": "角色列表",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F03.I02",
+      "name": "创建角色",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F03.I03",
+      "name": "角色详情",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F03.I04",
+      "name": "更新角色",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F03.I05",
+      "name": "删除角色",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F04.I01",
+      "name": "权限矩阵绑定",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F04.I02",
+      "name": "角色已授权菜单查询",
+      "type": "接口",
+      "status": "开发中"
+    },
+    {
+      "fn_id": "M00.F04.I03",
+      "name": "整批设置角色菜单",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F04.I04",
+      "name": "清空角色菜单",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F05.I01",
+      "name": "列出租户应用",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F05.I02",
+      "name": "订阅应用",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F05.I03",
+      "name": "更新应用订阅",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M00.F05.I04",
+      "name": "移除应用订阅",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F01.I01",
+      "name": "当前用户 whoami",
+      "type": "查询",
+      "status": "开发中"
+    },
+    {
+      "fn_id": "M01.F02.I01",
+      "name": "分配角色",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F03.I01",
+      "name": "列出我的租户成员关系",
+      "type": "查询",
+      "status": "开发中"
+    },
+    {
+      "fn_id": "M01.F03.I02",
+      "name": "切换当前租户",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F04.I01",
+      "name": "密码登录 API",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F04.I02",
+      "name": "失败锁定",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F04.I03",
+      "name": "密码登录 UI",
+      "type": "页面",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F04.I04",
+      "name": "~~OIDC Code 换取~~",
+      "type": "接口",
+      "status": "已废弃"
+    },
+    {
+      "fn_id": "M01.F04.I05",
+      "name": "~~refresh token~~",
+      "type": "接口",
+      "status": "已废弃"
+    },
+    {
+      "fn_id": "M01.F04.I06",
+      "name": "登出（本地清理）",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M01.F04.I07",
+      "name": "登出（全局 SSO）",
+      "type": "接口",
+      "status": "已废弃"
+    },
+    {
+      "fn_id": "M04.F01.I01",
+      "name": "OAuth 应用列表",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F01.I02",
+      "name": "创建 OAuth 应用",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F01.I03",
+      "name": "OAuth 应用详情",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F01.I04",
+      "name": "更新 OAuth 应用",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F01.I05",
+      "name": "删除 OAuth 应用",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F01.I06",
+      "name": "公共 client 元数据",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F02.I01",
+      "name": "启用/停用应用",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F03.I01",
+      "name": "授权码签发",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F03.I02",
+      "name": "令牌交换",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F03.I03",
+      "name": "令牌刷新",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I01",
+      "name": "菜单列表",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I02",
+      "name": "创建菜单",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I03",
+      "name": "菜单详情",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I04",
+      "name": "更新菜单",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I05",
+      "name": "删除菜单",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I06",
+      "name": "同级排序",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I07",
+      "name": "切换父级",
+      "type": "接口",
+      "status": "已上线"
+    },
+    {
+      "fn_id": "M04.F04.I08",
+      "name": "当前用户有效菜单",
+      "type": "查询",
+      "status": "已上线"
+    }
+  ],
+  "trace": [
+    {
+      "fn_id": "M00.F01.I03",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch",
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",
+        "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev",
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.Applications_ops_guardRejectsForeignTenant",
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.RoleMenus_ops_guardRejectsForeignTenant"
+      ]
+    },
+    {
+      "fn_id": "M00.F01.I04",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.PartialUpdateSemanticsTests.TenantsPatch_withoutStatus_keepsOriginalStatus"
+      ]
+    },
+    {
+      "fn_id": "M00.F02.I01",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_mapsDbStatusToEnum_notRawCast",
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_statusFilter_usesDbValueNotEnumNumber"
+      ]
+    },
+    {
+      "fn_id": "M00.F02.I04",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.ErrorSemanticsTests.MembersPatch_existingMember_legalBody_returns200",
+        "Saas.Identity.AspNetCore.Tests.ErrorSemanticsTests.MembersPatch_unknownUserId_returns404NotFound"
+      ]
+    },
+    {
+      "fn_id": "M00.F02.I06",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Invitations_createsInvitedUserAndActiveMember"
+      ]
+    },
+    {
+      "fn_id": "M00.F02.I08",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Status_endpoint_writesDbValueNotEnumNumber"
+      ]
+    },
+    {
+      "fn_id": "M00.F04.I02",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusGet_returnsGrantAggregate"
+      ]
+    },
+    {
+      "fn_id": "M00.F04.I03",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_returnsGrantAggregate",
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_replacesAll",
+        "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_unknownRole_throws404"
+      ]
+    },
+    {
+      "fn_id": "M00.F05.I01",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsGet_listsTenantScoped"
+      ]
+    },
+    {
+      "fn_id": "M00.F05.I02",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_subscribesClient",
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_unknownClient_throws404",
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_duplicateSubscription_throws"
+      ]
+    },
+    {
+      "fn_id": "M00.F05.I03",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPatch_updatesStatusAndExpiry"
+      ]
+    },
+    {
+      "fn_id": "M00.F05.I04",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsDelete_removesSubscription"
+      ]
+    },
+    {
+      "fn_id": "M01.F03.I02",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.MeControllerSwitchTests.Switch_returnsHs256Token_notAlgNone"
+      ]
+    },
+    {
+      "fn_id": "M01.F04.I01",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.ErrorSemanticsTests.Login_wrongPassword_returns401Unauthorized"
+      ]
+    },
+    {
+      "fn_id": "M01.F04.I02",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockedUser_throwsLockedException",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockoutExpires_afterDuration",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.ResetSuccess_clearsCounter",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.BelowThreshold_notLocked"
+      ]
+    },
+    {
+      "fn_id": "M01.F04.I03",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Put_thenGet_returnsSameSession",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Get_unknownId_returnsNull",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Get_expiredSession_returnsNullAndRemoves",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Delete_removesSession",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.GenerateId_returnsUniqueIds",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.ValidCookie_injectsSessionIntoItems",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.NoCookie_doesNotInject",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.UnknownCookieValue_doesNotInject",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.ExpiredCookie_doesNotInject",
+        "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.Next_invoked_always"
+      ]
+    },
+    {
+      "fn_id": "M04.F01.I01",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_listsPaged"
+      ]
+    },
+    {
+      "fn_id": "M04.F01.I02",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPost_persistsAndReturnsDto"
+      ]
+    },
+    {
+      "fn_id": "M04.F01.I04",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_byClientId_returnsDetail",
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPatch_updatesName"
+      ]
+    },
+    {
+      "fn_id": "M04.F01.I05",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsDelete_removesAndSets204"
+      ]
+    },
+    {
+      "fn_id": "M04.F02.I01",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.Status_patchUpdatesStatus"
+      ]
+    },
+    {
+      "fn_id": "M04.F04.I04",
+      "tests": [
+        "Saas.Identity.AspNetCore.Tests.PartialUpdateSemanticsTests.MenusPatch_withoutOptionalFields_keepsOriginalValues"
+      ]
+    }
+  ],
+  "source_index": [
+    {
+      "fn_id": "M00.F01.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\AdminTenantsController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F01.I03",
+      "source_paths": [
+        "src\\Security\\TenantGuard.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F02.I02",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantMembersController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F02.I06",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantMembersController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F03.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantRolesController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F03.I02",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantRolesController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F04.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantRoleMenusController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F04.I03",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantRoleMenusController.cs"
+      ]
+    },
+    {
+      "fn_id": "M00.F05.I02",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantApplicationsController.cs"
+      ]
+    },
+    {
+      "fn_id": "M01.F02.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\TenantMembersController.cs"
+      ]
+    },
+    {
+      "fn_id": "M01.F03.I02",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\MeController.cs"
+      ]
+    },
+    {
+      "fn_id": "M01.F04.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\AuthApi.cs"
+      ]
+    },
+    {
+      "fn_id": "M01.F04.I02",
+      "source_paths": [
+        "src\\Security\\FailedLoginStore.cs"
+      ]
+    },
+    {
+      "fn_id": "M01.F04.I06",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\AuthApi.cs"
+      ]
+    },
+    {
+      "fn_id": "M04.F01.I02",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\AdminClientsController.cs"
+      ]
+    },
+    {
+      "fn_id": "M04.F01.I06",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\ClientsController.cs"
+      ]
+    },
+    {
+      "fn_id": "M04.F02.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\AdminClientsController.cs"
+      ]
+    },
+    {
+      "fn_id": "M04.F03.I01",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\OAuthController.cs"
+      ]
+    },
+    {
+      "fn_id": "M04.F03.I02",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\OAuthController.cs"
+      ]
+    },
+    {
+      "fn_id": "M04.F03.I03",
+      "source_paths": [
+        "src\\Controllers\\Implementation\\OAuthController.cs"
+      ]
+    }
+  ]
+}
