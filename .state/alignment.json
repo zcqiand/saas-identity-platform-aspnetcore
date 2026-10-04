@@ -442,7 +442,7 @@
         "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_unknownClient_throws404",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:1156 (path)",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:227 (annot)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:2831 (annot)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:3163 (annot)"
       ],
       "entry": []
     },
@@ -456,7 +456,7 @@
       "tests": [
         "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPatch_updatesStatusAndExpiry",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:259 (annot)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:5836 (annot)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:7746 (annot)"
       ],
       "entry": []
     },
@@ -470,7 +470,7 @@
       "tests": [
         "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsDelete_removesSubscription",
         "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:289 (annot)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:8021 (annot)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:9931 (annot)"
       ],
       "entry": []
     },
@@ -630,9 +630,9 @@
       "tests": [
         "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_listsPaged",
         "output\\saas-identity-platform-contract-test\\tests\\admin-clients-write.test.ts:891 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:3624 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:5529 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:9758 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:11668 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:3956 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:7439 (path)"
       ],
       "entry": []
     },
@@ -646,9 +646,9 @@
       "tests": [
         "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPost_persistsAndReturnsDto",
         "output\\saas-identity-platform-contract-test\\tests\\admin-clients-write.test.ts:891 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:3624 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:5529 (path)",
-        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:9758 (path)"
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:11668 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:3956 (path)",
+        "output\\saas-identity-platform-contract-test\\tests\\tenant-applications.test.ts:7439 (path)"
       ],
       "entry": []
     },
