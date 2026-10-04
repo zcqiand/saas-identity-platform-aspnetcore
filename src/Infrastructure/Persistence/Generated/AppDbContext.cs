@@ -15,6 +15,8 @@ public partial class AppDbContext : DbContext
     {
     }
 
+    public virtual DbSet<ArInternalMetadatum> ArInternalMetadata { get; set; }
+
     public virtual DbSet<DrizzleMigration> DrizzleMigrations { get; set; }
 
     public virtual DbSet<OauthAccessToken> OauthAccessTokens { get; set; }
@@ -24,6 +26,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<OauthCode> OauthCodes { get; set; }
 
     public virtual DbSet<OauthRefreshToken> OauthRefreshTokens { get; set; }
+
+    public virtual DbSet<SchemaMigration> SchemaMigrations { get; set; }
 
     public virtual DbSet<SysMenu> SysMenus { get; set; }
 
@@ -57,6 +61,26 @@ public partial class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");
+
+        modelBuilder.Entity<ArInternalMetadatum>(entity =>
+        {
+            entity.HasKey(e => e.Key).HasName("ar_internal_metadata_pkey");
+
+            entity.ToTable("ar_internal_metadata");
+
+            entity.Property(e => e.Key)
+                .HasColumnType("character varying")
+                .HasColumnName("key");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp(6) without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("timestamp(6) without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.Value)
+                .HasColumnType("character varying")
+                .HasColumnName("value");
+        });
 
         modelBuilder.Entity<DrizzleMigration>(entity =>
         {
@@ -275,6 +299,17 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("oauth_refresh_token_user_id_sys_user_id_fk");
+        });
+
+        modelBuilder.Entity<SchemaMigration>(entity =>
+        {
+            entity.HasKey(e => e.Version).HasName("schema_migrations_pkey");
+
+            entity.ToTable("schema_migrations");
+
+            entity.Property(e => e.Version)
+                .HasColumnType("character varying")
+                .HasColumnName("version");
         });
 
         modelBuilder.Entity<SysMenu>(entity =>
