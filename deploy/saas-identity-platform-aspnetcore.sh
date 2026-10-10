@@ -80,7 +80,7 @@ if [ ! -f "$BASE/aspnetcore.env" ]; then
     printf 'PG_USER=postgres\n'
     printf 'PG_PASSWORD=qiand68+++\n'
     printf 'PG_DATABASE=saas_prod\n'
-    printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk\n' "$NGINX_DOMAIN"
+    printf 'SAAS_CORS_ALLOWED_ORIGINS=https://%s,https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk,https://saas-flutter.xiangru.uk\n' "$NGINX_DOMAIN"
   } > "$BASE/aspnetcore.env"
   chown deploy:deploy "$BASE/aspnetcore.env" 2>/dev/null || true
   chmod 600 "$BASE/aspnetcore.env"
@@ -199,7 +199,7 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   fi
   # CORS:老值保留(运维可能手工补过 prod origin),只在缺失时写默认白名单
   if ! grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env"; then
-    append_if_missing SAAS_CORS_ALLOWED_ORIGINS "https://${NGINX_DOMAIN},https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk"
+    append_if_missing SAAS_CORS_ALLOWED_ORIGINS "https://${NGINX_DOMAIN},https://saas-vue.xiangru.uk,https://saas-react.xiangru.uk,https://saas-nextjs.xiangru.uk,https://saas-flutter.xiangru.uk"
   fi
   # origin 级无损追加（照抄 springboot 仓 1a1412e 模式）：存量白名单缺任一默认 origin 时
   # 只补缺失 origin（不整值覆盖，运维手工 origin 保留）。白名单 4 域 = 本仓 NGINX_DOMAIN
@@ -208,7 +208,8 @@ if [ -f "$BASE/aspnetcore.env" ]; then
   for cors_origin in "https://${NGINX_DOMAIN}" \
                      "https://saas-vue.xiangru.uk" \
                      "https://saas-react.xiangru.uk" \
-                     "https://saas-nextjs.xiangru.uk"; do
+                     "https://saas-nextjs.xiangru.uk" \
+                     "https://saas-flutter.xiangru.uk"; do
     if grep -q '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env" && ! grep '^SAAS_CORS_ALLOWED_ORIGINS=' "$BASE/aspnetcore.env" | grep -qF "$cors_origin"; then
       sed -i "s#^\(SAAS_CORS_ALLOWED_ORIGINS=.*\)#\1,${cors_origin}#" "$BASE/aspnetcore.env"
       echo "→ reconcile SAAS_CORS_ALLOWED_ORIGINS: 追加缺失 origin ${cors_origin}（origin 级，不整值覆盖）"
