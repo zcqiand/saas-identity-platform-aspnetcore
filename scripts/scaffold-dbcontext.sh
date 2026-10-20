@@ -13,7 +13,8 @@
 # 删掉，不能靠 scaffold --force 覆盖同名（它只覆盖，不删孤儿）。
 #
 # 用法：
-#   bash scripts/scaffold-dbcontext.sh                       # default saas_dev @ 100.79.128.25
+#   bash scripts/scaffold-dbcontext.sh                       # env/.env.test 未给 host/port 即 fail-fast（5.115）
+#   PG_HOST=127.0.0.1 PG_PORT=54321 … bash scripts/scaffold-dbcontext.sh
 #   DATABASE_URL=postgresql://... bash scripts/scaffold-dbcontext.sh
 #
 # 前提：
@@ -86,9 +87,15 @@ if [ -z "${PG_PASSWORD}" ] || [ -z "${PG_USER}" ] || [ -z "${PG_DATABASE}" ] || 
   done
 fi
 
-# 兜底 host/port（其它 key 缺失时报错退出；host 是公开 IP 可硬编码）
-PG_HOST="${PG_HOST:-100.79.128.25}"
-PG_PORT="${PG_PORT:-5432}"
+# 兜底 host/port（其它 key 缺失时报错退出）
+# 5.115 fail-fast：禁远程缺省兜底（suite-hard-rules §1；2026-10-12 人裁 schema
+# 真源=本机 127.0.0.1:54321）——旧「host 公开 IP 可硬编码」注已失真（Tailscale
+# 内网址+误拉远程 rails 表实证 8ce7491），host/port 必显式给出（env 或 .env.test）。
+if [ -z "$PG_HOST" ] || [ -z "$PG_PORT" ]; then
+  echo "[scaffold-dbcontext] ERROR: PG_HOST/PG_PORT 缺失（5.115 禁远程缺省兜底——suite-hard-rules §1）" >&2
+  echo "[scaffold-dbcontext]        用法：PG_HOST=127.0.0.1 PG_PORT=54321 PG_DATABASE=saas_dev PG_USER=postgres PG_PASSWORD=… bash scripts/scaffold-dbcontext.sh" >&2
+  exit 2
+fi
 [ -z "$PG_DATABASE" ] && { echo "[scaffold-dbcontext] ERROR: Database= 缺失" >&2; exit 2; }
 [ -z "$PG_USER" ] && { echo "[scaffold-dbcontext] ERROR: Username= 缺失" >&2; exit 2; }
 [ -z "$PG_PASSWORD" ] && { echo "[scaffold-dbcontext] ERROR: Password= 缺失（CLAUDE.md 禁字面量兜底）" >&2; exit 2; }
