@@ -39,6 +39,19 @@ dotnet run --project src           # 本地起服务
 | :--- | :--- | :--- |
 | （待补） | | |
 
+### 书一《ASP.NET Core 从入门到项目实践》
+
+- 书稿定位：xr-know-016，第 26、27、28、29、30、31 章正文代码块挂本仓 `source=` 锚点
+- 配套版本：`v0.3.33-20260928`（registry 冻结 tag，代码以此为准）
+
+| 章 | 章题 | 对应源文件 |
+| :--- | :--- | :--- |
+| 26 | Identity 用户体系 | `src/Controllers/Implementation/AdminTenantsController.cs` + `src/Controllers/Implementation/TenantMembersController.cs` + `src/Controllers/Implementation/TenantRolesController.cs` + `src/Controllers/Implementation/TenantRoleMenusController.cs` + `src/Controllers/Implementation/MeController.cs` + `src/Controllers/Implementation/TenantApplicationsController.cs` |
+| 27 | JWT 与 API 鉴权 | `src/Controllers/Implementation/AuthApi.cs` |
+| 28 | OAuth/OIDC 与外部登录 | `src/Controllers/Implementation/AdminClientsController.cs` + `src/Controllers/Implementation/ClientsController.cs` + `src/Controllers/Implementation/OAuthController.cs` |
+| 29 | 数据保护与安全加固 | `src/Security/FailedLoginStore.cs` + `src/Security/TenantGuard.cs` |
+| 30 | 单元测试：xUnit 与 Moq | `src/Security/FailedLoginStore.cs` |
+| 31 | 集成测试与 Testcontainers | `tests/ErrorSemanticsTests.cs` + `tests/ModelStateValidationTests.cs` |
 ## 快速链接
 
 - [CLAUDE.md](CLAUDE.md) — 开发约定与编码规范
