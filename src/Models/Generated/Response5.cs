@@ -35,9 +35,15 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.List<TenantMemberUserView> Items { get; set; } = new System.Collections.Generic.List<TenantMemberUserView>();
 
+        /// <summary>
+        /// 页码，0 基（Spring Data Pageable）：首页 page=0。
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("page")]
         public int Page { get; set; } = default!;
 
+        /// <summary>
+        /// 每页条数。
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("pageSize")]
         public int PageSize { get; set; } = default!;
 

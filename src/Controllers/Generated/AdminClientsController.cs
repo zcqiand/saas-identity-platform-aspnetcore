@@ -30,6 +30,8 @@ namespace Saas.Identity.AspNetCore.Controllers.Generated
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public abstract class AdminClientsControllerBase : ControllerBase
     {
+        /// <param name="page">页码，0 基（Spring Data Pageable）：首页 page=0。</param>
+        /// <param name="pageSize">每页条数。</param>
         /// <returns>The request has succeeded.</returns>
         [Microsoft.AspNetCore.Mvc.HttpGet, Microsoft.AspNetCore.Mvc.Route("api/v1/admin/clients")]
         public abstract System.Threading.Tasks.Task<Response> ClientsGet([Microsoft.AspNetCore.Mvc.FromQuery] int? page, [Microsoft.AspNetCore.Mvc.FromQuery] int? pageSize);
