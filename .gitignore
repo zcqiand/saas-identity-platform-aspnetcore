@@ -25,3 +25,6 @@ obj/
 # 2026-10-04：教学演示载体注明不入仓不提交（见 tests/Teaching/*.cs 文件头）；TestResults 为 dotnet test 运行产物
 tests/Teaching/
 tests/TestResults/
+
+# 可再生件（正式区/临时区纪律：过程件进 _work/，_work 整体不入库；2026-10-24 人裁）
+_work/
