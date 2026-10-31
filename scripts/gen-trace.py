@@ -1,116 +1,172 @@
-#!/usr/bin/env python
-"""Run dotnet test + write .state/trace.json.
+#!/usr/bin/env python3
+"""跑 dotnet test（TRX logger）并产出 .state/trace.json。
 
-xUnit 2.x doesn't expose a clean "after all tests" listener hook like JUnit
-TestExecutionListener. Easiest path: emit trace.json with hardcoded fn IDs
-that match [Trait("Fn", ...)] attributes on test methods.
+trace 契约（见 suite scripts/lib/harness.py）：
+  - 每个测试一行：{"test": <完全限定名>, "fns": [功能 ID...], "inert": bool}
+  - inert=true（skip/未执行）的测试 fns 必须为空数组 —— 假绿在源头抹掉
+
+两段式设计（实测 xunit 2.9 + VSTest 17.10 的 [Trait] 不进 TRX）：
+  1) outcome 从 TRX 拿 —— dotnet test --logger trx 的权威执行结果
+  2) Fn ID 从源码拿 —— 正则扫 tests/**/*.cs 的 [Trait("Fn", "...")]，
+     拼 namespace.class.method 完全限定名。功能 ID 的真相源本来就是源码，
+     不依赖 runner 把 trait 写进哪个 XML 节点。
+
+功能 ID 的挂法（可多个，方法级）：
+
+    [Fact]
+    [Trait("Fn", "M01.F01.I01")]
+    [Trait("Fn", "M01.F01.I02")]
+    public void CreateXxx_returnsOk() { ... }
+
+Theory 展开的多行结果用 testName 前缀匹配挂到同一个方法上。
 """
-import os
+
+from __future__ import annotations
+
+import json
+import re
 import subprocess
 import sys
-import json
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TESTS_DIR = ROOT / "tests"
+TRX_DIR = TESTS_DIR / ".trx"
+STATE_DIR = ROOT / ".state"
 
-print("[gen-trace] dotnet test...", flush=True)
-result = subprocess.run(
-    ["dotnet", "test", "/p:TRACE_MAP=1", "--nologo"],
-    cwd=str(TESTS_DIR),
-    capture_output=True,
-    text=True,
-    encoding="utf-8",
-    errors="replace",
-)
-if result.returncode != 0:
-    print(result.stdout[-2000:])
-    print(result.stderr[-2000:])
-    sys.exit(1)
+NS = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
 
-# Hardcoded fn IDs — keep in sync with tests/*.cs [Trait("Fn",...)] attributes.
-trace = {
-    "schema": 1,
-    "tests": [
-        # M00.F01.I03 — TenantGuard (tests/TenantGuardTests.cs，9/7 重构后保留的 2 个核心测试)
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsOnMismatch", "fns": ["M00.F01.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_acceptsMatch",   "fns": ["M00.F01.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantGuardTests.VerifyPathTenant_throwsWhenJwtMissing_evenInDev", "fns": ["M00.F01.I03"], "inert": False},
+# [Trait("Fn", "M01.F01.I01")] —— 允许单引号/双引号、大小写变体
+TRAIT_RE = re.compile(r'\[\s*Trait\s*\(\s*"(?P<key>[^"]*)"\s*,\s*"(?P<val>[^"]*)"\s*\)\s*\]')
+NAMESPACE_RE = re.compile(r"^\s*namespace\s+([\w.]+)", re.MULTILINE)
+CLASS_RE = re.compile(r"^\s*(?:public|internal|partial|abstract|sealed|static|\s)*class\s+(\w+)", re.MULTILINE)
+METHOD_RE = re.compile(r"^\s*(?:public|internal|private|protected|\s)*(?:async\s+)?(?:Task|ValueTask|void)\s+(\w+)\s*\(", re.MULTILINE)
 
-        # M04.F01 + M04.F02.I01 — admin OAuth client CRUD（tests/AdminClientsControllerTests.cs，2026-09-10 审计补齐）
-        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPost_persistsAndReturnsDto", "fns": ["M04.F01.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_listsPaged", "fns": ["M04.F01.I01"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsGet_byClientId_returnsDetail", "fns": ["M04.F01.I04"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsPatch_updatesName", "fns": ["M04.F01.I04"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.ClientsDelete_removesAndSets204", "fns": ["M04.F01.I05"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.AdminClientsControllerTests.Status_patchUpdatesStatus", "fns": ["M04.F02.I01"], "inert": False},
 
-        # M00.F05 — 租户应用订阅 CRUD（tests/TenantApplicationsControllerTests.cs，2026-09-10 审计补齐）
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_subscribesClient", "fns": ["M00.F05.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_unknownClient_throws404", "fns": ["M00.F05.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPost_duplicateSubscription_throws", "fns": ["M00.F05.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsGet_listsTenantScoped", "fns": ["M00.F05.I01"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsPatch_updatesStatusAndExpiry", "fns": ["M00.F05.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.ApplicationsDelete_removesSubscription", "fns": ["M00.F05.I04"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantApplicationsControllerTests.Applications_ops_guardRejectsForeignTenant", "fns": ["M00.F01.I03"], "inert": False},
+def find_tests_csproj() -> Path:
+    """动态发现测试工程（5.126 反灌批改：仓会重命名 csproj——Lab.AspNetCore.Tests/
+    Saas.Identity.AspNetCore.Tests 各异，模板硬编码 App.Tests.csproj 已证陈旧）。
+    约定 tests/ 下有且仅有一个 .csproj，多/零个 fail-fast。"""
+    candidates = sorted(TESTS_DIR.glob("*.csproj"))
+    if len(candidates) != 1:
+        raise SystemExit(f"[gen-trace] tests/ 下期望恰 1 个 .csproj，实得 {len(candidates)}: "
+                         f"{[c.name for c in candidates]}")
+    return candidates[0]
 
-        # M01.F04.I02 — FailedLoginStore (tests/Auth/Session/FailedLoginStoreTest.cs)
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.Record_thenGet_attemptsIncrements", "fns": ["M01.F04.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockedUser_throwsLockedException", "fns": ["M01.F04.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.LockoutExpires_afterDuration", "fns": ["M01.F04.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.ResetSuccess_clearsCounter", "fns": ["M01.F04.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.FailedLoginStoreTest.BelowThreshold_notLocked", "fns": ["M01.F04.I02"], "inert": False},
 
-        # M01.F04.I03 — SaasSessionStore (tests/Auth/Session/SaasSessionStoreTest.cs) + Middleware (SaasSessionMiddlewareTest.cs)
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Put_thenGet_returnsSameSession", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Get_unknownId_returnsNull", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Get_expiredSession_returnsNullAndRemoves", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.Delete_removesSession", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionStoreTest.GenerateId_returnsUniqueIds", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.ValidCookie_injectsSessionIntoItems", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.NoCookie_doesNotInject", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.UnknownCookieValue_doesNotInject", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.ExpiredCookie_doesNotInject", "fns": ["M01.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.Auth.Session.SaasSessionMiddlewareTest.Next_invoked_always", "fns": ["M01.F04.I03"], "inert": False},
+def run_tests() -> int:
+    """跑 dotnet test，TRX 落到 tests/.trx/。返回退出码（0 = 全绿）。"""
+    cmd = [
+        "dotnet",
+        "test",
+        str(find_tests_csproj()),
+        "--nologo",
+        "--logger",
+        "trx",
+        "--results-directory",
+        str(TRX_DIR),
+        "-v",
+        "q",
+    ]
+    print(f"[gen-trace] {' '.join(cmd)}", flush=True)
+    return subprocess.run(cmd, shell=sys.platform == "win32").returncode
 
-        # M04.F03 OAuth (9/7 重命名后: I01=授权码签发 / I02=令牌交换 / I03=令牌刷新) —
-        # 当前 live 测试覆盖全在 tests/Auth/Session + tests/TenantGuard；
-        # OauthControllerTests 整文件 #if false（pre-existing 烂测试）。真覆盖走 contract-test 仓
-        # 跨端 live（start-family.sh + 4 后端 vitest）承担。M04.F03.I01/I02/I03 的 trace 锚点
-        # 由 contract-test 仓 M96.F02.I21 + aspnetcore flow-function-map.md 登记承担。
 
-        # M00.F04.I02-I04 — role-menus 聚合返回（tests/TenantRoleMenusControllerTests.cs，2026-09-10 I20 方案 C）
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusGet_returnsGrantAggregate", "fns": ["M00.F04.I02"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_returnsGrantAggregate", "fns": ["M00.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_replacesAll", "fns": ["M00.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.MenusPut_unknownRole_throws404", "fns": ["M00.F04.I03"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantRoleMenusControllerTests.RoleMenus_ops_guardRejectsForeignTenant", "fns": ["M00.F01.I03"], "inert": False},
+def scan_fn_traits() -> dict[str, list[str]]:
+    """扫 tests/**/*.cs：完全限定方法名 → [Fn 值]。
 
-        # M00.F02.I01/I06/I08 — invitation status=invited 真 user 行 + status 枚举显式映射（tests/TenantMembersControllerTests.cs，2026-09-10 I42 方案 C）
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Invitations_createsInvitedUserAndActiveMember", "fns": ["M00.F02.I06"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_mapsDbStatusToEnum_notRawCast", "fns": ["M00.F02.I01"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.MembersGet_statusFilter_usesDbValueNotEnumNumber", "fns": ["M00.F02.I01"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.TenantMembersControllerTests.Status_endpoint_writesDbValueNotEnumNumber", "fns": ["M00.F02.I08"], "inert": False},
+    文件粒度解析：一个文件假设一个 namespace（多个的取第一个），
+    class 嵌套按「最近一个 class 声明在上文」近似 —— 测试代码习惯
+    一文件一类一类一 namespace，够用且简单。
+    """
+    table: dict[str, list[str]] = {}
+    for cs in sorted(TESTS_DIR.rglob("*.cs")):
+        if "obj" in cs.parts or "bin" in cs.parts:
+            continue
+        src = cs.read_text(encoding="utf-8", errors="replace")
+        ns_m = NAMESPACE_RE.search(src)
+        ns = ns_m.group(1) if ns_m else ""
+        # 逐字符位置找 class 声明与方法 + Trait 的配对：
+        # 方法名匹配之前、该 class 作用域内的所有 Fn trait 都挂上去。
+        classes = [(m.start(), m.group(1)) for m in CLASS_RE.finditer(src)]
+        methods = list(METHOD_RE.finditer(src))
+        for i, tm in enumerate(methods):
+            method = tm.group(1)
+            # 该方法声明点之前最近的 class
+            cls = ""
+            for pos, cname in classes:
+                if pos < tm.start():
+                    cls = cname
+            if not cls:
+                continue
+            # 只取「上一个方法声明之后 → 本方法声明之前」的 Fn traits。
+            # 取整个文件头会把同 class 前面方法的 trait 重复挂给本方法。
+            seg_start = methods[i - 1].start() if i > 0 else 0
+            seg = src[seg_start : tm.start()]
+            fns = [m.group("val") for m in TRAIT_RE.finditer(seg) if m.group("key") == "Fn"]
+            if not fns:
+                continue
+            full = f"{ns}.{cls}.{method}" if ns else f"{cls}.{method}"
+            table[full] = sorted(set(fns))
+    return table
 
-        # M01.F03.I02 — 切换当前租户（tests/MeControllerSwitchTests.cs，2026-09-10 审计红线 #4 修复随附）
-        {"test": "Saas.Identity.AspNetCore.Tests.MeControllerSwitchTests.Switch_returnsHs256Token_notAlgNone", "fns": ["M01.F03.I02"], "inert": False},
 
-        # 5.34 — 错误语义收口（tests/ErrorSemanticsTests.cs，2026-09-20 trace 账补锚）：
-        #   a) PATCH 成员合法 body → 200（M00.F02.I04 更新成员）；b) 同 PATCH ghost userId → 404；
-        #   c) login 错密码 → 401（M01.F04.I01 密码登录 API）。真管线 WebApplicationFactory。
-        {"test": "Saas.Identity.AspNetCore.Tests.ErrorSemanticsTests.MembersPatch_existingMember_legalBody_returns200", "fns": ["M00.F02.I04"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.ErrorSemanticsTests.MembersPatch_unknownUserId_returns404NotFound", "fns": ["M00.F02.I04"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.ErrorSemanticsTests.Login_wrongPassword_returns401Unauthorized", "fns": ["M01.F04.I01"], "inert": False},
+def parse_trx(trx: Path, fn_traits: dict[str, list[str]]) -> list[dict]:
+    """TRX outcome × 源码 trait 表 → trace 行。outcome ≠ Passed → inert。"""
+    root = ET.parse(trx).getroot()
+    rows: list[dict] = []
+    for res in root.findall(".//t:UnitTestResult", NS):
+        name = res.get("testName", "")
+        outcome = res.get("outcome", "")
+        inert = outcome != "Passed"
+        fns: list[str] = []
+        if not inert:
+            # 精确匹配，或 Theory 前缀匹配（testName 带数据后缀）
+            if name in fn_traits:
+                fns = fn_traits[name]
+            else:
+                for full, ids in fn_traits.items():
+                    if name.startswith(full):
+                        fns = ids
+                        break
+        rows.append({"test": name, "fns": fns, "inert": inert})
+    return rows
 
-        # 5.26 — partial-update「不传不改」语义（tests/PartialUpdateSemanticsTests.cs）
-        {"test": "Saas.Identity.AspNetCore.Tests.PartialUpdateSemanticsTests.MenusPatch_withoutOptionalFields_keepsOriginalValues", "fns": ["M04.F04.I04"], "inert": False},
-        {"test": "Saas.Identity.AspNetCore.Tests.PartialUpdateSemanticsTests.TenantsPatch_withoutStatus_keepsOriginalStatus", "fns": ["M00.F01.I04"], "inert": False},
-    ],
-}
 
-state_dir = ROOT / ".state"
-state_dir.mkdir(exist_ok=True)
-trace_path = state_dir / "trace.json"
-trace_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
-print(f"[gen-trace] wrote {trace_path}", flush=True)
-sys.exit(0)
+def main() -> int:
+    # 陈旧 TRX 清场 —— 只认本次运行的产物
+    if TRX_DIR.exists():
+        for old in TRX_DIR.glob("*.trx"):
+            old.unlink()
+
+    fn_traits = scan_fn_traits()
+    print(f"[gen-trace] 源码扫描：{len(fn_traits)} 个方法挂了 Fn trait", flush=True)
+
+    rc = run_tests()
+    if rc != 0:
+        print("[gen-trace] dotnet test 失败（详见上方输出）。不产出 trace.json。", file=sys.stderr)
+        return rc
+
+    trxs = sorted(TRX_DIR.glob("*.trx"))
+    if not trxs:
+        print(
+            "[gen-trace] dotnet test 成功但没找到 TRX 文件。检查 --results-directory 是否生效。",
+            file=sys.stderr,
+        )
+        return 1
+
+    all_rows: list[dict] = []
+    for trx in trxs:
+        all_rows.extend(parse_trx(trx, fn_traits))
+
+    trace = {"schema": 1, "tests": all_rows}
+    STATE_DIR.mkdir(exist_ok=True)
+    out = STATE_DIR / "trace.json"
+    out.write_text(json.dumps(trace, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"[gen-trace] wrote {out} ({len(all_rows)} tests)", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
