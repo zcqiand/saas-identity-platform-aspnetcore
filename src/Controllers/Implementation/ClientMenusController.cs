@@ -36,7 +36,12 @@ public class ClientMenusController : ClientMenusControllerBase
 
     public override async Task<ICollection<ApiSysMenu>> MenusGet(string clientId)
     {
-        var rows = await _db.SysMenus.Where(m => m.ClientId == clientId).ToListAsync();
+        // 5.121 家族裁定：sortOrder 主键 + id 次级键（与 rails/laravel/go/fastapi 同形）
+        var rows = await _db.SysMenus
+            .Where(m => m.ClientId == clientId)
+            .OrderBy(m => m.SortOrder)
+            .ThenBy(m => m.Id)
+            .ToListAsync();
         return rows.Select(ToDto).ToList();
     }
 
@@ -118,7 +123,7 @@ public class ClientMenusController : ClientMenusControllerBase
         var rows = await _db.SysMenus
             .Where(m => m.ClientId == clientId)
             .OrderBy(m => m.SortOrder)
-            .ThenBy(m => m.Title)
+            .ThenBy(m => m.Id)
             .ToListAsync();
         return rows.Select(ToDto).ToList();
     }
