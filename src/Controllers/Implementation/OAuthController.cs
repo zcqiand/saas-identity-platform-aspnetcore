@@ -201,7 +201,17 @@ public class OauthController : OauthControllerBase
             CreatedAt = DateTime.UtcNow,
         });
 
-        await _db.SaveChangesAsync();
+        // 5.123① claim 影响行数判定：并发输家删 0 行 → EF 并发异常 → 归一 INVALID_GRANT 400
+        // （InMemory provider 下交错不可达；Npgsql 生产路径由本映射承接，禁裸吞）。
+        // Remove+Add 单次 SaveChanges = 消费与签发同事务，保持原子。
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ArgumentException("INVALID_GRANT: code not found");
+        }
 
         return new TokenResponse
         {
@@ -233,7 +243,10 @@ public class OauthController : OauthControllerBase
         if (oldRefresh.UserId == Guid.Empty)
             throw new ArgumentException("INVALID_GRANT: refresh_token has no user_id");
 
-        // 旋转: 旧 refresh 标记 consumed, 新 refresh 写入
+        // 旋转: 旧 refresh 撤销（5.123②：修前只 Add 新行不删旧行，注释声称 consumed
+        // 但无对应写入 → rotation 后同一 refreshToken 复用恒 200）+ 新 refresh 写入；
+        // 删旧与加新同一次 SaveChanges = 轮换段原子，无「旧废新未落」半态
+        _db.OauthCodes.Remove(oldRefresh);
         var newRefresh = JwtIssuer.GenerateRefreshToken(oldRefresh.UserId);
         _db.OauthCodes.Add(new OauthCode
         {
