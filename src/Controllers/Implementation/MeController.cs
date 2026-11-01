@@ -129,7 +129,10 @@ public class MeController : MeControllerBase
             {
                 Id = m.Id,
                 ClientId = m.ClientId,
-                ParentId = m.ParentId,
+                // 5.124 live 收口（5.112② 补漏）：根 sentinel 零值 UUID wire 序列化 null
+                //（2026-10-18 人批契约口径，springboot 14254ad 同款；DTO 已 nullable）。
+                // 修前 Guid.Empty 直灌 Guid? → wire 发 "00000000-…-0"，CT live 四方比对唯一分叉。
+                ParentId = m.ParentId == Guid.Empty ? null : m.ParentId,
                 Title = m.Title,
                 Path = m.Path,
                 Icon = m.Icon,
