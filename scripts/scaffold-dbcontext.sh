@@ -202,6 +202,45 @@ else:
 PYEOF
 fi
 
+# step 2.6/3: 排除清单（2026-11-01 人裁①）——rails 家族迁移在共享库落的簿记表
+# （ar_internal_metadata / schema_migrations）不是本仓契约面，dotnet ef scaffold
+# 没有 --exclude-table，只能 scaffold 后确定性剥离：删 entity 文件 + 抠 DbSet 属性
+# 与 OnModelCreating 配置块。幂等；表名清单与 lab patch-generated.py 同哲学
+# （「已知缺陷清单留在脚本里，重跑 codegen 不丢」）。
+APPDBCTX="${GENERATED_DIR}/AppDbContext.cs"
+python3 - "${GENERATED_DIR}" <<'PYEOF'
+import re, sys, pathlib
+
+gen = pathlib.Path(sys.argv[1])
+# 簿记表 → entity 类（EF 复数化产物；新增簿记表时两处同步）
+EXCLUDE = {"ArInternalMetadatum": "ArInternalMetadata", "SchemaMigration": "SchemaMigrations"}
+
+ctx = gen / "AppDbContext.cs"
+if ctx.exists():
+    src = ctx.read_text(encoding="utf-8")
+    for entity, dbset in EXCLUDE.items():
+        # DbSet 属性行（连同行尾换行；前后空行由两侧原有行保位）
+        src = re.sub(
+            r"\n    public virtual DbSet<%s> %s \{ get; set; \}\n" % (entity, dbset),
+            "", src)
+        # OnModelCreating 里整个 entity => { ... }); 配置块（连同行尾换行）
+        src = re.sub(
+            r"\n        modelBuilder\.Entity<%s>\(entity =>\n.*?\n        \}\);\n" % entity,
+            "", src, flags=re.DOTALL)
+    ctx.write_text(src, encoding="utf-8")
+
+removed = []
+for entity in EXCLUDE:
+    f = gen / f"{entity}.cs"
+    if f.exists():
+        f.unlink()
+        removed.append(f"{entity}.cs")
+if removed:
+    print("[scaffold-dbcontext]    排除清单剥离簿记表实体: " + ", ".join(removed))
+else:
+    print("[scaffold-dbcontext]    排除清单：无簿记表实体（已净）")
+PYEOF
+
 echo "[scaffold-dbcontext] step 3/3 — git diff src/${OUTPUT_DIR}/（DB-First 真源对照）"
 if git diff --exit-code --quiet "src/${OUTPUT_DIR}/" 2>/dev/null; then
   echo "[scaffold-dbcontext] OK  无 diff（DB 与仓 entity 完全一致）"
