@@ -1,4 +1,4 @@
-# CLAUDE.md — SaaS身份平台ASP.NET-Core后端
+# CLAUDE.md — SaaS 多租户多应用身份平台ASP.NET-Core后端
 
 > 书稿配套仓 + harness 门禁仓双身份。入口，不是手册。L0 门强制上限 60 行。
 > 本仓为《（书稿信息待补）》案例（待补）的可运行配套工程，是书稿代码块的 **source of truth**。

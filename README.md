@@ -1,6 +1,6 @@
 # SaaS 多租户多应用身份平台 · ASP.NET Core 后端
 
-SaaS 身份平台的 C# 后端 —— NSwag codegen abstract Controllers + 手写 partial 实现（属于 saas-identity 多栈家族）。
+SaaS 多租户多应用身份平台的 C# 后端 —— NSwag codegen abstract Controllers + 手写 partial 实现（属于 saas-identity 多栈家族）。
 
 本仓为《（书稿信息待补）》案例（待补）的可运行配套工程，是书稿代码块的 **source of truth**。
 
